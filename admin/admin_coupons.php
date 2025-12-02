@@ -23,6 +23,30 @@ if (file_exists(__DIR__ . '/../includes/admin_header.php')) {
 
 $db = getDB();
 
+// Asigură funcțiile de mesaje există (fallback minimal)
+if (!function_exists('hasMessage')) {
+    function hasMessage() {
+        return !empty($_SESSION['flash_message']);
+    }
+}
+if (!function_exists('displayMessage')) {
+    function displayMessage() {
+        if (!empty($_SESSION['flash_message'])) {
+            $msg = $_SESSION['flash_message'];
+            echo '<div class="alert alert-' . htmlspecialchars($msg['type'] ?? 'info') . ' alert-dismissible fade show">'
+                . htmlspecialchars($msg['text'] ?? '') .
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' .
+                '</div>';
+            unset($_SESSION['flash_message']);
+        }
+    }
+}
+if (!function_exists('setMessage')) {
+    function setMessage($text, $type = 'info') {
+        $_SESSION['flash_message'] = ['text' => $text, 'type' => $type];
+    }
+}
+
 // Parametri pentru filtrare și căutare
 $search = isset($_GET['search']) ? cleanInput($_GET['search']) : '';
 $filterType = isset($_GET['type']) ? cleanInput($_GET['type']) : '';
