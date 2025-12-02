@@ -1,5 +1,8 @@
 # Apache Configuration pentru Brodero
 
+# Custom Error Pages
+ErrorDocument 404 /404.php
+
 # Activare Rewrite Engine
 <IfModule mod_rewrite.c>
     RewriteEngine On
