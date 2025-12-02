@@ -85,8 +85,8 @@ $activeSection = $_GET['section'] ?? 'dashboard';
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-cart-check me-2"></i>Comenzi
                             </a>
-                            <a href="?section=utilizatori" 
-                               class="list-group-item list-group-item-action <?php echo $activeSection === 'utilizatori' ? 'active' : ''; ?>">
+                            <a href="<?php echo SITE_URL; ?>/admin/admin_users.php" 
+                               class="list-group-item list-group-item-action">
                                 <i class="bi bi-people me-2"></i>Utilizatori
                             </a>
                             <a href="?section=mesaje" 
