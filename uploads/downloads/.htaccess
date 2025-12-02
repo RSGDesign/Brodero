@@ -1,0 +1,5 @@
+# Deny direct access to files in downloads folders
+Options -Indexes
+<FilesMatch "^.*$">
+    Require all denied
+</FilesMatch>

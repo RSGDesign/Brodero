@@ -85,6 +85,10 @@ $activeSection = $_GET['section'] ?? 'dashboard';
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-ticket-perforated me-2"></i>Cupoane
                             </a>
+                            <a href="<?php echo SITE_URL; ?>/admin/product_files.php" 
+                               class="list-group-item list-group-item-action">
+                                <i class="bi bi-file-earmark-arrow-down me-2"></i>Fișiere Descărcabile
+                            </a>
                             <a href="<?php echo SITE_URL; ?>/admin/admin_orders.php" 
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-cart-check me-2"></i>Comenzi
