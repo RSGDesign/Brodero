@@ -505,7 +505,7 @@ function addToCart(productId) {
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Se adaugă...';
     
-    fetch('<?php echo SITE_URL; ?>/pages/add_to_cart.php', {
+    fetch('add_to_cart.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',

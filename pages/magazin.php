@@ -333,7 +333,7 @@ document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
         this.disabled = true;
         this.innerHTML = '<i class="bi bi-hourglass-split"></i>';
         
-        fetch('/pages/add_to_cart.php', {
+        fetch('add_to_cart.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

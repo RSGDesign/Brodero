@@ -137,7 +137,7 @@ $total = $subtotal - $discount;
                 <div class="card border-0 shadow-sm mb-3">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-3">Cod Cupon</h5>
-                        <form method="POST" action="<?php echo SITE_URL; ?>/pages/apply_coupon.php" id="couponForm">
+                        <form method="POST" action="apply_coupon.php" id="couponForm">
                             <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                             <div class="input-group mb-2">
                                 <input type="text" name="coupon_code" class="form-control" placeholder="Introdu codul" 
@@ -193,7 +193,7 @@ document.querySelectorAll('.remove-item').forEach(btn => {
 });
 
 function removeFromCart(cartId) {
-    fetch('<?php echo SITE_URL; ?>/pages/remove_from_cart.php', {
+    fetch('remove_from_cart.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `cart_id=${cartId}`
