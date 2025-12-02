@@ -25,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = floatval($_POST['price']);
     $sale_price = !empty($_POST['sale_price']) ? floatval($_POST['sale_price']) : null;
     $description = cleanInput($_POST['description']);
-    $short_description = cleanInput($_POST['short_description']);
     $category_id = (int)$_POST['category_id'];
     $stock_status = $_POST['stock_status'];
     $is_active = isset($_POST['is_active']) ? 1 : 0;
@@ -86,12 +85,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Salvare în baza de date
     if (empty($errors)) {
-        $stmt = $db->prepare("INSERT INTO products (name, description, short_description, price, sale_price, image, gallery, category_id, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmt = $db->prepare("INSERT INTO products (name, description, price, sale_price, image, gallery, category_id, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         
-        $stmt->bind_param("sssddssissi", 
+        $stmt->bind_param("ssddssissi", 
             $name, 
             $description, 
-            $short_description, 
             $price, 
             $sale_price, 
             $mainImage, 
@@ -205,13 +203,6 @@ function uploadImage($file, $subfolder = '') {
                                 <input type="text" class="form-control" id="name" name="name" 
                                        value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>" 
                                        required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="short_description" class="form-label">Descriere Scurtă</label>
-                                <textarea class="form-control" id="short_description" name="short_description" 
-                                          rows="2" placeholder="Descriere scurtă care va apărea în listele de produse"><?php echo isset($_POST['short_description']) ? htmlspecialchars($_POST['short_description']) : ''; ?></textarea>
-                                <small class="text-muted">Maxim 200 caractere</small>
                             </div>
 
                             <div class="mb-3">

@@ -47,7 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = floatval($_POST['price']);
     $sale_price = !empty($_POST['sale_price']) ? floatval($_POST['sale_price']) : null;
     $description = cleanInput($_POST['description']);
-    $short_description = cleanInput($_POST['short_description']);
     $category_id = (int)$_POST['category_id'];
     $stock_status = $_POST['stock_status'];
     $is_active = isset($_POST['is_active']) ? 1 : 0;
@@ -125,12 +124,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Actualizare în baza de date
     if (empty($errors)) {
-        $stmt = $db->prepare("UPDATE products SET name = ?, description = ?, short_description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, category_id = ?, stock_status = ?, is_active = ?, is_featured = ?, updated_at = NOW() WHERE id = ?");
+        $stmt = $db->prepare("UPDATE products SET name = ?, description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, category_id = ?, stock_status = ?, is_active = ?, is_featured = ?, updated_at = NOW() WHERE id = ?");
         
-        $stmt->bind_param("sssddssissii", 
+        $stmt->bind_param("ssddssissii", 
             $name, 
             $description, 
-            $short_description, 
             $price, 
             $sale_price, 
             $mainImage, 
@@ -263,13 +261,6 @@ function uploadImage($file, $subfolder = '') {
                                 <input type="text" class="form-control" id="name" name="name" 
                                        value="<?php echo htmlspecialchars($product['name']); ?>" 
                                        required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="short_description" class="form-label">Descriere Scurtă</label>
-                                <textarea class="form-control" id="short_description" name="short_description" 
-                                          rows="2" placeholder="Descriere scurtă care va apărea în listele de produse"><?php echo htmlspecialchars($product['short_description']); ?></textarea>
-                                <small class="text-muted">Maxim 200 caractere</small>
                             </div>
 
                             <div class="mb-3">
