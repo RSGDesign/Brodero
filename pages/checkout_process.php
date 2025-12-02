@@ -119,19 +119,18 @@ try {
     }, $cartItems);
     $productsJson = json_encode($products, JSON_UNESCAPED_UNICODE);
 
-    // Inserare în tabelul orders (include products_json)
+    // Inserare în tabelul orders (fără products_json deocamdată, va fi adăugat când migrăm schema)
     $stmt = $db->prepare("
         INSERT INTO orders (
             user_id, order_number, subtotal, discount_amount, coupon_code, total_amount, 
             status, payment_status, payment_method, notes, 
             customer_name, customer_email, customer_phone, shipping_address,
-            products_json,
             created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, ?, NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, NOW())
     ");
     
     $stmt->bind_param(
-        "issdsdsssssss",
+        "issdsdssssss",
         $userId,
         $orderNumber,
         $subtotal,
@@ -143,14 +142,19 @@ try {
         $customerName,
         $customerEmail,
         $customerPhone,
-        $shippingAddress,
-        $productsJson
+        $shippingAddress
     );
     
     $stmt->execute();
     $orderId = $db->insert_id;
     
-    // Nu mai inserăm order_items și nu gestionăm stoc pentru produse digitale
+    // Inserăm temporar în order_items pentru fiecare produs (până când migrăm schema)
+    $stmt = $db->prepare("INSERT INTO order_items (order_id, product_id, product_name, price, quantity) VALUES (?, ?, ?, ?, 1)");
+    foreach ($cartItems as $item) {
+        $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
+        $stmt->bind_param("iisd", $orderId, $item['id'], $item['name'], $price);
+        $stmt->execute();
+    }
     
     // Incrementare utilizări cupon dacă există
     if ($couponCode) {
