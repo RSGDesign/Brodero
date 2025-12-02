@@ -102,7 +102,7 @@ if ($userId) {
                         <?php displayMessage(); ?>
                     <?php endif; ?>
 
-                    <form action="/pages/checkout_process.php" method="POST" class="needs-validation" novalidate>
+                    <form action="<?php echo SITE_URL; ?>/pages/checkout_process.php" method="POST" class="needs-validation" novalidate>
                         <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
 
                         <div class="row mb-3">
