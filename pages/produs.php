@@ -474,8 +474,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Adăugare în coș
 function addToCart(productId) {
-    // Implementare funcționalitate coș
-    showNotification('Produs adăugat în coș!', 'success');
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    
+    // Disable button
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Se adaugă...';
+    
+    fetch('/pages/add_to_cart.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `product_id=${productId}&quantity=1`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update cart count în header
+            const cartCount = document.querySelector('.cart-count');
+            if (cartCount) {
+                cartCount.textContent = data.cart_count;
+                cartCount.classList.add('animate__animated', 'animate__pulse');
+            }
+            
+            // Success feedback
+            btn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Adăugat!';
+            btn.classList.replace('btn-primary', 'btn-success');
+            
+            showNotification('Produs adăugat în coș!', 'success');
+            
+            // Reset button after 2 seconds
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.replace('btn-success', 'btn-primary');
+                btn.disabled = false;
+            }, 2000);
+        } else {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            showNotification(data.message || 'Eroare la adăugare în coș', 'danger');
+        }
+    })
+    .catch(error => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showNotification('Eroare la adăugare în coș', 'danger');
+        console.error('Error:', error);
+    });
 }
 </script>
 

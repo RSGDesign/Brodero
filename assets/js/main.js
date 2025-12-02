@@ -261,3 +261,19 @@ function showNotification(message, type = 'success') {
         }
     }, 3000);
 }
+
+/**
+ * Update cart count badge in header
+ */
+function updateCartCount(count) {
+    const cartBadge = document.querySelector('.cart-count');
+    if (cartBadge) {
+        cartBadge.textContent = count;
+        if (count > 0) {
+            cartBadge.style.display = 'inline-block';
+        } else {
+            cartBadge.style.display = 'none';
+        }
+    }
+}
+

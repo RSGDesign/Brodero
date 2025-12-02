@@ -88,11 +88,15 @@ if (isLoggedIn()) {
                 <!-- Iconițe -->
                 <div class="d-flex align-items-center gap-3">
                     <!-- Coș -->
-                    <a href="<?php echo SITE_URL; ?>/pages/cos.php" class="position-relative text-decoration-none text-dark">
+                    <a href="<?php echo SITE_URL; ?>/pages/cart.php" class="position-relative text-decoration-none text-dark">
                         <i class="bi bi-cart3 fs-5"></i>
                         <?php if ($cartCount > 0): ?>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary cart-count">
                                 <?php echo $cartCount; ?>
+                            </span>
+                        <?php else: ?>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary cart-count" style="display: none;">
+                                0
                             </span>
                         <?php endif; ?>
                     </a>

@@ -260,10 +260,17 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                                     <span class="product-price"><?php echo number_format($product['price'], 2); ?> LEI</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <a href="<?php echo SITE_URL; ?>/pages/produs.php?id=<?php echo $product['id']; ?>" 
-                                               class="btn btn-primary btn-sm">
-                                                Detalii
-                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" 
+                                                        data-product-id="<?php echo $product['id']; ?>"
+                                                        <?php echo $product['stock_status'] !== 'in_stock' ? 'disabled' : ''; ?>>
+                                                    <i class="bi bi-cart-plus"></i>
+                                                </button>
+                                                <a href="<?php echo SITE_URL; ?>/pages/produs.php?id=<?php echo $product['id']; ?>" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    Detalii
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -315,5 +322,74 @@ while ($row = $categoriesResult->fetch_assoc()) {
         </div>
     </div>
 </section>
+
+<script>
+// Add to cart functionality pentru magazin
+document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const productId = this.dataset.productId;
+        const originalHTML = this.innerHTML;
+        
+        // Disable button
+        this.disabled = true;
+        this.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+        
+        fetch('/pages/add_to_cart.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `product_id=${productId}&quantity=1`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update cart count
+                const cartCount = document.querySelector('.cart-count');
+                if (cartCount) {
+                    cartCount.textContent = data.cart_count;
+                    cartCount.classList.add('animate__animated', 'animate__pulse');
+                }
+                
+                // Success feedback
+                this.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+                this.classList.add('btn-success');
+                this.classList.remove('btn-primary');
+                
+                // Show toast notification
+                if (typeof showNotification === 'function') {
+                    showNotification('Produs adăugat în coș!', 'success');
+                }
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-primary');
+                    this.disabled = false;
+                }, 2000);
+            } else {
+                this.innerHTML = originalHTML;
+                this.disabled = false;
+                if (typeof showNotification === 'function') {
+                    showNotification(data.message || 'Eroare la adăugare', 'danger');
+                } else {
+                    alert(data.message || 'Eroare la adăugare');
+                }
+            }
+        })
+        .catch(error => {
+            this.innerHTML = originalHTML;
+            this.disabled = false;
+            console.error('Error:', error);
+            if (typeof showNotification === 'function') {
+                showNotification('Eroare la adăugare în coș', 'danger');
+            } else {
+                alert('Eroare la adăugare în coș');
+            }
+        });
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

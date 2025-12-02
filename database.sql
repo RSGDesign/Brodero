@@ -68,10 +68,18 @@ CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     order_number VARCHAR(50) UNIQUE NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL DEFAULT 0,
+    discount_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+    coupon_code VARCHAR(50) NULL,
     total_amount DECIMAL(10,2) NOT NULL,
     status ENUM('pending', 'processing', 'completed', 'cancelled') DEFAULT 'pending',
     payment_status ENUM('unpaid', 'paid', 'refunded') DEFAULT 'unpaid',
     payment_method VARCHAR(50),
+    stripe_session_id VARCHAR(255) NULL,
+    customer_name VARCHAR(200) NOT NULL,
+    customer_email VARCHAR(100) NOT NULL,
+    customer_phone VARCHAR(20),
+    shipping_address TEXT,
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -137,6 +145,24 @@ CREATE TABLE IF NOT EXISTS newsletter (
     INDEX idx_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tabel cupoane de reducere
+CREATE TABLE IF NOT EXISTS coupons (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    discount_type ENUM('percent', 'fixed') NOT NULL,
+    discount_value DECIMAL(10,2) NOT NULL,
+    min_order_amount DECIMAL(10,2) DEFAULT 0,
+    max_uses INT DEFAULT NULL,
+    used_count INT DEFAULT 0,
+    expires_at DATETIME NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_code (code),
+    INDEX idx_active (is_active),
+    INDEX idx_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Tabel fișiere descărcabile pentru utilizatori
 CREATE TABLE IF NOT EXISTS user_downloads (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -175,3 +201,10 @@ INSERT INTO products (category_id, name, slug, description, price, sale_price, i
 (3, 'Ie Tradițională Oltenească', 'ie-traditionala-olteneasca', 'Model tradițional autentic pentru ie, inspirat din zona Olteniei.', 65.00, 55.00, FALSE, 'in_stock'),
 (4, 'Pasăre Colibri', 'pasare-colibri', 'Design colorat cu pasăre colibri, ideal pentru proiecte vibrante.', 48.00, NULL, FALSE, 'in_stock'),
 (2, 'Hexagoane Moderne', 'hexagoane-moderne', 'Pattern geometric cu hexagoane, stil modern minimalist.', 40.00, NULL, TRUE, 'in_stock');
+
+-- Inserare cupoane demo
+INSERT INTO coupons (code, discount_type, discount_value, min_order_amount, max_uses, expires_at, is_active) VALUES
+('WELCOME10', 'percent', 10.00, 50.00, 100, DATE_ADD(NOW(), INTERVAL 6 MONTH), TRUE),
+('SAVE20', 'fixed', 20.00, 100.00, 50, DATE_ADD(NOW(), INTERVAL 3 MONTH), TRUE),
+('FIRSTORDER', 'percent', 15.00, 0, NULL, NULL, TRUE),
+('SUMMER25', 'percent', 25.00, 150.00, 25, DATE_ADD(NOW(), INTERVAL 2 MONTH), TRUE);
