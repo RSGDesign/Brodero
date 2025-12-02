@@ -116,7 +116,8 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                              alt="<?php echo htmlspecialchars($product['name']); ?>"
                              id="mainProductImage"
                              style="height: 450px; object-fit: contain; cursor: zoom-in; background-color: #f8f9fa;"
-                             onclick="openLightbox(0)">
+                             onclick="openLightbox(0)"
+                             title="">
                         
                         <?php if ($discount > 0): ?>
                             <span class="position-absolute top-0 end-0 m-3 badge bg-danger" style="font-size: 1rem; padding: 0.5rem 1rem;">
@@ -142,7 +143,8 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                                          style="cursor: pointer; height: 100px; width: 100px; object-fit: cover; border: 3px solid transparent;"
                                          onclick="changeMainImage('<?php echo SITE_URL . '/uploads/' . $img; ?>', this, <?php echo $index; ?>)"
                                          data-index="<?php echo $index; ?>"
-                                         alt="Thumbnail <?php echo $index + 1; ?>">
+                                         alt=""
+                                         title="">
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -342,19 +344,21 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
             </div>
             <div class="modal-body text-center position-relative" style="min-height: 500px;">
                 <!-- Imagine mare -->
-                <img id="lightboxImage" src="" alt="Lightbox Image" class="img-fluid" style="max-height: 70vh; object-fit: contain;">
+                <img id="lightboxImage" src="" alt="" title="" class="img-fluid" style="max-height: 70vh; object-fit: contain;">
                 
                 <!-- Navigare stânga/dreapta -->
                 <button class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-3" 
                         onclick="navigateLightbox(-1)" 
                         id="prevBtn"
-                        style="opacity: 0.8; z-index: 10;">
+                        style="opacity: 0.8; z-index: 10;"
+                        title="Imagine anterioară">
                     <i class="bi bi-chevron-left"></i>
                 </button>
                 <button class="btn btn-light position-absolute top-50 end-0 translate-middle-y me-3" 
                         onclick="navigateLightbox(1)" 
                         id="nextBtn"
-                        style="opacity: 0.8; z-index: 10;">
+                        style="opacity: 0.8; z-index: 10;"
+                        title="Imagine următoare">
                     <i class="bi bi-chevron-right"></i>
                 </button>
                 
