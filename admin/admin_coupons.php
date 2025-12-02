@@ -14,7 +14,12 @@ if (!function_exists('isAdmin') || !isAdmin()) {
 }
 
 $pageTitle = "Gestionare Cupoane";
-require_once __DIR__ . '/../includes/admin_header.php';
+// Folosește header-ul general dacă admin_header.php nu există
+if (file_exists(__DIR__ . '/../includes/admin_header.php')) {
+    require_once __DIR__ . '/../includes/admin_header.php';
+} else {
+    require_once __DIR__ . '/../includes/header.php';
+}
 
 $db = getDB();
 
@@ -432,5 +437,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-require_once __DIR__ . '/../includes/admin_footer.php';
+if (file_exists(__DIR__ . '/../includes/admin_footer.php')) {
+    require_once __DIR__ . '/../includes/admin_footer.php';
+} else {
+    require_once __DIR__ . '/../includes/footer.php';
+}
 ?>
