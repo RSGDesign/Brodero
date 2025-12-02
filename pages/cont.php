@@ -215,7 +215,8 @@ $activeTab = $_GET['tab'] ?? 'comenzi';
                                     $isPaid = ($download['payment_status'] === 'paid');
                                     $isEnabled = ($download['downloads_enabled'] == 1);
                                     
-                                    $canDownload = $isPaid && $isEnabled && !$limitReached;
+                                    // Permite descărcarea dacă este activată (indiferent de statusul plății pentru transfer bancar)
+                                    $canDownload = $isEnabled && !$limitReached;
                                     ?>
                                     <div class="list-group-item">
                                         <div class="d-flex justify-content-between align-items-center">

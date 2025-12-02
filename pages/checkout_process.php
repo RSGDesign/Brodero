@@ -200,8 +200,8 @@ try {
     // Commit tranzacție
     $db->commit();
     
-    // Setează downloads_enabled pe iteme
-    $enableDownloads = ($paymentMethod === 'stripe') ? 1 : 0;
+    // Setează downloads_enabled pe iteme (activat implicit pentru toate metodele de plată)
+    $enableDownloads = 1;
     $stmt = $db->prepare("UPDATE order_items SET downloads_enabled = ? WHERE order_id = ?");
     if ($stmt) { $stmt->bind_param("ii", $enableDownloads, $orderId); $stmt->execute(); }
 

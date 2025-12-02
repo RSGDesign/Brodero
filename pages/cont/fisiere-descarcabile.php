@@ -25,7 +25,8 @@ require_once __DIR__ . '/../../includes/header.php';
                 $limitReached = ((int)$f['download_limit'] > 0) && ($remaining <= 0);
                 $isPaid = ($f['payment_status'] === 'paid');
                 $isEnabled = ($f['downloads_enabled'] == 1);
-                $canDownload = $isPaid && $isEnabled && !$limitReached;
+                // Permite descărcarea dacă este activată (indiferent de statusul plății)
+                $canDownload = $isEnabled && !$limitReached;
             ?>
             <div class="col-md-6">
                 <div class="card shadow-sm h-100">
