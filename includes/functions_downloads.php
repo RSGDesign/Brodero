@@ -33,11 +33,12 @@ function incrementDownloadCount($fileId) {
 
 function isFileAvailableToUser($fileId, $userId, $orderId) {
     $db = getDB();
+    // Eliminat condiția strictă payment_status = 'paid' pentru a permite descărcarea dacă downloads_enabled = 1
     $stmt = $db->prepare("SELECT pf.download_limit, pf.download_count
                           FROM product_files pf
                           JOIN order_items oi ON oi.product_id = pf.product_id AND oi.order_id = ?
                           JOIN orders o ON o.id = oi.order_id
-                          WHERE pf.id = ? AND o.user_id = ? AND o.payment_status = 'paid' AND pf.status = 'active' AND oi.downloads_enabled = 1");
+                          WHERE pf.id = ? AND o.user_id = ? AND pf.status = 'active' AND oi.downloads_enabled = 1");
     $stmt->bind_param("iii", $orderId, $fileId, $userId);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc();
@@ -66,18 +67,27 @@ function secureDownload($filePath, $downloadName) {
 
 function generateDownloadToken($fileId, $orderId, $userId) {
     $token = bin2hex(random_bytes(16));
-    $_SESSION['download_token'] = [
+    if (!isset($_SESSION['download_tokens'])) {
+        $_SESSION['download_tokens'] = [];
+    }
+    
+    // Cheie unică pentru fiecare combinație fișier-comandă
+    $key = "f{$fileId}_o{$orderId}";
+    
+    $_SESSION['download_tokens'][$key] = [
         'token' => $token,
         'file_id' => $fileId,
         'order_id' => $orderId,
         'user_id' => $userId,
-        'expires' => time() + 300
+        'expires' => time() + 3600 // Valabil 1 oră
     ];
     return $token;
 }
 
 function validateDownloadToken($token, $fileId, $orderId, $userId) {
-    $t = $_SESSION['download_token'] ?? null;
+    $key = "f{$fileId}_o{$orderId}";
+    $t = $_SESSION['download_tokens'][$key] ?? null;
+    
     if (!$t) return false;
     if ($t['token'] !== $token) return false;
     if ($t['file_id'] != $fileId || $t['order_id'] != $orderId || $t['user_id'] != $userId) return false;
