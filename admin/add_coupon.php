@@ -7,9 +7,10 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Verificare acces admin
+// Verificare acces admin (ÎNAINTE de orice output)
 if (!isAdmin()) {
-    redirect('/pages/login.php');
+    header("Location: " . SITE_URL . "/pages/login.php");
+    exit();
 }
 
 $pageTitle = "Adaugă Cupon";
