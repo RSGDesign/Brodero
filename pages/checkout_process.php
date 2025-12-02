@@ -5,29 +5,32 @@
  */
 
 // Enable error logging
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 ini_set('log_errors', 1);
-error_log("=== CHECKOUT PROCESS START ===");
+error_reporting(E_ALL);
 
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/database.php';
+try {
+    error_log("=== CHECKOUT PROCESS START ===");
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    error_log("Checkout: Not POST method");
-    redirect('/pages/cart.php');
-}
+    require_once __DIR__ . '/../config/config.php';
+    require_once __DIR__ . '/../config/database.php';
 
-// Verificare CSRF token
-if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    setMessage("Token invalid. Încearcă din nou.", "danger");
-    redirect('/pages/checkout.php');
-}
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        error_log("Checkout: Not POST method");
+        redirect('/pages/cart.php');
+    }
 
-// Validare date POST
-$customerName = trim($_POST['customer_name'] ?? '');
-$customerEmail = trim($_POST['customer_email'] ?? '');
-$customerPhone = trim($_POST['customer_phone'] ?? '');
-$shippingAddress = trim($_POST['shipping_address'] ?? '');
+    // Verificare CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        setMessage("Token invalid. Încearcă din nou.", "danger");
+        redirect('/pages/checkout.php');
+    }
+
+    // Validare date POST
+    $customerName = trim($_POST['customer_name'] ?? '');
+    $customerEmail = trim($_POST['customer_email'] ?? '');
+    $customerPhone = trim($_POST['customer_phone'] ?? '');
+    $shippingAddress = trim($_POST['shipping_address'] ?? '');
 $paymentMethod = $_POST['payment_method'] ?? '';
 $notes = trim($_POST['notes'] ?? '');
 
@@ -270,13 +273,24 @@ try {
     
 } catch (Exception $e) {
     // Rollback în caz de eroare
-    $db->rollback();
-    error_log("Checkout Error: " . $e->getMessage());
+    if (isset($db)) {
+        $db->rollback();
+    }
+    error_log("Checkout Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    error_log("Stack trace: " . $e->getTraceAsString());
     if (function_exists('isAdmin') && isAdmin()) {
         setMessage("A apărut o eroare la finalizarea comenzii: " . $e->getMessage(), "danger");
     } else {
         setMessage("A apărut o eroare. Încearcă din nou.", "danger");
     }
+    redirect('/pages/checkout.php');
+}
+
+} catch (Throwable $e) {
+    // Catch-all pentru orice eroare PHP
+    error_log("FATAL Checkout Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+    error_log("Stack trace: " . $e->getTraceAsString());
+    setMessage("A apărut o eroare critică. Te rugăm contactează suportul.", "danger");
     redirect('/pages/checkout.php');
 }
 ?>
