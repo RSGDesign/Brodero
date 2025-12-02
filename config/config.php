@@ -17,7 +17,7 @@ define('DB_NAME', 'u107933880_brodero');
 
 // Configurare site
 define('SITE_NAME', 'Brodero');
-define('SITE_URL', 'http://localhost/brodero');
+define('SITE_URL', 'https://brodero.online');
 define('SITE_EMAIL', 'contact@brodero.online');
 define('SITE_PHONE', '0741133343');
 

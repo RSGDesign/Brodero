@@ -1,8 +1,11 @@
 -- Baza de date pentru Brodero
 -- Design minimalist și eficient pentru magazin de broderie
+-- Database: u107933880_brodero
 
-CREATE DATABASE IF NOT EXISTS brodero_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE brodero_db;
+-- Nu mai este nevoie de CREATE DATABASE (baza de date există deja în cPanel)
+-- USE u107933880_brodero;
+
+-- Tabelele vor fi create direct în baza de date existentă
 
 -- Tabel utilizatori
 CREATE TABLE IF NOT EXISTS users (
