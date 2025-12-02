@@ -11,9 +11,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Configurare bază de date
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'brodero_db');
+define('DB_USER', 'u107933880_brodero');
+define('DB_PASS', 'Grasul1500!');
+define('DB_NAME', 'u107933880_brodero');
 
 // Configurare site
 define('SITE_NAME', 'Brodero');
