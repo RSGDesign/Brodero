@@ -132,8 +132,10 @@ try {
         ) VALUES (?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, NOW())
     ");
     
+    // Types: i (user_id), s (order_number), d (subtotal), d (discount), s (coupon_code), d (total_amount),
+    // s (payment_method), s (notes), s (customer_name), s (customer_email), s (customer_phone), s (shipping_address)
     $stmt->bind_param(
-        "issdsdssssss",
+        "isdds dssssss" ,
         $userIdForDb,
         $orderNumber,
         $subtotal,
@@ -149,7 +151,8 @@ try {
     );
     
     if (!$stmt->execute()) {
-        throw new Exception("Database insert failed: " . $stmt->error);
+        error_log("Orders INSERT failed: " . $stmt->error);
+        throw new Exception("Database insert failed");
     }
     $orderId = $db->insert_id;
     
