@@ -7,6 +7,7 @@
 $pageTitle = "Contul Meu";
 
 require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/functions_downloads.php';
 
 // Verificare autentificare
 if (!isLoggedIn()) {
@@ -32,18 +33,8 @@ $stmt->execute();
 $orders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
-// Obține fișiere descărcabile
-$downloadsQuery = "SELECT ud.*, p.name as product_name, p.file_path, o.order_number 
-                   FROM user_downloads ud 
-                   JOIN products p ON ud.product_id = p.id 
-                   JOIN orders o ON ud.order_id = o.id 
-                   WHERE ud.user_id = ? AND (ud.expires_at IS NULL OR ud.expires_at > NOW())
-                   ORDER BY ud.created_at DESC";
-$stmt = $db->prepare($downloadsQuery);
-$stmt->bind_param("i", $userId);
-$stmt->execute();
-$downloads = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+// Obține fișiere descărcabile folosind funcția helper
+$downloads = getUserDownloadableFiles($userId);
 
 // Procesare actualizare profil
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -217,23 +208,32 @@ $activeTab = $_GET['tab'] ?? 'comenzi';
                             <?php if (!empty($downloads)): ?>
                                 <div class="list-group">
                                     <?php foreach ($downloads as $download): ?>
+                                    <?php
+                                    $remaining = (int)$download['download_limit'] - (int)$download['download_count'];
+                                    $canDownload = ((int)$download['download_limit'] === 0) || ($remaining > 0);
+                                    ?>
                                     <div class="list-group-item">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div class="flex-grow-1">
                                                 <h6 class="mb-1 fw-bold">
-                                                    <?php echo htmlspecialchars($download['product_name']); ?>
+                                                    <?php echo htmlspecialchars($download['file_name']); ?>
                                                 </h6>
                                                 <small class="text-muted">
-                                                    Comandă: #<?php echo htmlspecialchars($download['order_number']); ?> | 
-                                                    Descărcări: <?php echo $download['download_count']; ?>/<?php echo $download['max_downloads']; ?>
-                                                    <?php if ($download['expires_at']): ?>
-                                                        | Expiră: <?php echo date('d.m.Y', strtotime($download['expires_at'])); ?>
+                                                    Produs: <?php echo htmlspecialchars($download['product_name']); ?> | 
+                                                    Comanda: #<?php echo $download['order_id']; ?> | 
+                                                    <?php if ((int)$download['download_limit'] > 0): ?>
+                                                        Descărcări: <?php echo $download['download_count']; ?>/<?php echo $download['download_limit']; ?>
+                                                    <?php else: ?>
+                                                        Descărcări: <?php echo $download['download_count']; ?> (nelimitat)
                                                     <?php endif; ?>
                                                 </small>
                                             </div>
                                             <div>
-                                                <?php if ($download['download_count'] < $download['max_downloads']): ?>
-                                                    <a href="<?php echo SITE_URL; ?>/pages/download.php?id=<?php echo $download['id']; ?>" 
+                                                <?php if ($canDownload): ?>
+                                                    <?php 
+                                                    $token = generateDownloadToken($download['file_id'], $download['order_id'], $userId);
+                                                    ?>
+                                                    <a href="<?php echo SITE_URL; ?>/pages/download.php?token=<?php echo urlencode($token); ?>&file=<?php echo $download['file_id']; ?>&order=<?php echo $download['order_id']; ?>" 
                                                        class="btn btn-sm btn-primary">
                                                         <i class="bi bi-download me-1"></i>Descarcă
                                                     </a>
@@ -249,7 +249,7 @@ $activeTab = $_GET['tab'] ?? 'comenzi';
                                 <div class="text-center py-5">
                                     <i class="bi bi-file-earmark-zip text-muted" style="font-size: 4rem;"></i>
                                     <h5 class="mt-3">Nu ai fișiere disponibile</h5>
-                                    <p class="text-muted">Fișierele descărcabile vor apărea aici după ce faci o comandă.</p>
+                                    <p class="text-muted">Fișierele descărcabile vor apărea aici după ce cumperi produse digitale și plata este confirmată.</p>
                                 </div>
                             <?php endif; ?>
                         </div>
