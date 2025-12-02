@@ -119,6 +119,9 @@ try {
     }, $cartItems);
     $productsJson = json_encode($products, JSON_UNESCAPED_UNICODE);
 
+    // Pentru comenzile guest, folosim user_id = 0 (trebuie să existe un user cu id=0 sau să facem câmpul nullable)
+    $userIdForDb = $userId ? $userId : 0;
+
     // Inserare în tabelul orders (fără products_json deocamdată, va fi adăugat când migrăm schema)
     $stmt = $db->prepare("
         INSERT INTO orders (
@@ -131,7 +134,7 @@ try {
     
     $stmt->bind_param(
         "issdsdssssss",
-        $userId,
+        $userIdForDb,
         $orderNumber,
         $subtotal,
         $discount,
@@ -145,7 +148,9 @@ try {
         $shippingAddress
     );
     
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        throw new Exception("Database insert failed: " . $stmt->error);
+    }
     $orderId = $db->insert_id;
     
     // Inserăm temporar în order_items pentru fiecare produs (până când migrăm schema)
