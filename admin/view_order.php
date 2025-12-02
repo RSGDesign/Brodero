@@ -1,17 +1,23 @@
 <?php
 /**
  * Vizualizare Detalii Comandă
- * Afișare completă informații comandă, produse, client, status
+ * Afișare completă informații comandă, client, status
  */
 
 $pageTitle = "Detalii Comandă";
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Verificare acces admin
+if (!function_exists('isAdmin')) {
+    function isAdmin() {
+        return isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'admin';
+    }
+}
 if (!isAdmin()) {
-    setMessage("Nu ai acces la această pagină.", "danger");
-    redirect('/');
+    header('Location: ' . SITE_URL . '/index.php');
+    exit;
 }
 
 $db = getDB();
@@ -24,7 +30,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $orderId = (int)$_GET['id'];
 
-// Procesare actualizare status
+// Procesare actualizare status ÎNAINTE de header
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $newStatus = cleanInput($_POST['status']);
     $paymentStatus = cleanInput($_POST['payment_status']);
@@ -58,6 +64,9 @@ if ($result->num_rows === 0) {
 
 $order = $result->fetch_assoc();
 $stmt->close();
+
+// Include header DUPĂ toate verificările
+require_once __DIR__ . '/../includes/header.php';
 
 // Obține produsele din comandă
 $orderItems = $db->query("SELECT oi.*, p.name as product_name, p.image as product_image 

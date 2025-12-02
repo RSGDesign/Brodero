@@ -62,17 +62,6 @@ require_once __DIR__ . '/../includes/header.php';
                     
                     <div class="card bg-light mb-4">
                         <div class="card-body">
-                    <?php if (isset($order['total_amount']) && (float)$order['total_amount'] <= 0): ?>
-                        <?php
-                        $stmt = $db->prepare("UPDATE orders SET payment_status = 'paid', status = 'completed' WHERE order_number = ?");
-                        if ($stmt) {
-                            $stmt->bind_param("s", $orderNumber);
-                            $stmt->execute();
-                        }
-                        setMessage("Comanda cu total 0 a fost finalizată automat.", "success");
-                        redirect('/pages/payment_success.php?order=' . urlencode($orderNumber));
-                        ?>
-                    <?php endif; ?>
                             <table class="table table-borderless mb-0">
                                 <tr>
                                     <td class="fw-bold" style="width: 150px;">Beneficiar:</td>
@@ -91,15 +80,15 @@ require_once __DIR__ . '/../includes/header.php';
                                     <td class="fw-bold">Banca:</td>
                                     <td>Banca Transilvania</td>
                                 </tr>
-                            <td><?php echo htmlspecialchars($order['customer_name'] ?? '—'); ?></td>
+                                <tr>
                                     <td class="fw-bold">Sumă:</td>
                                     <td class="text-danger fs-5">
                                         <strong><?php echo number_format($order['total_amount'], 2); ?> LEI</strong>
-                            <td><?php echo htmlspecialchars($order['customer_email'] ?? '—'); ?></td>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">Referință:</td>
-                            <td><?php echo htmlspecialchars($order['customer_phone'] ?? '—'); ?></td>
+                                    <td class="text-primary">
                                         <strong>Comanda #<?php echo htmlspecialchars($orderNumber); ?></strong>
                                         <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyReference()">
                                             <i class="bi bi-clipboard"></i> Copiază
@@ -108,7 +97,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </tr>
                             </table>
                         </div>
-                            <td>-<?php echo number_format((float)($order['discount_amount'] ?? 0), 2); ?> LEI</td>
+                    </div>
 
                     <div class="alert alert-warning">
                         <h6 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Important!</h6>
@@ -125,19 +114,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <td>Număr Comandă:</td>
                             <td class="fw-bold"><?php echo htmlspecialchars($orderNumber); ?></td>
                         </tr>
-                        <tr>
-                            <td>Client:</td>
-                            <td><?php echo htmlspecialchars($order['customer_name']); ?></td>
-                        </tr>
-                        <tr>
-                            <td>Email:</td>
-                            <td><?php echo htmlspecialchars($order['customer_email']); ?></td>
-                        </tr>
-                        <tr>
-                            <td>Telefon:</td>
-                            <td><?php echo htmlspecialchars($order['customer_phone']); ?></td>
-                        </tr>
-                        <?php if ($order['subtotal'] != $order['total_amount']): ?>
+                        <?php if (isset($order['subtotal']) && isset($order['discount_amount']) && $order['subtotal'] != $order['total_amount']): ?>
                         <tr>
                             <td>Subtotal:</td>
                             <td><?php echo number_format($order['subtotal'], 2); ?> LEI</td>
