@@ -144,7 +144,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <i class="bi bi-house-fill me-2"></i>Înapoi la Magazin
                         </a>
                         <?php if (isLoggedIn()): ?>
-                        <a href="/pages/my_orders.php" class="btn btn-outline-secondary">
+                        <a href="/pages/cont.php?tab=comenzi" class="btn btn-outline-secondary">
                             <i class="bi bi-list-ul me-2"></i>Vezi Comenzile Mele
                         </a>
                         <?php endif; ?>
