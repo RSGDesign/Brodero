@@ -4,10 +4,16 @@
  * Procesare comandă - validare, creare ordine, gestionare plăți
  */
 
+// Enable error logging
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+error_log("=== CHECKOUT PROCESS START ===");
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    error_log("Checkout: Not POST method");
     redirect('/pages/cart.php');
 }
 
@@ -25,18 +31,25 @@ $shippingAddress = trim($_POST['shipping_address'] ?? '');
 $paymentMethod = $_POST['payment_method'] ?? '';
 $notes = trim($_POST['notes'] ?? '');
 
+error_log("Checkout POST data - Name: $customerName, Email: $customerEmail, Payment: $paymentMethod");
+
 if (empty($customerName) || empty($customerEmail) || empty($customerPhone) || empty($shippingAddress)) {
+    error_log("Checkout: Missing required fields");
     setMessage("Completează toate câmpurile obligatorii.", "danger");
     redirect('/pages/checkout.php');
 }
 
 if (!filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+    error_log("Checkout: Invalid email - $customerEmail");
     setMessage("Adresa de email este invalidă.", "danger");
     redirect('/pages/checkout.php');
 }
 
-if (!preg_match('/^[0-9]{10}$/', $customerPhone)) {
-    setMessage("Numărul de telefon trebuie să conțină 10 cifre.", "danger");
+// Validare telefon mai flexibilă (acceptă și spații/caractere)
+$cleanPhone = preg_replace('/[^0-9]/', '', $customerPhone);
+if (strlen($cleanPhone) < 10) {
+    error_log("Checkout: Invalid phone - $customerPhone");
+    setMessage("Numărul de telefon trebuie să conțină cel puțin 10 cifre.", "danger");
     redirect('/pages/checkout.php');
 }
 
@@ -47,6 +60,11 @@ if (!in_array($paymentMethod, ['bank_transfer', 'stripe'])) {
 
 $db = getDB();
 $userId = isLoggedIn() ? $_SESSION['user_id'] : null;
+
+// Asigură că session_id există pentru guest users
+if (!isset($_SESSION['session_id'])) {
+    $_SESSION['session_id'] = session_id();
+}
 $sessionId = $_SESSION['session_id'];
 
 // Obține produse din coș
@@ -71,8 +89,11 @@ if ($userId) {
 $stmt->execute();
 $cartItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
+error_log("Checkout: Found " . count($cartItems) . " cart items");
+
 // Verificare coș gol
 if (empty($cartItems)) {
+    error_log("Checkout: Cart is empty");
     setMessage("Coșul tău este gol.", "warning");
     redirect('/pages/cart.php');
 }
@@ -103,6 +124,8 @@ $totalAmount = $subtotal - $discount;
 
 // Generare order number unic
 $orderNumber = 'BRD' . date('Ymd') . strtoupper(substr(uniqid(), -6));
+
+error_log("Checkout: Starting transaction for order $orderNumber, Total: $totalAmount");
 
 // Începe tranzacție
 $db->begin_transaction();
