@@ -201,8 +201,19 @@ try {
         redirect('/pages/payment_instructions.php?order=' . $orderNumber);
         
     } elseif ($paymentMethod === 'stripe') {
+        // Verificare dacă Stripe SDK e instalat
+        if (!file_exists(__DIR__ . '/../vendor/autoload.php')) {
+            setMessage("Plata cu cardul nu este disponibilă momentan. Vă rugăm alegeți Transfer Bancar.", "warning");
+            redirect('/pages/checkout.php');
+        }
+        
         // Integrare Stripe
         require_once __DIR__ . '/../vendor/autoload.php';
+        
+        if (!defined('STRIPE_SECRET_KEY') || empty(STRIPE_SECRET_KEY)) {
+            setMessage("Plata cu cardul nu este configurată. Vă rugăm alegeți Transfer Bancar.", "warning");
+            redirect('/pages/checkout.php');
+        }
         
         \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
         

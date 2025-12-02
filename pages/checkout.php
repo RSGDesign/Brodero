@@ -153,6 +153,10 @@ if ($userId) {
                                     <small class="text-muted d-block">Vei primi instrucțiunile de plată pe email</small>
                                 </label>
                             </div>
+                            <?php 
+                            // Afișează opțiunea Stripe doar dacă SDK-ul e instalat și configurat
+                            if (file_exists(__DIR__ . '/../vendor/autoload.php') && defined('STRIPE_SECRET_KEY') && !empty(STRIPE_SECRET_KEY)): 
+                            ?>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="payment_method" id="payment_card" value="stripe">
                                 <label class="form-check-label" for="payment_card">
@@ -160,6 +164,7 @@ if ($userId) {
                                     <small class="text-muted d-block">Plată securizată prin Stripe</small>
                                 </label>
                             </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-3">
