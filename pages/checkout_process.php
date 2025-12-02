@@ -250,7 +250,11 @@ try {
     // Rollback în caz de eroare
     $db->rollback();
     error_log("Checkout Error: " . $e->getMessage());
-    setMessage("A apărut o eroare. Încearcă din nou.", "danger");
+    if (function_exists('isAdmin') && isAdmin()) {
+        setMessage("A apărut o eroare la finalizarea comenzii: " . $e->getMessage(), "danger");
+    } else {
+        setMessage("A apărut o eroare. Încearcă din nou.", "danger");
+    }
     redirect('/pages/checkout.php');
 }
 ?>
