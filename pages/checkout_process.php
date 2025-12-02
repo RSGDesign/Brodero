@@ -119,29 +119,29 @@ try {
     }, $cartItems);
     $productsJson = json_encode($products, JSON_UNESCAPED_UNICODE);
 
-    // Pentru comenzile guest, folosim user_id = 0 (trebuie să existe un user cu id=0 sau să facem câmpul nullable)
-    $userIdForDb = $userId ? $userId : 0;
+    // Pentru comenzile guest, user_id trebuie să fie NULL (nu 0)
+    $userIdForDb = $userId ? $userId : null;
 
-            // Inserare în tabelul orders folosind coloanele de bază (evităm subtotal/discount/coupon dacă schema variază)
-            $stmt = $db->prepare("
-                INSERT INTO orders (
-                    user_id, order_number, total_amount,
-                    status, payment_status, payment_method, notes,
-                    created_at
-                ) VALUES (?, ?, ?, 'pending', 'unpaid', ?, ?, NOW())
-            ");
-            
-            // Param types: i,s,d,s,s (5 params)
-            $stmt->bind_param(
-                "isdss",
-                $userIdForDb,
-                $orderNumber,
-                $totalAmount,
-                $paymentMethod,
-                $notes
-            );
-            
-            
+    // Inserare în tabelul orders
+    if ($userIdForDb) {
+        $stmt = $db->prepare("
+            INSERT INTO orders (
+                user_id, order_number, total_amount,
+                status, payment_status, payment_method, notes,
+                created_at
+            ) VALUES (?, ?, ?, 'pending', 'unpaid', ?, ?, NOW())
+        ");
+        $stmt->bind_param("isdss", $userIdForDb, $orderNumber, $totalAmount, $paymentMethod, $notes);
+    } else {
+        $stmt = $db->prepare("
+            INSERT INTO orders (
+                order_number, total_amount,
+                status, payment_status, payment_method, notes,
+                created_at
+            ) VALUES (?, ?, 'pending', 'unpaid', ?, ?, NOW())
+        ");
+        $stmt->bind_param("sdss", $orderNumber, $totalAmount, $paymentMethod, $notes);
+    }
     
     if (!$stmt->execute()) {
         error_log("Orders INSERT failed: " . $stmt->error);
