@@ -251,7 +251,7 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                     <button type="button" class="btn btn-primary btn-lg" onclick="addToCart(<?php echo $product['id']; ?>)">
                         <i class="bi bi-cart-plus me-2"></i>Adaugă în Coș
                     </button>
-                    <button type="button" class="btn btn-outline-primary btn-lg">
+                    <button type="button" class="btn btn-outline-primary btn-lg" onclick="addToFavorites(<?php echo $product['id']; ?>)">
                         <i class="bi bi-heart me-2"></i>Adaugă la Favorite
                     </button>
                 </div>
@@ -475,7 +475,7 @@ function addToCart(productId) {
     btn.disabled = true;
     btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Se adaugă...';
     
-    fetch('/pages/add_to_cart.php', {
+    fetch('<?php echo SITE_URL; ?>/pages/add_to_cart.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -516,6 +516,29 @@ function addToCart(productId) {
         showNotification('Eroare la adăugare în coș', 'danger');
         console.error('Error:', error);
     });
+}
+
+// Adăugare la favorite
+function addToFavorites(productId) {
+    const btn = event.target.closest('button');
+    const icon = btn.querySelector('i');
+    
+    // Check if user is logged in
+    <?php if (!isLoggedIn()): ?>
+    showNotification('Trebuie să fii autentificat pentru a adăuga la favorite', 'warning');
+    setTimeout(() => {
+        window.location.href = '<?php echo SITE_URL; ?>/pages/login.php';
+    }, 1500);
+    return;
+    <?php endif; ?>
+    
+    showNotification('Funcționalitatea de favorite va fi disponibilă în curând!', 'info');
+    
+    // Temporary visual feedback
+    icon.classList.toggle('bi-heart');
+    icon.classList.toggle('bi-heart-fill');
+    btn.classList.toggle('btn-outline-primary');
+    btn.classList.toggle('btn-primary');
 }
 </script>
 
