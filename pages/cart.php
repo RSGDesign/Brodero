@@ -47,7 +47,13 @@ foreach ($cartItems as $item) {
 
 // Verificare cupon aplicat
 $discount = 0;
-$couponCode = $_SESSION['applied_coupon'] ?? null;
+$couponCode = null;
+
+if (isset($_SESSION['applied_coupon'])) {
+    // applied_coupon poate fi string sau array
+    $appliedCoupon = $_SESSION['applied_coupon'];
+    $couponCode = is_array($appliedCoupon) ? ($appliedCoupon['code'] ?? null) : $appliedCoupon;
+}
 
 if ($couponCode) {
     $couponStmt = $db->prepare("SELECT * FROM coupons WHERE code = ? AND is_active = 1");
