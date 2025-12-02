@@ -110,29 +110,38 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
             <div class="col-lg-6">
                 <div class="sticky-top" style="top: 100px;">
                     <!-- Main Image -->
-                    <div class="card border-0 shadow-sm mb-3">
+                    <div class="card border-0 shadow-sm mb-3 position-relative">
                         <img src="<?php echo !empty($allImages) ? SITE_URL . '/uploads/' . $allImages[0] : 'https://via.placeholder.com/600x450?text=' . urlencode($product['name']); ?>" 
                              class="card-img-top rounded" 
                              alt="<?php echo htmlspecialchars($product['name']); ?>"
                              id="mainProductImage"
-                             style="height: 450px; object-fit: cover;">
+                             style="height: 450px; object-fit: contain; cursor: zoom-in; background-color: #f8f9fa;"
+                             onclick="openLightbox(0)">
                         
                         <?php if ($discount > 0): ?>
                             <span class="position-absolute top-0 end-0 m-3 badge bg-danger" style="font-size: 1rem; padding: 0.5rem 1rem;">
                                 -<?php echo $discount; ?>%
                             </span>
                         <?php endif; ?>
+                        
+                        <!-- Zoom Icon -->
+                        <div class="position-absolute bottom-0 end-0 m-3">
+                            <span class="badge bg-dark bg-opacity-75">
+                                <i class="bi bi-zoom-in"></i> Click pentru mărire
+                            </span>
+                        </div>
                     </div>
                     
                     <!-- Gallery Thumbnails -->
                     <?php if (count($allImages) > 1): ?>
-                        <div class="row g-2">
+                        <div class="d-flex gap-2 overflow-auto pb-2" style="max-width: 100%;">
                             <?php foreach ($allImages as $index => $img): ?>
-                                <div class="col-3">
+                                <div class="flex-shrink-0">
                                     <img src="<?php echo SITE_URL . '/uploads/' . $img; ?>" 
-                                         class="img-fluid rounded shadow-sm thumbnail-image <?php echo $index === 0 ? 'active-thumbnail' : ''; ?>" 
-                                         style="cursor: pointer; height: 100px; object-fit: cover; width: 100%; border: 3px solid transparent; transition: border 0.3s;"
-                                         onclick="changeMainImage('<?php echo SITE_URL . '/uploads/' . $img; ?>', this)"
+                                         class="rounded shadow-sm thumbnail-image <?php echo $index === 0 ? 'active-thumbnail' : ''; ?>" 
+                                         style="cursor: pointer; height: 100px; width: 100px; object-fit: cover; border: 3px solid transparent;"
+                                         onclick="changeMainImage('<?php echo SITE_URL . '/uploads/' . $img; ?>', this, <?php echo $index; ?>)"
+                                         data-index="<?php echo $index; ?>"
                                          alt="Thumbnail <?php echo $index + 1; ?>">
                                 </div>
                             <?php endforeach; ?>
@@ -321,9 +330,54 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
 </section>
 <?php endif; ?>
 
+<!-- Lightbox Modal pentru vizualizare imagini la rezoluție completă -->
+<div class="modal fade" id="imageLightbox" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white">
+                    <i class="bi bi-image me-2"></i><?php echo htmlspecialchars($product['name']); ?>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center position-relative" style="min-height: 500px;">
+                <!-- Imagine mare -->
+                <img id="lightboxImage" src="" alt="Lightbox Image" class="img-fluid" style="max-height: 70vh; object-fit: contain;">
+                
+                <!-- Navigare stânga/dreapta -->
+                <button class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-3" 
+                        onclick="navigateLightbox(-1)" 
+                        id="prevBtn"
+                        style="opacity: 0.8; z-index: 10;">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="btn btn-light position-absolute top-50 end-0 translate-middle-y me-3" 
+                        onclick="navigateLightbox(1)" 
+                        id="nextBtn"
+                        style="opacity: 0.8; z-index: 10;">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                
+                <!-- Counter -->
+                <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3">
+                    <span class="badge bg-dark bg-opacity-75 text-white" id="imageCounter">1 / 1</span>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <!-- Thumbnail preview în modal -->
+                <div class="d-flex gap-2 overflow-auto" id="lightboxThumbnails" style="max-width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Array cu toate imaginile pentru lightbox
+const allProductImages = <?php echo json_encode(array_map(function($img) { return SITE_URL . '/uploads/' . $img; }, $allImages)); ?>;
+let currentLightboxIndex = 0;
+
 // Schimbare imagine principală
-function changeMainImage(imageUrl, clickedThumbnail) {
+function changeMainImage(imageUrl, clickedThumbnail, index) {
     // Actualizează imaginea principală
     document.getElementById('mainProductImage').src = imageUrl;
     
@@ -338,7 +392,73 @@ function changeMainImage(imageUrl, clickedThumbnail) {
         clickedThumbnail.style.border = '3px solid #6366f1';
         clickedThumbnail.classList.add('active-thumbnail');
     }
+    
+    // Update current index pentru lightbox
+    currentLightboxIndex = index;
 }
+
+// Deschide lightbox
+function openLightbox(index) {
+    currentLightboxIndex = index;
+    updateLightboxImage();
+    
+    // Generează thumbnails pentru modal
+    const thumbnailsContainer = document.getElementById('lightboxThumbnails');
+    thumbnailsContainer.innerHTML = '';
+    
+    allProductImages.forEach((img, idx) => {
+        const thumb = document.createElement('img');
+        thumb.src = img;
+        thumb.className = 'rounded shadow-sm';
+        thumb.style.cssText = 'width: 60px; height: 60px; object-fit: cover; cursor: pointer; border: 2px solid transparent;';
+        thumb.onclick = () => {
+            currentLightboxIndex = idx;
+            updateLightboxImage();
+        };
+        if (idx === index) {
+            thumb.style.border = '2px solid #6366f1';
+        }
+        thumbnailsContainer.appendChild(thumb);
+    });
+    
+    // Deschide modal
+    const modal = new bootstrap.Modal(document.getElementById('imageLightbox'));
+    modal.show();
+}
+
+// Update imagine în lightbox
+function updateLightboxImage() {
+    document.getElementById('lightboxImage').src = allProductImages[currentLightboxIndex];
+    document.getElementById('imageCounter').textContent = `${currentLightboxIndex + 1} / ${allProductImages.length}`;
+    
+    // Update active thumbnail în modal
+    const modalThumbs = document.querySelectorAll('#lightboxThumbnails img');
+    modalThumbs.forEach((thumb, idx) => {
+        thumb.style.border = idx === currentLightboxIndex ? '2px solid #6366f1' : '2px solid transparent';
+    });
+    
+    // Ascunde/arată butoane navigare
+    document.getElementById('prevBtn').style.display = currentLightboxIndex === 0 ? 'none' : 'block';
+    document.getElementById('nextBtn').style.display = currentLightboxIndex === allProductImages.length - 1 ? 'none' : 'block';
+}
+
+// Navigare în lightbox
+function navigateLightbox(direction) {
+    currentLightboxIndex += direction;
+    if (currentLightboxIndex < 0) currentLightboxIndex = 0;
+    if (currentLightboxIndex >= allProductImages.length) currentLightboxIndex = allProductImages.length - 1;
+    updateLightboxImage();
+}
+
+// Navigare cu taste (stânga/dreapta)
+document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('imageLightbox');
+    if (modal.classList.contains('show')) {
+        if (e.key === 'ArrowLeft') navigateLightbox(-1);
+        if (e.key === 'ArrowRight') navigateLightbox(1);
+        if (e.key === 'Escape') bootstrap.Modal.getInstance(modal).hide();
+    }
+});
 
 // Setează border inițial pentru primul thumbnail
 document.addEventListener('DOMContentLoaded', function() {
@@ -356,17 +476,49 @@ function addToCart(productId) {
 </script>
 
 <style>
+.thumbnail-image {
+    transition: all 0.3s ease;
+}
+
 .thumbnail-image:hover {
     opacity: 0.8;
     transform: scale(1.05);
 }
 
-.thumbnail-image {
-    transition: all 0.3s ease;
-}
-
 .active-thumbnail {
     border: 3px solid #6366f1 !important;
+}
+
+#mainProductImage:hover {
+    opacity: 0.95;
+}
+
+/* Lightbox styles */
+#imageLightbox .modal-content {
+    background-color: rgba(0, 0, 0, 0.95) !important;
+}
+
+#imageLightbox .btn-light:hover {
+    opacity: 1 !important;
+}
+
+/* Scrollbar pentru thumbnails */
+.overflow-auto::-webkit-scrollbar {
+    height: 8px;
+}
+
+.overflow-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.overflow-auto::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
 </style>
 
