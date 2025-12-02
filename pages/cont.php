@@ -210,7 +210,12 @@ $activeTab = $_GET['tab'] ?? 'comenzi';
                                     <?php foreach ($downloads as $download): ?>
                                     <?php
                                     $remaining = (int)$download['download_limit'] - (int)$download['download_count'];
-                                    $canDownload = ((int)$download['download_limit'] === 0) || ($remaining > 0);
+                                    $limitReached = ((int)$download['download_limit'] > 0) && ($remaining <= 0);
+                                    
+                                    $isPaid = ($download['payment_status'] === 'paid');
+                                    $isEnabled = ($download['downloads_enabled'] == 1);
+                                    
+                                    $canDownload = $isPaid && $isEnabled && !$limitReached;
                                     ?>
                                     <div class="list-group-item">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -238,7 +243,13 @@ $activeTab = $_GET['tab'] ?? 'comenzi';
                                                         <i class="bi bi-download me-1"></i>Descarcă
                                                     </a>
                                                 <?php else: ?>
-                                                    <span class="badge bg-secondary">Limită atinsă</span>
+                                                    <?php if (!$isPaid): ?>
+                                                        <span class="badge bg-warning text-dark">Plată în așteptare</span>
+                                                    <?php elseif (!$isEnabled): ?>
+                                                        <span class="badge bg-info text-dark">În procesare</span>
+                                                    <?php elseif ($limitReached): ?>
+                                                        <span class="badge bg-secondary">Limită atinsă</span>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -249,7 +260,7 @@ $activeTab = $_GET['tab'] ?? 'comenzi';
                                 <div class="text-center py-5">
                                     <i class="bi bi-file-earmark-zip text-muted" style="font-size: 4rem;"></i>
                                     <h5 class="mt-3">Nu ai fișiere disponibile</h5>
-                                    <p class="text-muted">Fișierele descărcabile vor apărea aici după ce cumperi produse digitale și plata este confirmată.</p>
+                                    <p class="text-muted">Fișierele descărcabile vor apărea aici după ce cumperi produse digitale.</p>
                                 </div>
                             <?php endif; ?>
                         </div>

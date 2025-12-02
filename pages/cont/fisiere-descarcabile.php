@@ -20,6 +20,13 @@ require_once __DIR__ . '/../../includes/header.php';
     <?php else: ?>
         <div class="row g-3">
             <?php foreach ($files as $f): ?>
+            <?php
+                $remaining = (int)$f['download_limit'] - (int)$f['download_count'];
+                $limitReached = ((int)$f['download_limit'] > 0) && ($remaining <= 0);
+                $isPaid = ($f['payment_status'] === 'paid');
+                $isEnabled = ($f['downloads_enabled'] == 1);
+                $canDownload = $isPaid && $isEnabled && !$limitReached;
+            ?>
             <div class="col-md-6">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
@@ -32,11 +39,21 @@ require_once __DIR__ . '/../../includes/header.php';
                             <small class="d-block">Descărcări nelimitate</small>
                         <?php endif; ?>
                     </div>
-                    <div class="card-footer bg-white border-0 d-flex justify-content-between">
-                        <?php $token = generateDownloadToken($f['file_id'], $f['order_id'], $userId); ?>
-                        <a class="btn btn-primary btn-sm" href="<?php echo SITE_URL; ?>/pages/download.php?file=<?php echo (int)$f['file_id']; ?>&order=<?php echo (int)$f['order_id']; ?>&token=<?php echo urlencode($token); ?>">
-                            <i class="bi bi-arrow-down-circle me-1"></i>Descarcă
-                        </a>
+                    <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
+                        <?php if ($canDownload): ?>
+                            <?php $token = generateDownloadToken($f['file_id'], $f['order_id'], $userId); ?>
+                            <a class="btn btn-primary btn-sm" href="<?php echo SITE_URL; ?>/pages/download.php?file=<?php echo (int)$f['file_id']; ?>&order=<?php echo (int)$f['order_id']; ?>&token=<?php echo urlencode($token); ?>">
+                                <i class="bi bi-arrow-down-circle me-1"></i>Descarcă
+                            </a>
+                        <?php else: ?>
+                            <?php if (!$isPaid): ?>
+                                <span class="badge bg-warning text-dark">Plată în așteptare</span>
+                            <?php elseif (!$isEnabled): ?>
+                                <span class="badge bg-info text-dark">În procesare</span>
+                            <?php elseif ($limitReached): ?>
+                                <span class="badge bg-secondary">Limită atinsă</span>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

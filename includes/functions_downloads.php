@@ -12,12 +12,13 @@ function getProductFiles($productId) {
 
 function getUserDownloadableFiles($userId) {
     $db = getDB();
-    $stmt = $db->prepare("SELECT oi.order_id, oi.product_id, oi.product_name,
+    $stmt = $db->prepare("SELECT oi.order_id, oi.product_id, oi.product_name, oi.downloads_enabled, o.payment_status,
                                  pf.id as file_id, pf.file_name, pf.file_path, pf.file_size, pf.download_limit, pf.download_count
                           FROM orders o
                           JOIN order_items oi ON o.id = oi.order_id
                           JOIN product_files pf ON pf.product_id = oi.product_id
-                          WHERE o.user_id = ? AND o.payment_status = 'paid' AND pf.status = 'active' AND (oi.downloads_enabled = 1)");
+                          WHERE o.user_id = ? AND pf.status = 'active'
+                          ORDER BY o.created_at DESC");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
