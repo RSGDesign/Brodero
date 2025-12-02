@@ -5,7 +5,6 @@
  */
 
 $pageTitle = "Instrucțiuni Plată";
-require_once __DIR__ . '/../includes/header.php';
 
 $orderNumber = $_GET['order'] ?? '';
 
@@ -29,6 +28,19 @@ if (!$order) {
     redirect('/');
 }
 
+// Pentru comenzi cu total 0: finalizează automat și redirect înainte de orice output
+if (isset($order['total_amount']) && (float)$order['total_amount'] <= 0) {
+    $stmt = $db->prepare("UPDATE orders SET payment_status = 'paid', status = 'completed' WHERE order_number = ?");
+    if ($stmt) {
+        $stmt->bind_param("s", $orderNumber);
+        $stmt->execute();
+    }
+    setMessage("Comanda cu total 0 a fost finalizată automat.", "success");
+    redirect('/pages/payment_success.php?order=' . urlencode($orderNumber));
+}
+
+// Abia acum includem header-ul, după ce validările/redirect-urile au avut loc
+require_once __DIR__ . '/../includes/header.php';
 // Trimite email cu instrucțiuni (opțional - necesită configurare SMTP)
 // sendBankTransferEmail($order['customer_email'], $orderNumber, $order['total_amount']);
 ?>
