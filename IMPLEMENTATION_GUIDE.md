@@ -176,7 +176,7 @@ composer require stripe/stripe-php
 **În checkout_process.php când metoda == 'stripe':**
 ```php
 require_once 'vendor/autoload.php';
-\Stripe\Stripe::setApiKey('sk_test_YOUR_SECRET_KEY');
+\Stripe\Stripe::setApiKey('sk_test_YOUsk_test_51STRYeQ1U061mKnqqVKPkDaQ4HS5RsmkYB2sDgk9N6WnMM1ntWdz53VGVxSbQjJkWfxh2VGeCyyMVgy11ogE7hKO00fw6RZ3fcR_SECRET_KEY');
 
 $session = \Stripe\Checkout\Session::create([
     'payment_method_types' => ['card'],

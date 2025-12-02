@@ -1,31 +1,34 @@
 <?php
 /**
  * Checkout Process
- * Procesare comenzi - validare, creare ordine, gestionare plăți
+ * Procesare comandă - validare, creare ordine, gestionare plăți
  */
 
 require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/database.php';
+    require_once __DIR__ . '/../config/database.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('/pages/cart.php');
-}
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        redirect('/pages/cart.php');
+    }
 
-// Verificare CSRF token
-if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    setMessage("Token invalid. Încearcă din nou.", "danger");
-    redirect('/pages/checkout.php');
-}
+    // Verificare CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        setMessage("Token invalid. Încearcă din nou.", "danger");
+        redirect('/pages/checkout.php');
+    }
 
-// Validare date POST
-$customerName = trim($_POST['customer_name'] ?? '');
-$customerEmail = trim($_POST['customer_email'] ?? '');
-$customerPhone = trim($_POST['customer_phone'] ?? '');
-$shippingAddress = trim($_POST['shipping_address'] ?? '');
+    // Validare date POST
+    $customerName = trim($_POST['customer_name'] ?? '');
+    $customerEmail = trim($_POST['customer_email'] ?? '');
+    $customerPhone = trim($_POST['customer_phone'] ?? '');
+    $shippingAddress = trim($_POST['shipping_address'] ?? '');
 $paymentMethod = $_POST['payment_method'] ?? '';
 $notes = trim($_POST['notes'] ?? '');
 
+error_log("Checkout POST data - Name: $customerName, Email: $customerEmail, Payment: $paymentMethod");
+
 if (empty($customerName) || empty($customerEmail) || empty($customerPhone) || empty($shippingAddress)) {
+    error_log("Checkout: Missing required fields");
     setMessage("Completează toate câmpurile obligatorii.", "danger");
     redirect('/pages/checkout.php');
 }
@@ -35,7 +38,7 @@ if (!filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
     redirect('/pages/checkout.php');
 }
 
-// Validare telefon mai flexibilă (acceptă și spații/caractere)
+// Validare telefon mai flexibil?? (accept?? ??i spa??ii/caractere)
 $cleanPhone = preg_replace('/[^0-9]/', '', $customerPhone);
 if (strlen($cleanPhone) < 10) {
     setMessage("Numărul de telefon trebuie să conțină cel puțin 10 cifre.", "danger");
@@ -78,7 +81,7 @@ if ($userId) {
 $stmt->execute();
 $cartItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Verificare coș gol
+// Verificare co?? goll
 if (empty($cartItems)) {
     setMessage("Coșul tău este gol.", "warning");
     redirect('/pages/cart.php');
@@ -88,7 +91,7 @@ if (empty($cartItems)) {
 $subtotal = 0;
 foreach ($cartItems as $item) {
     $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
-    $subtotal += $price; // cantitate implicit 1
+    $subtotal += $price; // cantitate implicită 1
 }
 
 // Calculare discount dacă există cupon
@@ -111,7 +114,7 @@ $totalAmount = $subtotal - $discount;
 // Generare order number unic
 $orderNumber = 'BRD' . date('Ymd') . strtoupper(substr(uniqid(), -6));
 
-// Începe tranzacție
+// ??ncepe tranzac??ie
 $db->begin_transaction();
 
 try {
@@ -240,17 +243,22 @@ try {
             exit;
             
         } catch (\Stripe\Exception\ApiErrorException $e) {
-            setMessage("Eroare la procesarea plății. Încearcă din nou.", "danger");
+            setMessage("Eroare la procesarea pl????ii. ??ncearc?? din nou.", "danger");
             redirect('/pages/checkout.php');
         }
     }
     
 } catch (Exception $e) {
-    // Rollback în caz de eroare
+    // Rollback ??n caz de eroare
     if (isset($db)) {
         $db->rollback();
     }
     setMessage("Eroare la procesarea comenzii: " . $e->getMessage(), "danger");
+    redirect('/pages/checkout.php');
+}
+
+} catch (Throwable $e) {
+    setMessage("Eroare de sistem. V?? rug??m contacta??i administratorul.", "danger");
     redirect('/pages/checkout.php');
 }
 ?>
