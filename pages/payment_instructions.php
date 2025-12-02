@@ -23,6 +23,7 @@ $stmt->bind_param("s", $orderNumber);
 $stmt->execute();
 $order = $stmt->get_result()->fetch_assoc();
 
+// Dacă totalul este 0, marchează comanda ca plătită și finalizată automat
 if (!$order) {
     setMessage("Comandă nu a fost găsită.", "danger");
     redirect('/');
@@ -49,6 +50,17 @@ if (!$order) {
                     
                     <div class="card bg-light mb-4">
                         <div class="card-body">
+                    <?php if (isset($order['total_amount']) && (float)$order['total_amount'] <= 0): ?>
+                        <?php
+                        $stmt = $db->prepare("UPDATE orders SET payment_status = 'paid', status = 'completed' WHERE order_number = ?");
+                        if ($stmt) {
+                            $stmt->bind_param("s", $orderNumber);
+                            $stmt->execute();
+                        }
+                        setMessage("Comanda cu total 0 a fost finalizată automat.", "success");
+                        redirect('/pages/payment_success.php?order=' . urlencode($orderNumber));
+                        ?>
+                    <?php endif; ?>
                             <table class="table table-borderless mb-0">
                                 <tr>
                                     <td class="fw-bold" style="width: 150px;">Beneficiar:</td>
@@ -67,15 +79,15 @@ if (!$order) {
                                     <td class="fw-bold">Banca:</td>
                                     <td>Banca Transilvania</td>
                                 </tr>
-                                <tr>
+                            <td><?php echo htmlspecialchars($order['customer_name'] ?? '—'); ?></td>
                                     <td class="fw-bold">Sumă:</td>
                                     <td class="text-danger fs-5">
                                         <strong><?php echo number_format($order['total_amount'], 2); ?> LEI</strong>
-                                    </td>
+                            <td><?php echo htmlspecialchars($order['customer_email'] ?? '—'); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">Referință:</td>
-                                    <td>
+                            <td><?php echo htmlspecialchars($order['customer_phone'] ?? '—'); ?></td>
                                         <strong>Comanda #<?php echo htmlspecialchars($orderNumber); ?></strong>
                                         <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyReference()">
                                             <i class="bi bi-clipboard"></i> Copiază
@@ -84,7 +96,7 @@ if (!$order) {
                                 </tr>
                             </table>
                         </div>
-                    </div>
+                            <td>-<?php echo number_format((float)($order['discount_amount'] ?? 0), 2); ?> LEI</td>
 
                     <div class="alert alert-warning">
                         <h6 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Important!</h6>
