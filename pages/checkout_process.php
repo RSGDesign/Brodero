@@ -122,34 +122,29 @@ try {
     // Pentru comenzile guest, folosim user_id = 0 (trebuie să existe un user cu id=0 sau să facem câmpul nullable)
     $userIdForDb = $userId ? $userId : 0;
 
-    // Inserare în tabelul orders (fără products_json deocamdată, va fi adăugat când migrăm schema)
-    $stmt = $db->prepare("
-        INSERT INTO orders (
-            user_id, order_number, subtotal, discount_amount, coupon_code, total_amount, 
-            status, payment_status, payment_method, notes, 
-            customer_name, customer_email, customer_phone, shipping_address,
-            created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, NOW())
-    ");
-    
-    // Types: i (user_id), s (order_number), d (subtotal), d (discount), s (coupon_code), d (total_amount),
-    // s (payment_method), s (notes), s (customer_name), s (customer_email), s (customer_phone), s (shipping_address)
-    // Param types: i,s,d,d,s,d,s,s,s,s,s,s
-    $stmt->bind_param(
-        "isddsdssssss",
-        $userIdForDb,
-        $orderNumber,
-        $subtotal,
-        $discount,
-        $couponCode,
-        $totalAmount,
-        $paymentMethod,
-        $notes,
-        $customerName,
-        $customerEmail,
-        $customerPhone,
-        $shippingAddress
-    );
+            // Inserare în tabelul orders folosind coloanele de bază (evităm subtotal/discount/coupon dacă schema variază)
+            $stmt = $db->prepare("
+                INSERT INTO orders (
+                    user_id, order_number, total_amount,
+                    status, payment_status, payment_method, notes, 
+                    customer_name, customer_email, customer_phone, shipping_address,
+                    created_at
+                ) VALUES (?, ?, ?, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            
+            // Param types: i,s,d,s,s,s,s,s (8 params)
+            $stmt->bind_param(
+                "isdssssss",
+                $userIdForDb,
+                $orderNumber,
+                $totalAmount,
+                $paymentMethod,
+                $notes,
+                $customerName,
+                $customerEmail,
+                $customerPhone,
+                $shippingAddress
+            );
     
     if (!$stmt->execute()) {
         error_log("Orders INSERT failed: " . $stmt->error);
@@ -176,6 +171,16 @@ try {
             error_log("Coupon used_count update failed: " . $stmt->error);
         }
     }
+        // Incrementare utilizări cupon dacă există (opțional)
+        if (!empty($couponCode)) {
+            $stmt = $db->prepare("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?");
+            if ($stmt) {
+                $stmt->bind_param("s", $couponCode);
+                if (!$stmt->execute()) {
+                    error_log("Coupon used_count update failed: " . $stmt->error);
+                }
+            }
+        }
     
     // Ștergere coș
     if ($userId) {
