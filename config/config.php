@@ -26,6 +26,17 @@ define('BASE_PATH', dirname(__DIR__));
 define('UPLOAD_PATH', BASE_PATH . '/uploads/');
 define('ASSETS_PATH', BASE_PATH . '/assets/');
 
+// Creare directoare necesare
+if (!is_dir(UPLOAD_PATH)) {
+    mkdir(UPLOAD_PATH, 0755, true);
+}
+if (!is_dir(UPLOAD_PATH . 'products/')) {
+    mkdir(UPLOAD_PATH . 'products/', 0755, true);
+}
+if (!is_dir(UPLOAD_PATH . 'products/gallery/')) {
+    mkdir(UPLOAD_PATH . 'products/gallery/', 0755, true);
+}
+
 // Configurare upload
 define('MAX_FILE_SIZE', 5242880); // 5MB
 define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'zip']);
