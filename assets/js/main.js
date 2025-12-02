@@ -41,6 +41,66 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Validare Bootstrap pentru toate formularele
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+    
+    // Validare specială pentru formularele de newsletter
+    const newsletterForms = document.querySelectorAll('.newsletter-form');
+    newsletterForms.forEach(form => {
+        const emailInput = form.querySelector('input[type="email"]');
+        
+        if (emailInput) {
+            // Validare în timp real
+            emailInput.addEventListener('input', function() {
+                const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+                
+                if (this.value && emailPattern.test(this.value)) {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                } else if (this.value) {
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-valid', 'is-invalid');
+                }
+            });
+            
+            // Validare la blur
+            emailInput.addEventListener('blur', function() {
+                if (this.value) {
+                    const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+                    
+                    if (!emailPattern.test(this.value)) {
+                        this.classList.add('is-invalid');
+                        this.classList.remove('is-valid');
+                    }
+                }
+            });
+        }
+        
+        // Previne submit-ul dacă email-ul e invalid
+        form.addEventListener('submit', function(e) {
+            const emailInput = this.querySelector('input[type="email"]');
+            const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+            
+            if (!emailInput.value || !emailPattern.test(emailInput.value)) {
+                e.preventDefault();
+                emailInput.classList.add('is-invalid');
+                emailInput.focus();
+                return false;
+            }
+        });
+    });
+    
     // Validare formular contact înainte de submit
     const contactForm = document.querySelector('.contact-form');
     if (contactForm) {

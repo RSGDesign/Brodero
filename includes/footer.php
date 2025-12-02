@@ -94,12 +94,22 @@
                     <p class="text-white-50 small mb-3">
                         Abonează-te pentru a primi noutăți și oferte exclusive!
                     </p>
-                    <form action="<?php echo SITE_URL; ?>/pages/newsletter.php" method="POST" class="newsletter-form">
+                    <form action="<?php echo SITE_URL; ?>/pages/newsletter.php" method="POST" class="newsletter-form needs-validation" novalidate>
+                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                         <div class="input-group mb-2">
-                            <input type="email" name="email" class="form-control" placeholder="Email-ul tău" required>
+                            <input type="email" 
+                                   name="email" 
+                                   class="form-control" 
+                                   placeholder="Email-ul tău" 
+                                   required 
+                                   pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                   title="Introducă o adresă de email validă">
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-send"></i>
                             </button>
+                            <div class="invalid-feedback">
+                                Te rugăm să introduci un email valid.
+                            </div>
                         </div>
                         <small class="text-white-50">
                             Nu vom împărtăși niciodată email-ul tău.

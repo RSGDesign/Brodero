@@ -89,9 +89,9 @@ $activeSection = $_GET['section'] ?? 'dashboard';
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-people me-2"></i>Utilizatori
                             </a>
-                            <a href="?section=mesaje" 
-                               class="list-group-item list-group-item-action <?php echo $activeSection === 'mesaje' ? 'active' : ''; ?>">
-                                <i class="bi bi-envelope me-2"></i>Mesaje Contact
+                            <a href="<?php echo SITE_URL; ?>/admin/admin_newsletter.php" 
+                               class="list-group-item list-group-item-action">
+                                <i class="bi bi-envelope-paper me-2"></i>Newsletter
                             </a>
                             <a href="<?php echo SITE_URL; ?>/pages/cont.php" 
                                class="list-group-item list-group-item-action">
@@ -348,54 +348,6 @@ $activeSection = $_GET['section'] ?? 'dashboard';
                         </div>
                     </div>
                 
-                <?php else: ?>
-                    <!-- Mesaje Contact -->
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-0 p-4">
-                            <h5 class="fw-bold mb-0">Mesaje Contact</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <?php
-                            $messages = $db->query("SELECT * FROM contact_messages ORDER BY created_at DESC")->fetch_all(MYSQLI_ASSOC);
-                            ?>
-                            <?php if (!empty($messages)): ?>
-                                <div class="table-responsive">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Nume</th>
-                                                <th>Email</th>
-                                                <th>Subiect</th>
-                                                <th>Status</th>
-                                                <th>Data</th>
-                                                <th>Acțiuni</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($messages as $msg): ?>
-                                            <tr>
-                                                <td><?php echo htmlspecialchars($msg['name']); ?></td>
-                                                <td><?php echo htmlspecialchars($msg['email']); ?></td>
-                                                <td><?php echo htmlspecialchars($msg['subject']); ?></td>
-                                                <td>
-                                                    <span class="badge bg-<?php echo $msg['status'] === 'new' ? 'warning' : 'success'; ?>">
-                                                        <?php echo $msg['status']; ?>
-                                                    </span>
-                                                </td>
-                                                <td><?php echo date('d.m.Y H:i', strtotime($msg['created_at'])); ?></td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-outline-primary">Vezi</button>
-                                                </td>
-                                            </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            <?php else: ?>
-                                <p class="text-muted text-center py-5">Nu există mesaje de contact.</p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
                 <?php endif; ?>
             </div>
         </div>

@@ -6,6 +6,11 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
+// Generare CSRF token pentru formulare
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Verificare coș
 $cartCount = 0;
 if (isLoggedIn()) {

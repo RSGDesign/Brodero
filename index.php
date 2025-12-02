@@ -156,12 +156,22 @@ if ($result && $result->num_rows > 0) {
                 </p>
             </div>
             <div class="col-lg-4">
-                <form action="<?php echo SITE_URL; ?>/pages/newsletter.php" method="POST" class="newsletter-form">
+                <form action="<?php echo SITE_URL; ?>/pages/newsletter.php" method="POST" class="newsletter-form needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                     <div class="input-group">
-                        <input type="email" name="email" class="form-control" placeholder="Email-ul tău" required>
+                        <input type="email" 
+                               name="email" 
+                               class="form-control" 
+                               placeholder="Email-ul tău" 
+                               required
+                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                               title="Introducă o adresă de email validă">
                         <button type="submit" class="btn btn-primary">
                             Abonează-te
                         </button>
+                        <div class="invalid-feedback">
+                            Te rugăm să introduci un email valid.
+                        </div>
                     </div>
                 </form>
             </div>

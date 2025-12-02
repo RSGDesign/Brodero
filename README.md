@@ -58,8 +58,8 @@ Brodero este o platformă modernă și elegantă pentru vânzarea de design-uri 
 ✅ **Gestionare Produse** - CRUD complet cu upload imagini și galerie  
 ✅ **Gestionare Categorii** - Organizare produse pe categorii  
 ✅ **Gestionare Comenzi** - Vizualizare, actualizare status, filtrare  
-✅ Gestionare utilizatori  
-✅ Vizualizare mesaje contact  
+✅ **Gestionare Utilizatori** - CRUD complet, blocare/activare conturi, statistici  
+✅ **Gestionare Newsletter** - Abonați, trimitere campanii email, statistici  
 ✅ Statistici vânzări și comenzi  
 
 ## 📁 Structura Fișierelor
@@ -75,7 +75,11 @@ Brodero/
 │   ├── add_category.php   # Adăugare categorie
 │   ├── edit_category.php  # Editare categorie
 │   ├── admin_orders.php   # Gestionare comenzi
-│   └── view_order.php     # Detalii comandă
+│   ├── view_order.php     # Detalii comandă
+│   ├── admin_users.php    # Gestionare utilizatori
+│   ├── edit_user.php      # Editare utilizator
+│   ├── admin_newsletter.php # Gestionare abonați newsletter
+│   └── send_newsletter.php # Trimitere campanii email
 ├── 📂 assets/
 │   ├── css/              # Stiluri personalizate
 │   ├── js/               # JavaScript
@@ -89,6 +93,7 @@ Brodero/
 │   ├── contact.php       # Formular contact
 │   ├── cont.php          # Dashboard utilizator
 │   ├── login.php         # Autentificare
+│   ├── unsubscribe.php   # Dezabonare newsletter
 │   └── ...               # Alte pagini
 ├── 📂 uploads/           # Fișiere uploadate
 │   ├── products/         # Imagini produse
@@ -125,6 +130,10 @@ Brodero/
 - **/admin/admin_categories.php** - Gestionare categorii produse
 - **/admin/admin_orders.php** - Gestionare comenzi (listare, filtrare, actualizare status)
 - **/admin/view_order.php** - Vizualizare detalii comandă completă
+- **/admin/admin_users.php** - Gestionare utilizatori (listare, editare, blocare, ștergere)
+- **/admin/edit_user.php** - Editare detalii utilizator complet
+- **/admin/admin_newsletter.php** - Gestionare abonați newsletter
+- **/admin/send_newsletter.php** - Compunere și trimitere campanii email
 
 ## 🛠️ Tehnologii
 
@@ -180,6 +189,29 @@ Site-ul este complet responsive și optimizat pentru:
 - Thumbnails interactive cu border activ
 - Zoom și preview imagini complete
 - Support mouse și touch
+
+### Gestionare Utilizatori
+- CRUD complet utilizatori
+- Blocare/reactivare conturi
+- Schimbare rol (client/admin)
+- Protecție auto-blocare și admin unic
+- Validări complete (email unic, username unic, parolă min 6 caractere)
+- Statistici comenzi per utilizator
+- Filtrare după nume, email, rol, status
+
+### Gestionare Newsletter
+- 5 carduri statistici: total, activi, dezabonați, noi astăzi, luna curentă
+- Adăugare manuală abonați
+- Dezabonare/reactivare abonați
+- Ștergere abonați cu confirmare
+- Filtrare după email și status
+- Formular trimitere campanii email
+- Template-uri HTML predefinite (salut, ofertă, produs, buton)
+- Preview newsletter înainte de trimitere
+- Selectare destinatari: toți/activi/inactivi
+- Email template profesional cu header/footer Brodero
+- Link dezabonare automat în fiecare email
+- Pagină publică de dezabonare (unsubscribe.php)
 
 ### Design Modern
 - Layout minimalist și clean
