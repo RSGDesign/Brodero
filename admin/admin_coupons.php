@@ -13,14 +13,6 @@ if (!function_exists('isAdmin') || !isAdmin()) {
     exit();
 }
 
-$pageTitle = "Gestionare Cupoane";
-// Folosește header-ul general dacă admin_header.php nu există
-if (file_exists(__DIR__ . '/../includes/admin_header.php')) {
-    require_once __DIR__ . '/../includes/admin_header.php';
-} else {
-    require_once __DIR__ . '/../includes/header.php';
-}
-
 $db = getDB();
 
 // Asigură funcțiile de mesaje există (fallback minimal)
@@ -45,6 +37,60 @@ if (!function_exists('setMessage')) {
     function setMessage($text, $type = 'info') {
         $_SESSION['flash_message'] = ['text' => $text, 'type' => $type];
     }
+}
+
+// Handle POST actions (ÎNAINTE de orice output HTML)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    if ($action === 'toggle_status') {
+        $couponId = (int)$_POST['coupon_id'];
+        $newStatus = (int)$_POST['new_status'];
+        
+        $stmt = $db->prepare("UPDATE coupons SET is_active = ? WHERE id = ?");
+        $stmt->bind_param("ii", $newStatus, $couponId);
+        
+        if ($stmt->execute()) {
+            setMessage("Status cupon actualizat cu succes.", "success");
+        } else {
+            setMessage("Eroare la actualizare status.", "danger");
+        }
+        header("Location: " . SITE_URL . "/admin/admin_coupons.php");
+        exit();
+    }
+    
+    if ($action === 'delete') {
+        $couponId = (int)$_POST['coupon_id'];
+        
+        // Verifică dacă cuponul este folosit în comenzi
+        $stmt = $db->prepare("SELECT COUNT(*) as count FROM orders WHERE coupon_code = (SELECT code FROM coupons WHERE id = ?)");
+        $stmt->bind_param("i", $couponId);
+        $stmt->execute();
+        $usageCount = $stmt->get_result()->fetch_assoc()['count'];
+        
+        if ($usageCount > 0) {
+            setMessage("Nu poți șterge acest cupon. Este folosit în $usageCount comenzi.", "danger");
+        } else {
+            $stmt = $db->prepare("DELETE FROM coupons WHERE id = ?");
+            $stmt->bind_param("i", $couponId);
+            
+            if ($stmt->execute()) {
+                setMessage("Cupon șters cu succes.", "success");
+            } else {
+                setMessage("Eroare la ștergere cupon.", "danger");
+            }
+        }
+        header("Location: " . SITE_URL . "/admin/admin_coupons.php");
+        exit();
+    }
+}
+
+$pageTitle = "Gestionare Cupoane";
+// Folosește header-ul general dacă admin_header.php nu există
+if (file_exists(__DIR__ . '/../includes/admin_header.php')) {
+    require_once __DIR__ . '/../includes/admin_header.php';
+} else {
+    require_once __DIR__ . '/../includes/header.php';
 }
 
 // Parametri pentru filtrare și căutare
@@ -417,50 +463,6 @@ document.getElementById('deleteForm')?.addEventListener('submit', function(e) {
 </script>
 
 <?php
-// Handle POST actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    if ($action === 'toggle_status') {
-        $couponId = (int)$_POST['coupon_id'];
-        $newStatus = (int)$_POST['new_status'];
-        
-        $stmt = $db->prepare("UPDATE coupons SET is_active = ? WHERE id = ?");
-        $stmt->bind_param("ii", $newStatus, $couponId);
-        
-        if ($stmt->execute()) {
-            setMessage("Status cupon actualizat cu succes.", "success");
-        } else {
-            setMessage("Eroare la actualizare status.", "danger");
-        }
-        redirect('/admin/admin_coupons.php');
-    }
-    
-    if ($action === 'delete') {
-        $couponId = (int)$_POST['coupon_id'];
-        
-        // Verifică dacă cuponul este folosit în comenzi
-        $stmt = $db->prepare("SELECT COUNT(*) as count FROM orders WHERE coupon_code = (SELECT code FROM coupons WHERE id = ?)");
-        $stmt->bind_param("i", $couponId);
-        $stmt->execute();
-        $usageCount = $stmt->get_result()->fetch_assoc()['count'];
-        
-        if ($usageCount > 0) {
-            setMessage("Nu poți șterge acest cupon. Este folosit în $usageCount comenzi.", "danger");
-        } else {
-            $stmt = $db->prepare("DELETE FROM coupons WHERE id = ?");
-            $stmt->bind_param("i", $couponId);
-            
-            if ($stmt->execute()) {
-                setMessage("Cupon șters cu succes.", "success");
-            } else {
-                setMessage("Eroare la ștergere cupon.", "danger");
-            }
-        }
-        redirect('/admin/admin_coupons.php');
-    }
-}
-
 if (file_exists(__DIR__ . '/../includes/admin_footer.php')) {
     require_once __DIR__ . '/../includes/admin_footer.php';
 } else {
