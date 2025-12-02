@@ -107,16 +107,16 @@ require_once __DIR__ . '/../includes/header.php';
                             <table class="table table-borderless mb-0">
                                 <tr>
                                     <td class="text-start">Număr Comandă:</td>
-                                    <td class="text-end fw-bold"><?php echo htmlspecialchars($order['order_number']); ?></td>
+                                    <td class="text-end fw-bold"><?php echo htmlspecialchars($order['order_number'] ?? ''); ?></td>
                                 </tr>
                                 <tr>
                                     <td class="text-start">Email:</td>
-                                    <td class="text-end"><?php echo htmlspecialchars($order['customer_email']); ?></td>
+                                    <td class="text-end"><?php echo htmlspecialchars($order['customer_email'] ?? '-'); ?></td>
                                 </tr>
-                                <?php if ($order['discount_amount'] > 0): ?>
+                                <?php if (isset($order['discount_amount']) && $order['discount_amount'] > 0): ?>
                                 <tr>
                                     <td class="text-start">Subtotal:</td>
-                                    <td class="text-end"><?php echo number_format($order['subtotal'], 2); ?> LEI</td>
+                                    <td class="text-end"><?php echo number_format($order['subtotal'] ?? $order['total_amount'], 2); ?> LEI</td>
                                 </tr>
                                 <tr class="text-success">
                                     <td class="text-start">Reducere:</td>
