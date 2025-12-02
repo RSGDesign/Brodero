@@ -8,62 +8,69 @@ $pageTitle = "Plată Reușită";
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../vendor/autoload.php';
 
 $sessionId = $_GET['session_id'] ?? '';
+$orderNumber = $_GET['order'] ?? '';
 
-if (empty($sessionId)) {
+if (empty($sessionId) && empty($orderNumber)) {
     setMessage("Sesiune invalidă.", "danger");
     redirect('/');
 }
 
-\Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
+$db = getDB();
+$order = null;
 
-try {
-    // Verifică sesiunea Stripe
-    $session = \Stripe\Checkout\Session::retrieve($sessionId);
-    
-    if ($session->payment_status !== 'paid') {
-        setMessage("Plata nu a fost confirmată.", "warning");
-        redirect('/pages/cart.php');
-    }
-    
-    $db = getDB();
-    
-    // Actualizare status comandă
-    $stmt = $db->prepare("
-        UPDATE orders 
-        SET payment_status = 'paid', status = 'processing', updated_at = NOW()
-        WHERE stripe_session_id = ? AND payment_status = 'unpaid'
-    ");
-    $stmt->bind_param("s", $sessionId);
-    $stmt->execute();
-    
-    if ($stmt->affected_rows === 0) {
-        // Comanda a fost deja procesată
-        $stmt = $db->prepare("SELECT * FROM orders WHERE stripe_session_id = ?");
-        $stmt->bind_param("s", $sessionId);
-        $stmt->execute();
-        $order = $stmt->get_result()->fetch_assoc();
-    } else {
-        // Prima procesare - preia comanda
-        $stmt = $db->prepare("SELECT * FROM orders WHERE stripe_session_id = ?");
-        $stmt->bind_param("s", $sessionId);
-        $stmt->execute();
-        $order = $stmt->get_result()->fetch_assoc();
+// Cazul 1: Plată prin Stripe
+if (!empty($sessionId)) {
+    // Verificăm dacă avem Stripe SDK
+    if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+        require_once __DIR__ . '/../vendor/autoload.php';
         
-        // Trimite email confirmare (opțional - necesită configurare SMTP)
-        // sendOrderConfirmationEmail($order['customer_email'], $order['order_number'], $order['total_amount']);
+        if (defined('STRIPE_SECRET_KEY') && !empty(STRIPE_SECRET_KEY)) {
+            \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
+
+            try {
+                // Verifică sesiunea Stripe
+                $session = \Stripe\Checkout\Session::retrieve($sessionId);
+                
+                if ($session->payment_status !== 'paid') {
+                    setMessage("Plata nu a fost confirmată.", "warning");
+                    redirect('/pages/cart.php');
+                }
+                
+                // Actualizare status comandă
+                $stmt = $db->prepare("
+                    UPDATE orders 
+                    SET payment_status = 'paid', status = 'processing', updated_at = NOW()
+                    WHERE stripe_session_id = ? AND payment_status = 'unpaid'
+                ");
+                $stmt->bind_param("s", $sessionId);
+                $stmt->execute();
+                
+                // Preia comanda
+                $stmt = $db->prepare("SELECT * FROM orders WHERE stripe_session_id = ?");
+                $stmt->bind_param("s", $sessionId);
+                $stmt->execute();
+                $order = $stmt->get_result()->fetch_assoc();
+                
+            } catch (\Stripe\Exception\ApiErrorException $e) {
+                error_log("Stripe Error: " . $e->getMessage());
+                setMessage("Eroare la verificarea plății.", "danger");
+                redirect('/');
+            }
+        }
     }
-    
-    if (!$order) {
-        setMessage("Comanda nu a fost găsită.", "danger");
-        redirect('/');
-    }
-    
-} catch (\Stripe\Exception\ApiErrorException $e) {
-    error_log("Stripe Error: " . $e->getMessage());
-    setMessage("Eroare la verificarea plății.", "danger");
+} 
+// Cazul 2: Comandă directă (ex: total 0 sau redirect manual)
+elseif (!empty($orderNumber)) {
+    $stmt = $db->prepare("SELECT * FROM orders WHERE order_number = ?");
+    $stmt->bind_param("s", $orderNumber);
+    $stmt->execute();
+    $order = $stmt->get_result()->fetch_assoc();
+}
+
+if (!$order) {
+    setMessage("Comanda nu a fost găsită.", "danger");
     redirect('/');
 }
 
