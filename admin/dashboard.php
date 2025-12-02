@@ -77,6 +77,10 @@ $activeSection = $_GET['section'] ?? 'dashboard';
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-box-seam me-2"></i>Produse
                             </a>
+                            <a href="<?php echo SITE_URL; ?>/admin/admin_categories.php" 
+                               class="list-group-item list-group-item-action">
+                                <i class="bi bi-tags me-2"></i>Categorii
+                            </a>
                             <a href="?section=comenzi" 
                                class="list-group-item list-group-item-action <?php echo $activeSection === 'comenzi' ? 'active' : ''; ?>">
                                 <i class="bi bi-bag-check me-2"></i>Comenzi
