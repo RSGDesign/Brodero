@@ -1,0 +1,57 @@
+# Apache Configuration pentru Brodero
+
+# Activare Rewrite Engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /brodero/
+    
+    # Redirect de la www la non-www (opțional)
+    # RewriteCond %{HTTP_HOST} ^www\.brodero\.online [NC]
+    # RewriteRule ^(.*)$ http://brodero.online/$1 [L,R=301]
+    
+    # Protejare directoare sensibile
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^includes/ - [F,L]
+    
+    # Forțare HTTPS (decomentați pentru producție)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Protecție împotriva listării directoarelor
+Options -Indexes
+
+# Setări PHP
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+</IfModule>
+
+# Compresie Gzip pentru performanță
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript
+</IfModule>
+
+# Cache pentru resurse statice
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# Protecție fișiere sensibile
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sql)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Pagini de eroare personalizate (opțional)
+# ErrorDocument 404 /brodero/pages/404.php
+# ErrorDocument 403 /brodero/pages/403.php
+# ErrorDocument 500 /brodero/pages/500.php
