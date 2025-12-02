@@ -40,6 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $stmt->bind_param("sssi", $newStatus, $paymentStatus, $notes, $orderId);
     
     if ($stmt->execute()) {
+        // Actualizare permisiuni descărcare în funcție de statusul plății
+        $enableDownloads = ($paymentStatus === 'paid') ? 1 : 0;
+        $stmtDownloads = $db->prepare("UPDATE order_items SET downloads_enabled = ? WHERE order_id = ?");
+        $stmtDownloads->bind_param("ii", $enableDownloads, $orderId);
+        $stmtDownloads->execute();
+        $stmtDownloads->close();
+
         setMessage("Comanda a fost actualizată cu succes!", "success");
         redirect('/admin/view_order.php?id=' . $orderId);
     } else {
