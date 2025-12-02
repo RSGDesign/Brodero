@@ -141,19 +141,7 @@ try {
                 $notes
             );
             
-            // Param types: i,s,d,s,s,s,s,s (8 params)
-            $stmt->bind_param(
-                "isdssssss",
-                $userIdForDb,
-                $orderNumber,
-                $totalAmount,
-                $paymentMethod,
-                $notes,
-                $customerName,
-                $customerEmail,
-                $customerPhone,
-                $shippingAddress
-            );
+            
     
     if (!$stmt->execute()) {
         error_log("Orders INSERT failed: " . $stmt->error);
