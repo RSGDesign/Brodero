@@ -4,6 +4,9 @@
  * Instrucțiuni plată transfer bancar
  */
 
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+
 $pageTitle = "Instrucțiuni Plată";
 
 $orderNumber = $_GET['order'] ?? '';
