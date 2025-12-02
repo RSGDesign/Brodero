@@ -1,159 +1,171 @@
 <?php
-// DEBUG MODE - CHECKOUT PROCESS
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+/**
+ * Checkout Process
+ * Procesare comenzi - validare, creare ordine, gestionare plăți
+ */
 
-echo "<h3>DEBUG MODE STARTED</h3>";
-flush();
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    redirect('/pages/cart.php');
+}
+
+// Verificare CSRF token
+if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    setMessage("Token invalid. Încearcă din nou.", "danger");
+    redirect('/pages/checkout.php');
+}
+
+// Validare date POST
+$customerName = trim($_POST['customer_name'] ?? '');
+$customerEmail = trim($_POST['customer_email'] ?? '');
+$customerPhone = trim($_POST['customer_phone'] ?? '');
+$shippingAddress = trim($_POST['shipping_address'] ?? '');
+$paymentMethod = $_POST['payment_method'] ?? '';
+$notes = trim($_POST['notes'] ?? '');
+
+if (empty($customerName) || empty($customerEmail) || empty($customerPhone) || empty($shippingAddress)) {
+    setMessage("Completează toate câmpurile obligatorii.", "danger");
+    redirect('/pages/checkout.php');
+}
+
+if (!filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+    setMessage("Adresa de email este invalidă.", "danger");
+    redirect('/pages/checkout.php');
+}
+
+// Validare telefon mai flexibilă (acceptă și spații/caractere)
+$cleanPhone = preg_replace('/[^0-9]/', '', $customerPhone);
+if (strlen($cleanPhone) < 10) {
+    setMessage("Numărul de telefon trebuie să conțină cel puțin 10 cifre.", "danger");
+    redirect('/pages/checkout.php');
+}
+
+if (!in_array($paymentMethod, ['bank_transfer', 'stripe'])) {
+    setMessage("Metodă de plată invalidă.", "danger");
+    redirect('/pages/checkout.php');
+}
+
+$db = getDB();
+$userId = isLoggedIn() ? $_SESSION['user_id'] : null;
+
+// Asigură că session_id există pentru guest users
+if (!isset($_SESSION['session_id'])) {
+    $_SESSION['session_id'] = session_id();
+}
+$sessionId = $_SESSION['session_id'];
+
+// Obține produse din coș
+if ($userId) {
+    $stmt = $db->prepare("
+        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.price, p.sale_price
+        FROM cart c
+        JOIN products p ON c.product_id = p.id
+        WHERE c.user_id = ?
+    ");
+    $stmt->bind_param("i", $userId);
+} else {
+    $stmt = $db->prepare("
+        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.price, p.sale_price
+        FROM cart c
+        JOIN products p ON c.product_id = p.id
+        WHERE c.session_id = ?
+    ");
+    $stmt->bind_param("s", $sessionId);
+}
+
+$stmt->execute();
+$cartItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+// Verificare coș gol
+if (empty($cartItems)) {
+    setMessage("Coșul tău este gol.", "warning");
+    redirect('/pages/cart.php');
+}
+
+// Produse digitale: calcul subtotal fără cantități/stoc
+$subtotal = 0;
+foreach ($cartItems as $item) {
+    $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
+    $subtotal += $price; // cantitate implicit 1
+}
+
+// Calculare discount dacă există cupon
+$discount = 0;
+$couponCode = null;
+$appliedCoupon = $_SESSION['applied_coupon'] ?? null;
+
+if ($appliedCoupon) {
+    $couponCode = $appliedCoupon['code'];
+    
+    if ($appliedCoupon['discount_type'] === 'percent') {
+        $discount = ($subtotal * $appliedCoupon['discount_value']) / 100;
+    } else {
+        $discount = $appliedCoupon['discount_value'];
+    }
+}
+
+$totalAmount = $subtotal - $discount;
+
+// Generare order number unic
+$orderNumber = 'BRD' . date('Ymd') . strtoupper(substr(uniqid(), -6));
+
+// Începe tranzacție
+$db->begin_transaction();
 
 try {
-    echo "1. Loading config...<br>";
-    require_once __DIR__ . '/../config/config.php';
-    echo "Config loaded.<br>";
-    
-    echo "2. Loading database...<br>";
-    require_once __DIR__ . '/../config/database.php';
-    echo "Database loaded.<br>";
-
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        die("ERROR: Request method is " . $_SERVER['REQUEST_METHOD'] . ", expected POST. <a href='/pages/cart.php'>Back to cart</a>");
-    }
-
-    echo "3. Checking CSRF...<br>";
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        die("ERROR: CSRF Token mismatch. <a href='/pages/checkout.php'>Back to checkout</a>");
-    }
-    echo "CSRF OK.<br>";
-
-    // Validare date POST
-    echo "4. Validating POST data...<br>";
-    $customerName = trim($_POST['customer_name'] ?? '');
-    $customerEmail = trim($_POST['customer_email'] ?? '');
-    $customerPhone = trim($_POST['customer_phone'] ?? '');
-    $shippingAddress = trim($_POST['shipping_address'] ?? '');
-    $paymentMethod = $_POST['payment_method'] ?? '';
-    $notes = trim($_POST['notes'] ?? '');
-
-    echo "Data: Name=$customerName, Email=$customerEmail, Phone=$customerPhone, Method=$paymentMethod<br>";
-
-    if (empty($customerName) || empty($customerEmail) || empty($customerPhone) || empty($shippingAddress)) {
-        die("ERROR: Missing fields. <a href='/pages/checkout.php'>Back</a>");
-    }
-
-    if (!filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
-        die("ERROR: Invalid email. <a href='/pages/checkout.php'>Back</a>");
-    }
-
-    $cleanPhone = preg_replace('/[^0-9]/', '', $customerPhone);
-    if (strlen($cleanPhone) < 10) {
-        die("ERROR: Invalid phone. <a href='/pages/checkout.php'>Back</a>");
-    }
-
-    if (!in_array($paymentMethod, ['bank_transfer', 'stripe'])) {
-        die("ERROR: Invalid payment method. <a href='/pages/checkout.php'>Back</a>");
-    }
-    echo "Validation OK.<br>";
-
-    echo "5. Connecting to DB...<br>";
-    $db = getDB();
-    $userId = isLoggedIn() ? $_SESSION['user_id'] : null;
-    echo "DB Connected. UserID: " . ($userId ? $userId : 'Guest') . "<br>";
-
-    if (!isset($_SESSION['session_id'])) {
-        $_SESSION['session_id'] = session_id();
-    }
-    $sessionId = $_SESSION['session_id'];
-    echo "SessionID: $sessionId<br>";
-
-    echo "6. Fetching cart items...<br>";
-    if ($userId) {
-        $stmt = $db->prepare("
-            SELECT c.id as cart_id, c.quantity, p.id, p.name, p.price, p.sale_price
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.user_id = ?
-        ");
-        $stmt->bind_param("i", $userId);
-    } else {
-        $stmt = $db->prepare("
-            SELECT c.id as cart_id, c.quantity, p.id, p.name, p.price, p.sale_price
-            FROM cart c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.session_id = ?
-        ");
-        $stmt->bind_param("s", $sessionId);
-    }
-
-    if (!$stmt->execute()) {
-        throw new Exception("Cart query failed: " . $stmt->error);
-    }
-    $cartItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    echo "Cart items found: " . count($cartItems) . "<br>";
-
-    if (empty($cartItems)) {
-        die("ERROR: Cart is empty. <a href='/pages/cart.php'>Back to cart</a>");
-    }
-
-    echo "7. Calculating totals...<br>";
-    $subtotal = 0;
-    foreach ($cartItems as $item) {
+    // Construiește JSON cu produse (fără quantity)
+    $products = array_map(function($item) {
         $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
-        $subtotal += $price;
-    }
+        return [
+            'id' => (int)$item['id'],
+            'name' => $item['name'],
+            'price' => (float)$price
+        ];
+    }, $cartItems);
+    $productsJson = json_encode($products, JSON_UNESCAPED_UNICODE);
 
-    $discount = 0;
-    $couponCode = null;
-    $appliedCoupon = $_SESSION['applied_coupon'] ?? null;
-
-    if ($appliedCoupon) {
-        $couponCode = $appliedCoupon['code'];
-        if ($appliedCoupon['discount_type'] === 'percent') {
-            $discount = ($subtotal * $appliedCoupon['discount_value']) / 100;
-        } else {
-            $discount = $appliedCoupon['discount_value'];
-        }
-    }
-
-    $totalAmount = $subtotal - $discount;
-    echo "Total calculated: $totalAmount (Sub: $subtotal, Disc: $discount)<br>";
-
-    $orderNumber = 'BRD' . date('Ymd') . strtoupper(substr(uniqid(), -6));
-    echo "Order Number: $orderNumber<br>";
-
-    echo "8. Starting transaction...<br>";
-    $db->begin_transaction();
-
-    echo "9. Inserting Order...<br>";
+    // Pentru comenzile guest, user_id trebuie să fie NULL (nu 0)
     $userIdForDb = $userId ? $userId : null;
 
+    // Inserare în tabelul orders
     if ($userIdForDb) {
         $stmt = $db->prepare("
             INSERT INTO orders (
-                user_id, order_number, total_amount,
+                user_id, customer_name, customer_email, customer_phone, shipping_address,
+                order_number, total_amount, subtotal, discount_amount, coupon_code,
                 status, payment_status, payment_method, notes,
                 created_at
-            ) VALUES (?, ?, ?, 'pending', 'unpaid', ?, ?, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?, NOW())
         ");
-        $stmt->bind_param("isdss", $userIdForDb, $orderNumber, $totalAmount, $paymentMethod, $notes);
+        $stmt->bind_param("isssssdddsss", 
+            $userIdForDb, $customerName, $customerEmail, $customerPhone, $shippingAddress,
+            $orderNumber, $totalAmount, $subtotal, $discount, $couponCode,
+            $paymentMethod, $notes
+        );
     } else {
         $stmt = $db->prepare("
             INSERT INTO orders (
-                order_number, total_amount,
+                customer_name, customer_email, customer_phone, shipping_address,
+                order_number, total_amount, subtotal, discount_amount, coupon_code,
                 status, payment_status, payment_method, notes,
                 created_at
-            ) VALUES (?, ?, 'pending', 'unpaid', ?, ?, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?, NOW())
         ");
-        $stmt->bind_param("sdss", $orderNumber, $totalAmount, $paymentMethod, $notes);
+        $stmt->bind_param("sssssdddsss", 
+            $customerName, $customerEmail, $customerPhone, $shippingAddress,
+            $orderNumber, $totalAmount, $subtotal, $discount, $couponCode,
+            $paymentMethod, $notes
+        );
     }
     
     if (!$stmt->execute()) {
-        throw new Exception("Order insert failed: " . $stmt->error);
+        throw new Exception("Database insert failed: " . $stmt->error);
     }
     $orderId = $db->insert_id;
-    echo "Order inserted. ID: $orderId<br>";
     
-    echo "10. Inserting Order Items...<br>";
+    // Inserăm temporar în order_items pentru fiecare produs (până când migrăm schema)
     $stmt = $db->prepare("INSERT INTO order_items (order_id, product_id, product_name, price, quantity) VALUES (?, ?, ?, ?, 1)");
     foreach ($cartItems as $item) {
         $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
@@ -161,11 +173,10 @@ try {
         if (!$stmt->execute()) {
             throw new Exception("Order item insert failed: " . $stmt->error);
         }
-        echo "Item inserted: " . $item['name'] . "<br>";
     }
     
+    // Incrementare utilizări cupon dacă există
     if (!empty($couponCode)) {
-        echo "Updating coupon usage...<br>";
         $stmt = $db->prepare("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?");
         if ($stmt) {
             $stmt->bind_param("s", $couponCode);
@@ -173,7 +184,7 @@ try {
         }
     }
     
-    echo "11. Clearing cart...<br>";
+    // Ștergere coș
     if ($userId) {
         $stmt = $db->prepare("DELETE FROM cart WHERE user_id = ?");
         $stmt->bind_param("i", $userId);
@@ -182,83 +193,85 @@ try {
         $stmt->bind_param("s", $sessionId);
     }
     $stmt->execute();
+    
+    // Elimină cuponul aplicat din sesiune
     unset($_SESSION['applied_coupon']);
     
-    echo "12. Committing transaction...<br>";
+    // Commit tranzacție
     $db->commit();
-    echo "Transaction committed.<br>";
     
+    // Setează downloads_enabled pe iteme
     $enableDownloads = ($paymentMethod === 'stripe') ? 1 : 0;
     $stmt = $db->prepare("UPDATE order_items SET downloads_enabled = ? WHERE order_id = ?");
     if ($stmt) { $stmt->bind_param("ii", $enableDownloads, $orderId); $stmt->execute(); }
 
-    echo "<h3>SUCCESS!</h3>";
-    
+    // Procesare în funcție de metoda de plată
     if ($paymentMethod === 'bank_transfer') {
-        $url = '/pages/payment_instructions.php?order=' . $orderNumber;
-        echo "Payment method is Bank Transfer.<br>";
-        echo "<b><a href='$url'>CLICK HERE TO CONTINUE TO PAYMENT INSTRUCTIONS</a></b>";
-        // redirect($url); // Disabled for debug
+        // Redirect către instrucțiuni plată
+        redirect('/pages/payment_instructions.php?order=' . $orderNumber);
         
     } elseif ($paymentMethod === 'stripe') {
-        echo "Payment method is Stripe.<br>";
+        // Verificare dacă Stripe SDK e instalat
         if (!file_exists(__DIR__ . '/../vendor/autoload.php')) {
-            die("Stripe SDK missing.");
+            setMessage("Plata cu cardul nu este disponibilă momentan. Vă rugăm alegeți Transfer Bancar.", "warning");
+            redirect('/pages/checkout.php');
         }
+        
+        // Integrare Stripe
         require_once __DIR__ . '/../vendor/autoload.php';
         
         if (!defined('STRIPE_SECRET_KEY') || empty(STRIPE_SECRET_KEY)) {
-            die("Stripe key missing.");
+            setMessage("Plata cu cardul nu este configurată. Vă rugăm alegeți Transfer Bancar.", "warning");
+            redirect('/pages/checkout.php');
         }
         
         \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
         
-        echo "Creating Stripe session...<br>";
-        $session = \Stripe\Checkout\Session::create([
-            'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => 'ron',
-                    'product_data' => [
-                        'name' => 'Comandă #' . $orderNumber,
-                        'description' => count($cartItems) . ' produs(e) - Brodero'
+        try {
+            $session = \Stripe\Checkout\Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'ron',
+                        'product_data' => [
+                            'name' => 'Comandă #' . $orderNumber,
+                            'description' => count($cartItems) . ' produs(e) - Brodero'
+                        ],
+                        'unit_amount' => round($totalAmount * 100), // în bani (cenți)
                     ],
-                    'unit_amount' => round($totalAmount * 100),
-                ],
-                'quantity' => 1,
-            ]],
-            'mode' => 'payment',
-            'success_url' => SITE_URL . '/pages/payment_success.php?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => SITE_URL . '/pages/payment_cancel.php?order=' . $orderNumber,
-            'customer_email' => $customerEmail,
-            'metadata' => [
-                'order_id' => $orderId,
-                'order_number' => $orderNumber
-            ]
-        ]);
-        
-        $stmt = $db->prepare("UPDATE orders SET stripe_session_id = ? WHERE id = ?");
-        $stmt->bind_param("si", $session->id, $orderId);
-        $stmt->execute();
-        
-        echo "Stripe session created.<br>";
-        echo "<b><a href='" . $session->url . "'>CLICK HERE TO PAY WITH CARD</a></b>";
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => SITE_URL . '/pages/payment_success.php?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => SITE_URL . '/pages/payment_cancel.php?order=' . $orderNumber,
+                'customer_email' => $customerEmail,
+                'metadata' => [
+                    'order_id' => $orderId,
+                    'order_number' => $orderNumber
+                ]
+            ]);
+            
+            // Salvare stripe_session_id în DB
+            $stmt = $db->prepare("UPDATE orders SET stripe_session_id = ? WHERE id = ?");
+            $stmt->bind_param("si", $session->id, $orderId);
+            $stmt->execute();
+            
+            // Redirect la Stripe Checkout
+            header('Location: ' . $session->url);
+            exit;
+            
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            setMessage("Eroare la procesarea plății. Încearcă din nou.", "danger");
+            redirect('/pages/checkout.php');
+        }
     }
     
 } catch (Exception $e) {
+    // Rollback în caz de eroare
     if (isset($db)) {
         $db->rollback();
     }
-    echo "<h2 style='color:red'>EXCEPTION CAUGHT</h2>";
-    echo "Message: " . $e->getMessage() . "<br>";
-    echo "File: " . $e->getFile() . "<br>";
-    echo "Line: " . $e->getLine() . "<br>";
-    echo "<pre>" . $e->getTraceAsString() . "</pre>";
-} catch (Throwable $e) {
-    echo "<h2 style='color:red'>FATAL ERROR CAUGHT</h2>";
-    echo "Message: " . $e->getMessage() . "<br>";
-    echo "File: " . $e->getFile() . "<br>";
-    echo "Line: " . $e->getLine() . "<br>";
-    echo "<pre>" . $e->getTraceAsString() . "</pre>";
+    setMessage("Eroare la procesarea comenzii: " . $e->getMessage(), "danger");
+    redirect('/pages/checkout.php');
 }
 ?>
