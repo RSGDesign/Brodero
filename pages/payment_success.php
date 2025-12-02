@@ -5,7 +5,9 @@
  */
 
 $pageTitle = "Plată Reușită";
-require_once __DIR__ . '/../includes/header.php';
+
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $sessionId = $_GET['session_id'] ?? '';
@@ -64,6 +66,9 @@ try {
     setMessage("Eroare la verificarea plății.", "danger");
     redirect('/');
 }
+
+// Include header DUPĂ toate validările
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="container my-5">
