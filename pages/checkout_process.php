@@ -161,23 +161,15 @@ try {
     }
     
     // Incrementare utilizări cupon dacă există
-    if ($couponCode) {
+    if (!empty($couponCode)) {
         $stmt = $db->prepare("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?");
-        $stmt->bind_param("s", $couponCode);
-        if (!$stmt->execute()) {
-            error_log("Coupon used_count update failed: " . $stmt->error);
-        }
-    }
-        // Incrementare utilizări cupon dacă există (opțional)
-        if (!empty($couponCode)) {
-            $stmt = $db->prepare("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?");
-            if ($stmt) {
-                $stmt->bind_param("s", $couponCode);
-                if (!$stmt->execute()) {
-                    error_log("Coupon used_count update failed: " . $stmt->error);
-                }
+        if ($stmt) {
+            $stmt->bind_param("s", $couponCode);
+            if (!$stmt->execute()) {
+                error_log("Coupon used_count update failed: " . $stmt->error);
             }
         }
+    }
     
     // Ștergere coș
     if ($userId) {
@@ -197,6 +189,11 @@ try {
     // Commit tranzacție
     $db->commit();
     
+    // Setează downloads_enabled pe iteme
+    $enableDownloads = ($paymentMethod === 'stripe') ? 1 : 0;
+    $stmt = $db->prepare("UPDATE order_items SET downloads_enabled = ? WHERE order_id = ?");
+    if ($stmt) { $stmt->bind_param("ii", $enableDownloads, $orderId); $stmt->execute(); }
+
     // Procesare în funcție de metoda de plată
     if ($paymentMethod === 'bank_transfer') {
         // Redirect către instrucțiuni plată

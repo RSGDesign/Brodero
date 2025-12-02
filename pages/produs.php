@@ -7,6 +7,7 @@
 $pageTitle = "Produs";
 
 require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/functions_downloads.php';
 
 // Verificare ID produs
 if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -99,6 +100,35 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                 <li class="breadcrumb-item active"><?php echo htmlspecialchars($product['name']); ?></li>
             </ol>
         </nav>
+    </div>
+</section>
+
+<!-- Digital product badge and files list -->
+<section class="py-0">
+    <div class="container">
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="bi bi-cloud-download me-2"></i>
+            <strong>Produs Digital – Descărcare Instant</strong>
+        </div>
+        <?php $files = getProductFiles($productId); $totalSize = 0; ?>
+        <?php if (!empty($files)): ?>
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <strong>Fișiere incluse</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <?php foreach ($files as $f): $totalSize += (int)$f['file_size']; ?>
+                            <li class="d-flex align-items-center mb-2">
+                                <i class="bi bi-file-earmark-zip me-2"></i>
+                                <span><?php echo htmlspecialchars($f['file_name']); ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <small class="text-muted">Mărime totală: <?php echo number_format($totalSize/1024/1024, 2); ?> MB</small>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 </section>
 

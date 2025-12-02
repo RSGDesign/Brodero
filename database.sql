@@ -105,6 +105,26 @@ CREATE TABLE IF NOT EXISTS order_items (
     INDEX idx_product (product_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tabel fișiere descărcabile pentru produse digitale
+CREATE TABLE IF NOT EXISTS product_files (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    product_id INT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_size INT NOT NULL DEFAULT 0,
+    download_limit INT NOT NULL DEFAULT 0, -- 0 = nelimitat
+    download_count INT NOT NULL DEFAULT 0,
+    status ENUM('active','inactive') NOT NULL DEFAULT 'active',
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    INDEX idx_product (product_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Opțional: dacă se dorește marcarea descărcărilor pe item, adaugă coloana downloads_enabled
+ALTER TABLE order_items
+    ADD COLUMN downloads_enabled TINYINT(1) NOT NULL DEFAULT 0;
+
 -- Tabel coș de cumpărături
 CREATE TABLE IF NOT EXISTS cart (
     id INT AUTO_INCREMENT PRIMARY KEY,
