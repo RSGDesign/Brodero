@@ -7,6 +7,30 @@
 $pageTitle = "Finalizare Comandă";
 require_once __DIR__ . '/../includes/header.php';
 
+// Asigură funcțiile de mesaje există (fallback minimal)
+if (!function_exists('hasMessage')) {
+    function hasMessage() {
+        return !empty($_SESSION['flash_message']);
+    }
+}
+if (!function_exists('displayMessage')) {
+    function displayMessage() {
+        if (!empty($_SESSION['flash_message'])) {
+            $msg = $_SESSION['flash_message'];
+            echo '<div class="alert alert-' . htmlspecialchars($msg['type'] ?? 'info') . ' alert-dismissible fade show">'
+                . htmlspecialchars($msg['text'] ?? '') .
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' .
+                '</div>';
+            unset($_SESSION['flash_message']);
+        }
+    }
+}
+if (!function_exists('setMessage')) {
+    function setMessage($text, $type = 'info') {
+        $_SESSION['flash_message'] = ['text' => $text, 'type' => $type];
+    }
+}
+
 if (!isset($_SESSION['session_id'])) {
     $_SESSION['session_id'] = session_id();
 }
