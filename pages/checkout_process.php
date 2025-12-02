@@ -77,16 +77,11 @@ if (empty($cartItems)) {
     redirect('/pages/cart.php');
 }
 
-// Verificare stoc și calcul subtotal
+// Produse digitale: calcul subtotal fără cantități/stoc
 $subtotal = 0;
 foreach ($cartItems as $item) {
-    if ($item['stock_status'] !== 'in_stock' || $item['quantity'] > $item['stock']) {
-        setMessage("Produsul '{$item['name']}' nu mai este disponibil în cantitatea dorită.", "danger");
-        redirect('/pages/cart.php');
-    }
-    
     $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
-    $subtotal += $price * $item['quantity'];
+    $subtotal += $price; // cantitate implicită 1
 }
 
 // Calculare discount dacă există cupon
@@ -113,18 +108,30 @@ $orderNumber = 'BRD' . date('Ymd') . strtoupper(substr(uniqid(), -6));
 $db->begin_transaction();
 
 try {
-    // Inserare în tabelul orders
+    // Construiește JSON cu produse (fără quantity)
+    $products = array_map(function($item) {
+        $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
+        return [
+            'id' => (int)$item['id'],
+            'name' => $item['name'],
+            'price' => (float)$price
+        ];
+    }, $cartItems);
+    $productsJson = json_encode($products, JSON_UNESCAPED_UNICODE);
+
+    // Inserare în tabelul orders (include products_json)
     $stmt = $db->prepare("
         INSERT INTO orders (
             user_id, order_number, subtotal, discount_amount, coupon_code, total_amount, 
             status, payment_status, payment_method, notes, 
             customer_name, customer_email, customer_phone, shipping_address,
+            products_json,
             created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     
     $stmt->bind_param(
-        "issdsdssssss",
+        "issdsdsssssss",
         $userId,
         $orderNumber,
         $subtotal,
@@ -136,29 +143,14 @@ try {
         $customerName,
         $customerEmail,
         $customerPhone,
-        $shippingAddress
+        $shippingAddress,
+        $productsJson
     );
     
     $stmt->execute();
     $orderId = $db->insert_id;
     
-    // Inserare în tabelul order_items
-    $stmt = $db->prepare("
-        INSERT INTO order_items (order_id, product_id, product_name, quantity, price)
-        VALUES (?, ?, ?, ?, ?)
-    ");
-    
-    foreach ($cartItems as $item) {
-        $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
-        $stmt->bind_param("iisid", $orderId, $item['id'], $item['name'], $item['quantity'], $price);
-        $stmt->execute();
-        
-        // Scădere stoc
-        $newStock = $item['stock'] - $item['quantity'];
-        $updateStmt = $db->prepare("UPDATE products SET stock = ? WHERE id = ?");
-        $updateStmt->bind_param("ii", $newStock, $item['id']);
-        $updateStmt->execute();
-    }
+    // Nu mai inserăm order_items și nu gestionăm stoc pentru produse digitale
     
     // Incrementare utilizări cupon dacă există
     if ($couponCode) {

@@ -7,7 +7,11 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
-requireAdmin();
+// Protecție acces: doar admin
+if (!function_exists('isAdmin') || !isAdmin()) {
+    setMessage("Nu ai acces la această pagină.", "danger");
+    redirect('/');
+}
 
 $pageTitle = "Gestionare Cupoane";
 require_once __DIR__ . '/../includes/admin_header.php';

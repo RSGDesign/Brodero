@@ -15,17 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $productId = (int)($_POST['product_id'] ?? 0);
-$quantity = (int)($_POST['quantity'] ?? 1);
+$quantity = 1; // Produse digitale: cantitate fix 1
 
-if ($productId <= 0 || $quantity <= 0) {
+if ($productId <= 0) {
     echo json_encode(['success' => false, 'message' => 'Date invalide']);
     exit;
 }
 
 $db = getDB();
 
-// Verificare produs și stoc
-$stmt = $db->prepare("SELECT id, name, price, sale_price, stock_status FROM products WHERE id = ? AND stock_status = 'in_stock'");
+// Verificare produs (fără stoc)
+$stmt = $db->prepare("SELECT id, name, price, sale_price FROM products WHERE id = ? AND is_active = 1");
 $stmt->bind_param("i", $productId);
 $stmt->execute();
 $product = $stmt->get_result()->fetch_assoc();
@@ -56,20 +56,11 @@ $checkStmt->execute();
 $existing = $checkStmt->get_result()->fetch_assoc();
 
 if ($existing) {
-    // Actualizare cantitate
-    $newQuantity = $existing['quantity'] + $quantity;
-    $updateStmt = $db->prepare("UPDATE cart SET quantity = ?, updated_at = NOW() WHERE id = ?");
-    $updateStmt->bind_param("ii", $newQuantity, $existing['id']);
-    
-    if ($updateStmt->execute()) {
-        echo json_encode([
-            'success' => true,
-            'message' => 'Cantitatea a fost actualizată în coș',
-            'cart_count' => getCartCount()
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Eroare la actualizare']);
-    }
+    echo json_encode([
+        'success' => false,
+        'message' => 'Produsul este digital și deja se află în coș.',
+        'cart_count' => getCartCount()
+    ]);
 } else {
     // Adăugare produs nou
     if ($userId) {

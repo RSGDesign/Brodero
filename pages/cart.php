@@ -41,7 +41,8 @@ $cartItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $subtotal = 0;
 foreach ($cartItems as $item) {
     $price = $item['sale_price'] ?? $item['price'];
-    $subtotal += $price * $item['quantity'];
+    // Produse digitale: cantitate implicită 1
+    $subtotal += $price;
 }
 
 // Verificare cupon aplicat
@@ -108,12 +109,8 @@ $total = $subtotal - $discount;
                                 <small class="text-muted"><?php echo number_format($price, 2); ?> LEI</small>
                             </div>
                             <div class="col-md-3">
-                                <div class="input-group input-group-sm">
-                                    <button class="btn btn-outline-secondary update-quantity" data-action="decrease" type="button">-</button>
-                                    <input type="number" class="form-control text-center quantity-input" 
-                                           value="<?php echo $item['quantity']; ?>" min="1" max="10">
-                                    <button class="btn btn-outline-secondary update-quantity" data-action="increase" type="button">+</button>
-                                </div>
+                            <div class="col-md-3 text-center">
+                                <span class="badge bg-secondary">x1</span>
                             </div>
                             <div class="col-md-2 text-end">
                                 <strong><?php echo number_format($price * $item['quantity'], 2); ?> LEI</strong>
@@ -179,20 +176,7 @@ $total = $subtotal - $discount;
 
 <script>
 document.querySelectorAll('.update-quantity').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const row = this.closest('[data-cart-id]');
-        const input = row.querySelector('.quantity-input');
-        const currentQty = parseInt(input.value);
-        
-        if (this.dataset.action === 'increase') {
-            input.value = currentQty + 1;
-        } else if (this.dataset.action === 'decrease' && currentQty > 1) {
-            input.value = currentQty - 1;
-        }
-        
-        updateCart(row.dataset.cartId, input.value);
-    });
-});
+// Quantity controls have been removed, no need for event listeners for quantity updates
 
 document.querySelectorAll('.remove-item').forEach(btn => {
     btn.addEventListener('click', function() {

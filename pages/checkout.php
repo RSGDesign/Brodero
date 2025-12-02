@@ -43,19 +43,13 @@ if (empty($cartItems)) {
     redirect('/pages/cart.php');
 }
 
-// Verificare stoc pentru toate produsele
-foreach ($cartItems as $item) {
-    if ($item['stock_status'] !== 'in_stock' || $item['quantity'] > $item['stock']) {
-        setMessage("Produsul '{$item['name']}' nu mai este disponibil în cantitatea dorită.", "danger");
-        redirect('/pages/cart.php');
-    }
-}
+// Produse digitale: fără verificări stoc/cantitate
 
 // Calcul subtotal
 $subtotal = 0;
 foreach ($cartItems as $item) {
     $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
-    $subtotal += $price * $item['quantity'];
+    $subtotal += $price; // cantitate implicită 1
 }
 
 // Verificare cupon aplicat

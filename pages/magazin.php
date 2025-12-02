@@ -262,8 +262,7 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                             </div>
                                             <div class="btn-group" role="group">
                                                 <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" 
-                                                        data-product-id="<?php echo $product['id']; ?>"
-                                                        <?php echo $product['stock_status'] !== 'in_stock' ? 'disabled' : ''; ?>>
+                                                        data-product-id="<?php echo $product['id']; ?>">
                                                     <i class="bi bi-cart-plus"></i>
                                                 </button>
                                                 <a href="<?php echo SITE_URL; ?>/pages/produs.php?id=<?php echo $product['id']; ?>" 

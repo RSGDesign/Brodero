@@ -248,18 +248,12 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                 
                 <!-- Actions -->
                 <div class="d-grid gap-2">
-                    <?php if ($product['stock_status'] === 'in_stock'): ?>
-                        <button type="button" class="btn btn-primary btn-lg" onclick="addToCart(<?php echo $product['id']; ?>)">
-                            <i class="bi bi-cart-plus me-2"></i>Adaugă în Coș
-                        </button>
-                        <button type="button" class="btn btn-outline-primary btn-lg">
-                            <i class="bi bi-heart me-2"></i>Adaugă la Favorite
-                        </button>
-                    <?php else: ?>
-                        <button type="button" class="btn btn-secondary btn-lg" disabled>
-                            <i class="bi bi-x-circle me-2"></i>Indisponibil
-                        </button>
-                    <?php endif; ?>
+                    <button type="button" class="btn btn-primary btn-lg" onclick="addToCart(<?php echo $product['id']; ?>)">
+                        <i class="bi bi-cart-plus me-2"></i>Adaugă în Coș
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-heart me-2"></i>Adaugă la Favorite
+                    </button>
                 </div>
                 
                 <!-- Additional Info -->
