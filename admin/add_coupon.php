@@ -7,10 +7,18 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
-requireAdmin();
+// Verificare acces admin
+if (!isAdmin()) {
+    redirect('/pages/login.php');
+}
 
 $pageTitle = "Adaugă Cupon";
-require_once __DIR__ . '/../includes/admin_header.php';
+// Fallback la header standard dacă admin_header lipsește
+if (file_exists(__DIR__ . '/../includes/admin_header.php')) {
+    require_once __DIR__ . '/../includes/admin_header.php';
+} else {
+    require_once __DIR__ . '/../includes/header.php';
+}
 
 $db = getDB();
 
@@ -246,4 +254,10 @@ document.getElementById('discount_type').dispatchEvent(new Event('change'));
 })()
 </script>
 
-<?php require_once __DIR__ . '/../includes/admin_footer.php'; ?>
+<?php 
+if (file_exists(__DIR__ . '/../includes/admin_footer.php')) {
+    require_once __DIR__ . '/../includes/admin_footer.php';
+} else {
+    require_once __DIR__ . '/../includes/footer.php';
+}
+?>
