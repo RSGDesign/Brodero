@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $limit = isset($_POST['download_limit']) ? intval($_POST['download_limit']) : 0;
                         $status = isset($_POST['status']) && $_POST['status'] === 'active' ? 'active' : 'inactive';
                         $stmt = $db->prepare("INSERT INTO product_files (product_id, file_name, file_path, file_size, status, download_limit, download_count, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, 0, NOW())");
-                        $stmt->bind_param('ississi', $productId, $safeName, $relPath, $sizeBytes, $status, $limit);
+                        $stmt->bind_param('issisi', $productId, $safeName, $relPath, $sizeBytes, $status, $limit);
                         if ($stmt->execute()) {
                             $messages[] = 'Fișier încărcat cu succes.';
                         } else {
