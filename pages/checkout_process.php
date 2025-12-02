@@ -134,8 +134,9 @@ try {
     
     // Types: i (user_id), s (order_number), d (subtotal), d (discount), s (coupon_code), d (total_amount),
     // s (payment_method), s (notes), s (customer_name), s (customer_email), s (customer_phone), s (shipping_address)
+    // Param types: i,s,d,d,s,d,s,s,s,s,s,s
     $stmt->bind_param(
-        "isdds dssssss" ,
+        "isddsdssssss",
         $userIdForDb,
         $orderNumber,
         $subtotal,
@@ -161,14 +162,19 @@ try {
     foreach ($cartItems as $item) {
         $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
         $stmt->bind_param("iisd", $orderId, $item['id'], $item['name'], $price);
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            error_log("Order item insert failed: " . $stmt->error);
+            throw new Exception("Order item insert failed");
+        }
     }
     
     // Incrementare utilizări cupon dacă există
     if ($couponCode) {
         $stmt = $db->prepare("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?");
         $stmt->bind_param("s", $couponCode);
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            error_log("Coupon used_count update failed: " . $stmt->error);
+        }
     }
     
     // Ștergere coș
@@ -179,7 +185,9 @@ try {
         $stmt = $db->prepare("DELETE FROM cart WHERE session_id = ?");
         $stmt->bind_param("s", $sessionId);
     }
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        error_log("Cart clear failed: " . $stmt->error);
+    }
     
     // Elimină cuponul aplicat din sesiune
     unset($_SESSION['applied_coupon']);
