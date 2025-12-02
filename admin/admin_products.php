@@ -92,9 +92,14 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetch_all(MY
                 </h1>
                 <p class="mb-0 text-white-50">Total: <?php echo $totalProducts; ?> produse</p>
             </div>
-            <a href="<?php echo SITE_URL; ?>/admin/add_product.php" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-2"></i>Adaugă Produs Nou
-            </a>
+            <div>
+                <a href="<?php echo SITE_URL; ?>/admin/dashboard.php" class="btn btn-outline-light me-2">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+                <a href="<?php echo SITE_URL; ?>/admin/add_product.php" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Adaugă Produs Nou
+                </a>
+            </div>
         </div>
     </div>
 </section>
