@@ -31,7 +31,7 @@ if ($userId) {
         JOIN products p ON c.product_id = p.id
         WHERE c.session_id = ?
     ");
-    $stmt->bind_param("s", $sessionId);
+        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image
 }
 
 $stmt->execute();
@@ -44,7 +44,7 @@ foreach ($cartItems as $item) {
     // Produse digitale: cantitate implicită 1
     $subtotal += $price;
 }
-
+        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image
 // Verificare cupon aplicat
 $discount = 0;
 $couponCode = $_SESSION['applied_coupon'] ?? null;
@@ -99,26 +99,27 @@ $total = $subtotal - $discount;
                         
                         <?php foreach ($cartItems as $item): ?>
                         <?php $price = $item['sale_price'] ?? $item['price']; ?>
-                        <div class="row align-items-center mb-3 pb-3 border-bottom" data-cart-id="<?php echo $item['cart_id']; ?>">
-                            <div class="col-md-2">
+                        <div class="row g-3 align-items-center mb-3 pb-3 border-bottom" data-cart-id="<?php echo $item['cart_id']; ?>">
+                            <div class="col-3 col-md-2">
                                 <img src="<?php echo SITE_URL . '/uploads/' . ($item['image'] ?? 'placeholder.jpg'); ?>" 
                                      class="img-fluid rounded" alt="">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-7 col-md-5">
                                 <h6 class="mb-1"><?php echo htmlspecialchars($item['name']); ?></h6>
-                                <small class="text-muted"><?php echo number_format($price, 2); ?> LEI</small>
+                                <small class="text-muted d-block"><?php echo number_format($price, 2); ?> LEI</small>
                             </div>
-                            <div class="col-md-3">
-                            <div class="col-md-3 text-center">
-                                <span class="badge bg-secondary">x1</span>
-                            </div>
-                            <div class="col-md-2 text-end">
-                                <strong><?php echo number_format($price * $item['quantity'], 2); ?> LEI</strong>
-                            </div>
-                            <div class="col-md-1 text-end">
-                                <button class="btn btn-sm btn-outline-danger remove-item" title="Șterge">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                            <div class="col-12 col-md-5 d-flex align-items-center justify-content-between">
+                                <div class="me-3">
+                                    <span class="badge bg-secondary">x1</span>
+                                </div>
+                                <div class="text-end flex-grow-1">
+                                    <strong><?php echo number_format($price, 2); ?> LEI</strong>
+                                </div>
+                                <div class="ms-3 text-end">
+                                    <button class="btn btn-sm btn-outline-danger remove-item" title="Șterge">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -175,9 +176,7 @@ $total = $subtotal - $discount;
 </section>
 
 <script>
-document.querySelectorAll('.update-quantity').forEach(btn => {
-// Quantity controls have been removed, no need for event listeners for quantity updates
-
+// Remove item from cart (digital products: no quantity updates)
 document.querySelectorAll('.remove-item').forEach(btn => {
     btn.addEventListener('click', function() {
         if (confirm('Sigur vrei să ștergi acest produs?')) {
@@ -186,18 +185,6 @@ document.querySelectorAll('.remove-item').forEach(btn => {
         }
     });
 });
-
-function updateCart(cartId, quantity) {
-    fetch('<?php echo SITE_URL; ?>/pages/update_cart.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `cart_id=${cartId}&quantity=${quantity}`
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) location.reload();
-    });
-}
 
 function removeFromCart(cartId) {
     fetch('<?php echo SITE_URL; ?>/pages/remove_from_cart.php', {
