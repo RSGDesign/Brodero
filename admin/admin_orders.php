@@ -6,12 +6,18 @@
 
 $pageTitle = "Gestionare Comenzi";
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Verificare acces admin
+if (!function_exists('isAdmin')) {
+    function isAdmin() {
+        return isset($_SESSION['user']) && ($_SESSION['user']['role'] ?? '') === 'admin';
+    }
+}
 if (!isAdmin()) {
-    setMessage("Nu ai acces la această pagină.", "danger");
-    redirect('/');
+    header('Location: ' . SITE_URL . '/index.php');
+    exit;
 }
 
 $db = getDB();
@@ -53,6 +59,8 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     
     redirect('/admin/admin_orders.php');
 }
+
+require_once __DIR__ . '/../includes/header.php';
 
 // Filtre și căutare
 $whereConditions = [];
