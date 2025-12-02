@@ -278,19 +278,17 @@ try {
     }
     error_log("Checkout Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
     error_log("Stack trace: " . $e->getTraceAsString());
-    if (function_exists('isAdmin') && isAdmin()) {
-        setMessage("A apărut o eroare la finalizarea comenzii: " . $e->getMessage(), "danger");
-    } else {
-        setMessage("A apărut o eroare. Încearcă din nou.", "danger");
-    }
-    redirect('/pages/checkout.php');
+    
+    // Afișează eroarea direct pe ecran pentru debugging
+    die("EROARE CHECKOUT: " . $e->getMessage() . "<br>Fișier: " . $e->getFile() . "<br>Linia: " . $e->getLine() . "<br><pre>" . $e->getTraceAsString() . "</pre>");
 }
 
 } catch (Throwable $e) {
     // Catch-all pentru orice eroare PHP
     error_log("FATAL Checkout Error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
     error_log("Stack trace: " . $e->getTraceAsString());
-    setMessage("A apărut o eroare critică. Te rugăm contactează suportul.", "danger");
-    redirect('/pages/checkout.php');
+    
+    // Afișează eroarea direct pe ecran pentru debugging
+    die("EROARE FATALĂ CHECKOUT: " . $e->getMessage() . "<br>Fișier: " . $e->getFile() . "<br>Linia: " . $e->getLine() . "<br><pre>" . $e->getTraceAsString() . "</pre>");
 }
 ?>
