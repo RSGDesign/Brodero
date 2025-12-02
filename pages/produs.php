@@ -54,8 +54,21 @@ if ($product['category_id']) {
 
 // Procesare galerie imagini
 $gallery = [];
+$allImages = []; // Array cu toate imaginile (principală + galerie)
+
+// Adaugă imaginea principală
+if (!empty($product['image'])) {
+    $allImages[] = $product['image'];
+}
+
+// Adaugă imaginile din galerie
 if (!empty($product['gallery'])) {
-    $gallery = json_decode($product['gallery'], true);
+    $galleryImages = json_decode($product['gallery'], true);
+    if (is_array($galleryImages)) {
+        foreach ($galleryImages as $img) {
+            $allImages[] = $img;
+        }
+    }
 }
 
 // Calculare preț final
@@ -98,7 +111,7 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                 <div class="sticky-top" style="top: 100px;">
                     <!-- Main Image -->
                     <div class="card border-0 shadow-sm mb-3">
-                        <img src="<?php echo $product['image'] ? SITE_URL . '/uploads/' . $product['image'] : 'https://via.placeholder.com/600x450?text=' . urlencode($product['name']); ?>" 
+                        <img src="<?php echo !empty($allImages) ? SITE_URL . '/uploads/' . $allImages[0] : 'https://via.placeholder.com/600x450?text=' . urlencode($product['name']); ?>" 
                              class="card-img-top rounded" 
                              alt="<?php echo htmlspecialchars($product['name']); ?>"
                              id="mainProductImage"
@@ -112,14 +125,15 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                     </div>
                     
                     <!-- Gallery Thumbnails -->
-                    <?php if (!empty($gallery)): ?>
+                    <?php if (count($allImages) > 1): ?>
                         <div class="row g-2">
-                            <?php foreach ($gallery as $img): ?>
+                            <?php foreach ($allImages as $index => $img): ?>
                                 <div class="col-3">
                                     <img src="<?php echo SITE_URL . '/uploads/' . $img; ?>" 
-                                         class="img-fluid rounded shadow-sm thumbnail-image" 
-                                         style="cursor: pointer; height: 100px; object-fit: cover; width: 100%;"
-                                         onclick="changeMainImage('<?php echo SITE_URL . '/uploads/' . $img; ?>')">
+                                         class="img-fluid rounded shadow-sm thumbnail-image <?php echo $index === 0 ? 'active-thumbnail' : ''; ?>" 
+                                         style="cursor: pointer; height: 100px; object-fit: cover; width: 100%; border: 3px solid transparent; transition: border 0.3s;"
+                                         onclick="changeMainImage('<?php echo SITE_URL . '/uploads/' . $img; ?>', this)"
+                                         alt="Thumbnail <?php echo $index + 1; ?>">
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -309,9 +323,30 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
 
 <script>
 // Schimbare imagine principală
-function changeMainImage(imageUrl) {
+function changeMainImage(imageUrl, clickedThumbnail) {
+    // Actualizează imaginea principală
     document.getElementById('mainProductImage').src = imageUrl;
+    
+    // Elimină border de la toate thumbnail-urile
+    document.querySelectorAll('.thumbnail-image').forEach(img => {
+        img.style.border = '3px solid transparent';
+        img.classList.remove('active-thumbnail');
+    });
+    
+    // Adaugă border la thumbnail-ul selectat
+    if (clickedThumbnail) {
+        clickedThumbnail.style.border = '3px solid #6366f1';
+        clickedThumbnail.classList.add('active-thumbnail');
+    }
 }
+
+// Setează border inițial pentru primul thumbnail
+document.addEventListener('DOMContentLoaded', function() {
+    const firstThumbnail = document.querySelector('.thumbnail-image.active-thumbnail');
+    if (firstThumbnail) {
+        firstThumbnail.style.border = '3px solid #6366f1';
+    }
+});
 
 // Adăugare în coș
 function addToCart(productId) {
@@ -319,5 +354,20 @@ function addToCart(productId) {
     showNotification('Produs adăugat în coș!', 'success');
 }
 </script>
+
+<style>
+.thumbnail-image:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+.thumbnail-image {
+    transition: all 0.3s ease;
+}
+
+.active-thumbnail {
+    border: 3px solid #6366f1 !important;
+}
+</style>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
