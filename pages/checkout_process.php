@@ -126,11 +126,20 @@ try {
             $stmt = $db->prepare("
                 INSERT INTO orders (
                     user_id, order_number, total_amount,
-                    status, payment_status, payment_method, notes, 
-                    customer_name, customer_email, customer_phone, shipping_address,
+                    status, payment_status, payment_method, notes,
                     created_at
-                ) VALUES (?, ?, ?, 'pending', 'unpaid', ?, ?, ?, ?, ?, ?, NOW())
+                ) VALUES (?, ?, ?, 'pending', 'unpaid', ?, ?, NOW())
             ");
+            
+            // Param types: i,s,d,s,s (5 params)
+            $stmt->bind_param(
+                "isdss",
+                $userIdForDb,
+                $orderNumber,
+                $totalAmount,
+                $paymentMethod,
+                $notes
+            );
             
             // Param types: i,s,d,s,s,s,s,s (8 params)
             $stmt->bind_param(
