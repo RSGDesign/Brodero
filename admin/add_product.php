@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 $uploadResult = uploadImage($file, 'products/gallery');
                 if ($uploadResult['success']) {
-                    $galleryImages[] = 'gallery/' . $uploadResult['filename'];
+                    $galleryImages[] = $uploadResult['filename'];
                 } else {
                     $errors[] = "Imagine galerie: " . $uploadResult['error'];
                 }
