@@ -17,20 +17,10 @@ $sessionId = $_SESSION['session_id'];
 
 // Obține produse din coș
 if ($userId) {
-    $stmt = $db->prepare("
-        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image, p.stock, p.stock_status
-        FROM cart c
-        JOIN products p ON c.product_id = p.id
-        WHERE c.user_id = ?
-    ");
+    $stmt = $db->prepare("\n        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image\n        FROM cart c\n        JOIN products p ON c.product_id = p.id\n        WHERE c.user_id = ?\n    ");
     $stmt->bind_param("i", $userId);
 } else {
-    $stmt = $db->prepare("
-        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image, p.stock, p.stock_status
-        FROM cart c
-        JOIN products p ON c.product_id = p.id
-        WHERE c.session_id = ?
-    ");
+    $stmt = $db->prepare("\n        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image\n        FROM cart c\n        JOIN products p ON c.product_id = p.id\n        WHERE c.session_id = ?\n    ");
     $stmt->bind_param("s", $sessionId);
 }
 
