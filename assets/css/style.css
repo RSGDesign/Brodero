@@ -464,3 +464,53 @@ footer a:hover {
 .newsletter-form button[type="submit"]:active {
     transform: translateY(0);
 }
+
+/* Badge și elemente */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+.badge.bg-dark {
+    background-color: var(--dark-color) !important;
+    color: white;
+}
+
+.cart-count {
+    font-size: 0.65rem;
+    min-width: 20px;
+    height: 20px;
+    padding: 0.25rem 0.5rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Section borders */
+section.border-bottom {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Header consistency */
+header .dropdown-menu {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+header .dropdown-item:hover {
+    background-color: var(--light-color);
+}
+
+/* Footer */
+footer {
+    background-color: var(--dark-color);
+}
+
+footer a {
+    color: var(--text-muted);
+}
+
+footer a:hover {
+    color: white;
+}

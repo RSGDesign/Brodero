@@ -73,9 +73,9 @@ if ($couponCode) {
 $total = $subtotal - $discount;
 ?>
 
-<section class="bg-light py-4">
+<section class="bg-light py-4 border-bottom">
     <div class="container">
-        <h1 class="h2 fw-bold"><i class="bi bi-cart3 me-2"></i>Coșul Meu</h1>
+        <h1 class="h2 fw-bold text-dark"><i class="bi bi-cart3 me-2"></i>Coșul Meu</h1>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Acasă</a></li>

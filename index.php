@@ -43,7 +43,11 @@ if ($result && $result->num_rows > 0) {
                 </div>
             </div>
             <div class="col-lg-6 text-center d-none d-lg-block">
-                <i class="bi bi-flower3" style="font-size: 15rem; opacity: 0.2;"></i>
+                <div class="hero-image-wrapper">
+                    <img src="<?php echo SITE_URL; ?>/assets/images/about/poza2.jpg" 
+                         alt="Broderie - Design creativ" 
+                         class="img-fluid rounded-custom shadow-custom hero-image">
+                </div>
             </div>
         </div>
     </div>
@@ -180,3 +184,23 @@ if ($result && $result->num_rows > 0) {
 </section>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
+<style>
+.hero-image-wrapper {
+    overflow: hidden;
+    border-radius: 0.5rem;
+    max-height: 600px;
+}
+
+.hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.3s ease;
+}
+
+.hero-image:hover {
+    transform: scale(1.02);
+}
+</style>

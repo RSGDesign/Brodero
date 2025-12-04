@@ -193,19 +193,34 @@ require_once __DIR__ . '/../includes/header.php';
 </section>
 
 <!-- Call to Action -->
-<section class="py-5 bg-primary text-white">
+<section class="py-5 bg-light">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <h3 class="fw-bold mb-3">Alătură-te comunității Brodero!</h3>
-                <p class="mb-lg-0">
-                    Descoperă cele mai creative design-uri de broderie și fă parte din comunitatea noastră de pasionați.
+                <h3 class="fw-bold mb-3">Abonează-te la newsletter pentru oferte exclusive!</h3>
+                <p class="text-muted mb-lg-0">
+                    Fii printre primii care află despre noile design-uri și reducerile speciale.
                 </p>
             </div>
-            <div class="col-lg-4 text-lg-end">
-                <a href="<?php echo SITE_URL; ?>/pages/magazin.php" class="btn btn-white btn-lg">
-                    <i class="bi bi-shop me-2"></i>Explorează Magazinul
-                </a>
+            <div class="col-lg-4">
+                <form action="<?php echo SITE_URL; ?>/pages/newsletter.php" method="POST" class="newsletter-form needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                    <div class="input-group">
+                        <input type="email" 
+                               name="email" 
+                               class="form-control" 
+                               placeholder="Email-ul tău" 
+                               required
+                               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                               title="Introducă o adresă de email validă">
+                        <button type="submit" class="btn btn-primary">
+                            Abonează-te
+                        </button>
+                        <div class="invalid-feedback">
+                            Te rugăm să introduci un email valid.
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

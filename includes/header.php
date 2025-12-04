@@ -91,11 +91,11 @@ if (isLoggedIn()) {
                     <a href="<?php echo SITE_URL; ?>/pages/cart.php" class="position-relative text-decoration-none text-dark">
                         <i class="bi bi-cart3 fs-5"></i>
                         <?php if ($cartCount > 0): ?>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary cart-count">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark cart-count">
                                 <?php echo $cartCount; ?>
                             </span>
                         <?php else: ?>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary cart-count" style="display: none;">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark cart-count" style="display: none;">
                                 0
                             </span>
                         <?php endif; ?>

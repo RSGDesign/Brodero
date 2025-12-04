@@ -96,11 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <!-- Page Header -->
-<section class="bg-light py-4">
+<section class="bg-light py-4 border-bottom">
     <div class="container">
         <div class="row">
             <div class="col-12">
-                <h1 class="h2 fw-bold mb-0">Contact</h1>
+                <h1 class="h2 fw-bold mb-0 text-dark">Contact</h1>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Acasă</a></li>

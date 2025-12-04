@@ -84,7 +84,7 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
 ?>
 
 <!-- Breadcrumb -->
-<section class="bg-light py-3">
+<section class="bg-light py-3 border-bottom">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
