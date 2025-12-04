@@ -195,21 +195,6 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                 <!-- Product Title -->
                 <h1 class="h2 fw-bold mb-3"><?php echo htmlspecialchars($product['name']); ?></h1>
                 
-                <!-- Rating & Views (placeholder) -->
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="text-warning">
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-fill"></i>
-                        <i class="bi bi-star-half"></i>
-                        <span class="text-dark ms-2">4.5</span>
-                    </div>
-                    <span class="text-muted">|</span>
-                    <span class="text-muted">
-                        <i class="bi bi-eye me-1"></i><?php echo number_format($product['views']); ?> vizualizări
-                    </span>
-                </div>
                 
                 <!-- Price -->
                 <div class="mb-4">
@@ -230,18 +215,7 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                     <?php endif; ?>
                 </div>
                 
-                <!-- Stock Status -->
-                <div class="mb-4">
-                    <?php if ($product['stock_status'] === 'in_stock'): ?>
-                        <span class="badge bg-success">
-                            <i class="bi bi-check-circle me-1"></i>În Stoc - Disponibil
-                        </span>
-                    <?php else: ?>
-                        <span class="badge bg-danger">
-                            <i class="bi bi-x-circle me-1"></i>Stoc Epuizat
-                        </span>
-                    <?php endif; ?>
-                </div>
+                
                 
                 <!-- Description -->
                 <div class="mb-4">
