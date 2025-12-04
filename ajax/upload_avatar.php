@@ -8,33 +8,44 @@
 error_reporting(0);
 ini_set('display_errors', 0);
 
-// Oprește orice output înainte de JSON
+// Curăță buffer-ul existent
+while (ob_get_level()) {
+    ob_end_clean();
+}
+
+// Pornește buffer nou
 ob_start();
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
-// Curăță buffer-ul de output
+// Curăță buffer din nou (pentru a elimina orice output din config)
 ob_end_clean();
+ob_start();
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=UTF-8');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+
+// Funcție pentru a trimite răspuns JSON și opri execuția
+function sendJSON($data) {
+    ob_end_clean();
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 // Verificare autentificare
 if (!isLoggedIn()) {
-    echo json_encode(['success' => false, 'message' => 'Trebuie să fii autentificat.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Trebuie să fii autentificat.']);
 }
 
 // Verificare metodă POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Metodă invalidă.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Metodă invalidă.']);
 }
 
 // Verificare CSRF token
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    echo json_encode(['success' => false, 'message' => 'Token CSRF invalid.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Token CSRF invalid.']);
 }
 
 $db = getDB();
@@ -42,8 +53,7 @@ $userId = $_SESSION['user_id'];
 
 // Verificare fișier încărcat
 if (!isset($_FILES['avatar'])) {
-    echo json_encode(['success' => false, 'message' => 'Niciun fișier încărcat.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Niciun fișier încărcat.']);
 }
 
 if ($_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
@@ -62,8 +72,7 @@ if ($_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
         default:
             $errorMsg .= 'Eroare necunoscută.';
     }
-    echo json_encode(['success' => false, 'message' => $errorMsg]);
-    exit;
+    sendJSON(['success' => false, 'message' => $errorMsg]);
 }
 
 $file = $_FILES['avatar'];
@@ -72,14 +81,12 @@ $maxSize = 5 * 1024 * 1024; // 5MB
 
 // Validare tip fișier
 if (!in_array($file['type'], $allowedTypes)) {
-    echo json_encode(['success' => false, 'message' => 'Tip fișier invalid. Doar JPG și PNG sunt permise.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Tip fișier invalid. Doar JPG și PNG sunt permise.']);
 }
 
 // Validare mărime
 if ($file['size'] > $maxSize) {
-    echo json_encode(['success' => false, 'message' => 'Fișierul este prea mare. Mărimea maximă este 5MB.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Fișierul este prea mare. Mărimea maximă este 5MB.']);
 }
 
 // Creare director avatare dacă nu există
@@ -108,8 +115,7 @@ if (!function_exists('exif_imagetype')) {
 } else {
     $imageType = @exif_imagetype($file['tmp_name']);
     if ($imageType === false) {
-        echo json_encode(['success' => false, 'message' => 'Fișierul nu este o imagine validă.']);
-        exit;
+        sendJSON(['success' => false, 'message' => 'Fișierul nu este o imagine validă.']);
     }
 }
 
@@ -123,13 +129,11 @@ switch ($imageType) {
         $sourceImage = @imagecreatefrompng($file['tmp_name']);
         break;
     default:
-        echo json_encode(['success' => false, 'message' => 'Format imagine nesuportat. Folosește JPG sau PNG.']);
-        exit;
+        sendJSON(['success' => false, 'message' => 'Format imagine nesuportat. Folosește JPG sau PNG.']);
 }
 
 if (!$sourceImage) {
-    echo json_encode(['success' => false, 'message' => 'Eroare la procesarea imaginii.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Eroare la procesarea imaginii.']);
 }
 
 // Obține dimensiuni originale
@@ -146,8 +150,7 @@ $targetImage = @imagecreatetruecolor(300, 300);
 
 if (!$targetImage) {
     imagedestroy($sourceImage);
-    echo json_encode(['success' => false, 'message' => 'Eroare la crearea imaginii. Verifică extensia GD.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Eroare la crearea imaginii. Verifică extensia GD.']);
 }
 
 // Păstrare transparență pentru PNG
@@ -176,8 +179,7 @@ imagedestroy($targetImage);
 if (!$saved) {
     $lastError = error_get_last();
     $errorDetail = $lastError ? $lastError['message'] : 'necunoscut';
-    echo json_encode(['success' => false, 'message' => 'Eroare la salvarea fișierului: ' . $errorDetail]);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Eroare la salvarea fișierului: ' . $errorDetail]);
 }
 
 // Ștergere avatar vechi dacă există
@@ -196,13 +198,13 @@ $stmt = $db->prepare("UPDATE users SET avatar = ?, updated_at = NOW() WHERE id =
 $stmt->bind_param("si", $relativeFilePath, $userId);
 
 if ($stmt->execute()) {
-    echo json_encode([
+    sendJSON([
         'success' => true, 
         'message' => 'Avatar actualizat cu succes!',
         'avatar_url' => SITE_URL . '/uploads/' . $relativeFilePath
     ]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Eroare la salvare în baza de date.']);
+    sendJSON(['success' => false, 'message' => 'Eroare la salvare în baza de date.']);
 }
 
 $stmt->close();

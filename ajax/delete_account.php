@@ -7,31 +7,41 @@
 error_reporting(0);
 ini_set('display_errors', 0);
 
+// Curăță buffer-ul existent
+while (ob_get_level()) {
+    ob_end_clean();
+}
 ob_start();
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 
 ob_end_clean();
+ob_start();
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=UTF-8');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+
+// Funcție pentru a trimite răspuns JSON
+function sendJSON($data) {
+    ob_end_clean();
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 // Verificare autentificare
 if (!isLoggedIn()) {
-    echo json_encode(['success' => false, 'message' => 'Trebuie să fii autentificat.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Trebuie să fii autentificat.']);
 }
 
 // Verificare metodă POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Metodă invalidă.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Metodă invalidă.']);
 }
 
 // Verificare CSRF token
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    echo json_encode(['success' => false, 'message' => 'Token CSRF invalid.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Token CSRF invalid.']);
 }
 
 $db = getDB();
@@ -40,8 +50,7 @@ $password = $_POST['password'] ?? '';
 
 // Validare parolă
 if (empty($password)) {
-    echo json_encode(['success' => false, 'message' => 'Parola este obligatorie pentru dezactivare.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Parola este obligatorie pentru dezactivare.']);
 }
 
 // Verifică parola
@@ -52,8 +61,7 @@ $user = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 if (!$user || !password_verify($password, $user['password'])) {
-    echo json_encode(['success' => false, 'message' => 'Parola este incorectă.']);
-    exit;
+    sendJSON(['success' => false, 'message' => 'Parola este incorectă.']);
 }
 
 // Dezactivare cont (nu ștergere)
@@ -64,13 +72,13 @@ if ($stmt->execute()) {
     // Deconectare utilizator
     session_destroy();
     
-    echo json_encode([
+    sendJSON([
         'success' => true, 
         'message' => 'Contul a fost dezactivat cu succes.',
         'redirect' => SITE_URL
     ]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Eroare la dezactivare. Încearcă din nou.']);
+    sendJSON(['success' => false, 'message' => 'Eroare la dezactivare. Încearcă din nou.']);
 }
 
 $stmt->close();
