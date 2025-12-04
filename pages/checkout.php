@@ -1,35 +1,11 @@
 <?php
 /**
- * Checkout Page
- * Pagină finalizare comandă cu formular date client și selectare metodă plată
+ * Checkout Page - Plată cu Stripe
+ * Pagină finalizare comandă cu formular date client și plată prin Stripe
  */
 
 $pageTitle = "Finalizare Comandă";
 require_once __DIR__ . '/../includes/header.php';
-
-// Asigură funcțiile de mesaje există (fallback minimal)
-if (!function_exists('hasMessage')) {
-    function hasMessage() {
-        return !empty($_SESSION['flash_message']);
-    }
-}
-if (!function_exists('displayMessage')) {
-    function displayMessage() {
-        if (!empty($_SESSION['flash_message'])) {
-            $msg = $_SESSION['flash_message'];
-            echo '<div class="alert alert-' . htmlspecialchars($msg['type'] ?? 'info') . ' alert-dismissible fade show">'
-                . htmlspecialchars($msg['text'] ?? '') .
-                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' .
-                '</div>';
-            unset($_SESSION['flash_message']);
-        }
-    }
-}
-if (!function_exists('setMessage')) {
-    function setMessage($text, $type = 'info') {
-        $_SESSION['flash_message'] = ['text' => $text, 'type' => $type];
-    }
-}
 
 if (!isset($_SESSION['session_id'])) {
     $_SESSION['session_id'] = session_id();
@@ -41,29 +17,38 @@ $sessionId = $_SESSION['session_id'];
 
 // Obține produse din coș
 if ($userId) {
-    $stmt = $db->prepare("\n        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image\n        FROM cart c\n        JOIN products p ON c.product_id = p.id\n        WHERE c.user_id = ?\n    ");
+    $stmt = $db->prepare("
+        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image
+        FROM cart c
+        JOIN products p ON c.product_id = p.id
+        WHERE c.user_id = ?
+    ");
     $stmt->bind_param("i", $userId);
 } else {
-    $stmt = $db->prepare("\n        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image\n        FROM cart c\n        JOIN products p ON c.product_id = p.id\n        WHERE c.session_id = ?\n    ");
+    $stmt = $db->prepare("
+        SELECT c.id as cart_id, c.quantity, p.id, p.name, p.slug, p.price, p.sale_price, p.image
+        FROM cart c
+        JOIN products p ON c.product_id = p.id
+        WHERE c.session_id = ?
+    ");
     $stmt->bind_param("s", $sessionId);
 }
 
 $stmt->execute();
 $cartItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
 
-// Verificare coș gol
+// Redirect dacă coșul este gol
 if (empty($cartItems)) {
-    setMessage("Coșul tău este gol.", "warning");
+    setMessage("Coșul tău este gol!", "warning");
     redirect('/pages/cart.php');
 }
-
-// Produse digitale: fără verificări stoc/cantitate
 
 // Calcul subtotal
 $subtotal = 0;
 foreach ($cartItems as $item) {
     $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
-    $subtotal += $price; // cantitate implicită 1
+    $subtotal += $price;
 }
 
 // Verificare cupon aplicat
@@ -82,180 +67,230 @@ $total = $subtotal - $discount;
 
 // Preia date utilizator dacă e logat
 $userData = [];
+$firstName = '';
+$lastName = '';
+$email = '';
+$phone = '';
+
 if ($userId) {
     $stmt = $db->prepare("SELECT username, email, phone, first_name, last_name FROM users WHERE id = ?");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $userData = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($userData) {
+        $firstName = $userData['first_name'] ?? '';
+        $lastName = $userData['last_name'] ?? '';
+        $email = $userData['email'] ?? '';
+        $phone = $userData['phone'] ?? '';
+    }
 }
 ?>
 
-<div class="container my-5">
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-person-fill me-2"></i>Detalii Client</h5>
-                </div>
-                <div class="card-body">
-                    <?php if (hasMessage()): ?>
-                        <?php displayMessage(); ?>
-                    <?php endif; ?>
+<!-- Page Header -->
+<section class="bg-light py-4 border-bottom">
+    <div class="container">
+        <h1 class="h2 fw-bold text-dark"><i class="bi bi-credit-card me-2"></i>Finalizare Comandă</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Acasă</a></li>
+                <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>/pages/cart.php">Coș</a></li>
+                <li class="breadcrumb-item active">Checkout</li>
+            </ol>
+        </nav>
+    </div>
+</section>
 
-                    <form action="<?php echo SITE_URL; ?>/pages/checkout_process.php" method="POST" class="needs-validation" novalidate>
-                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Formular Checkout -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h3 class="fw-bold mb-4">Informații de Livrare</h3>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="customer_name" class="form-label">Nume Complet *</label>
-                                <input type="text" class="form-control" id="customer_name" name="customer_name" 
-                                       value="<?php echo htmlspecialchars(trim(($userData['first_name'] ?? '') . ' ' . ($userData['last_name'] ?? '')) ?: ($userData['username'] ?? '')); ?>" required>
-                                <div class="invalid-feedback">
-                                    Introdu numele complet.
+                        <form id="checkoutForm" class="checkout-form">
+                            <div class="row g-3">
+                                <!-- Prenume -->
+                                <div class="col-md-6">
+                                    <label for="firstName" class="form-label">Prenume <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="firstName" name="first_name" 
+                                           value="<?php echo htmlspecialchars($firstName); ?>" required>
+                                </div>
+
+                                <!-- Nume -->
+                                <div class="col-md-6">
+                                    <label for="lastName" class="form-label">Nume <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="lastName" name="last_name" 
+                                           value="<?php echo htmlspecialchars($lastName); ?>" required>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="<?php echo htmlspecialchars($email); ?>" required>
+                                </div>
+
+                                <!-- Telefon -->
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">Telefon <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="<?php echo htmlspecialchars($phone); ?>" required>
+                                </div>
+
+                                <!-- Adresă -->
+                                <div class="col-12">
+                                    <label for="address" class="form-label">Adresă <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="address" name="address" rows="2" placeholder="Strada, număr, bloc, scară, etaj, apartament" required></textarea>
+                                </div>
+
+                                <!-- Oraș -->
+                                <div class="col-md-6">
+                                    <label for="city" class="form-label">Oraș <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="city" name="city" required>
+                                </div>
+
+                                <!-- Cod Poștal -->
+                                <div class="col-md-6">
+                                    <label for="zipCode" class="form-label">Cod Poștal <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="zipCode" name="zip_code" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="customer_email" class="form-label">Email *</label>
-                                <input type="email" class="form-control" id="customer_email" name="customer_email" 
-                                       value="<?php echo htmlspecialchars($userData['email'] ?? ''); ?>" required>
-                                <div class="invalid-feedback">
-                                    Introdu o adresă de email validă.
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="customer_phone" class="form-label">Telefon *</label>
-                                <input type="tel" class="form-control" id="customer_phone" name="customer_phone" 
-                                       value="<?php echo htmlspecialchars($userData['phone'] ?? ''); ?>" pattern="[0-9]{10}" placeholder="07XXXXXXXX" required>
-                                <div class="invalid-feedback">
-                                    Introdu un număr de telefon valid (10 cifre).
-                                </div>
-                            </div>
-                        </div>
+                            <hr class="my-4">
 
-                        <div class="mb-3">
-                            <label for="shipping_address" class="form-label">Adresă Livrare *</label>
-                            <textarea class="form-control" id="shipping_address" name="shipping_address" 
-                                      rows="3" placeholder="Strada, număr, bloc, scară, etaj, apartament, oraș, județ, cod poștal" required></textarea>
-                            <div class="invalid-feedback">
-                                Introdu adresa completă de livrare.
-                            </div>
-                        </div>
+                            <h3 class="fw-bold mb-4">Metodă de Plată</h3>
 
-                        <div class="mb-4">
-                            <label class="form-label">Metodă Plată *</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment_bank" value="bank_transfer" checked>
-                                <label class="form-check-label" for="payment_bank">
-                                    <i class="bi bi-bank me-2"></i>Transfer Bancar
-                                    <small class="text-muted d-block">Vei primi instrucțiunile de plată pe email</small>
-                                </label>
-                            </div>
-                            <?php 
-                            // Afișează opțiunea Stripe doar dacă SDK-ul e instalat și configurat
-                            if (file_exists(__DIR__ . '/../vendor/autoload.php') && defined('STRIPE_SECRET_KEY') && !empty(STRIPE_SECRET_KEY)): 
-                            ?>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment_card" value="stripe">
-                                <label class="form-check-label" for="payment_card">
-                                    <i class="bi bi-credit-card me-2"></i>Plată Online cu Card (Stripe)
-                                    <small class="text-muted d-block">Plată securizată prin Stripe</small>
-                                </label>
-                            </div>
-                            <?php endif; ?>
-                        </div>
+                            <!-- Stripe Payment Element -->
+                            <div id="payment-element" class="mb-4"></div>
 
-                        <div class="mb-3">
-                            <label for="notes" class="form-label">Notițe Comandă (opțional)</label>
-                            <textarea class="form-control" id="notes" name="notes" rows="3" 
-                                      placeholder="Instrucțiuni speciale pentru livrare..."></textarea>
-                        </div>
+                            <input type="hidden" id="csrf_token" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <input type="hidden" id="cart_id" name="cart_id" value="1">
 
-                        <button type="submit" class="btn btn-primary btn-lg w-100">
-                            <i class="bi bi-check-circle me-2"></i>Finalizează Comanda
-                        </button>
-                    </form>
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                                <i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> LEI
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-4">
-            <div class="card shadow-sm sticky-top" style="top: 100px;">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0"><i class="bi bi-cart-check me-2"></i>Rezumat Comandă</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <h6 class="text-muted mb-3">Produse (<?php echo count($cartItems); ?>)</h6>
-                        <?php foreach ($cartItems as $item): ?>
-                            <?php
-                            $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
-                            $itemTotal = $price * $item['quantity'];
-                            ?>
-                            <div class="d-flex justify-content-between mb-2">
-                                <small>
-                                    <?php echo htmlspecialchars($item['name']); ?> 
-                                    <span class="text-muted">x<?php echo $item['quantity']; ?></span>
-                                </small>
-                                <small class="fw-bold"><?php echo number_format($itemTotal, 2); ?> LEI</small>
+            <!-- Sumar Comandă -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm sticky-top" style="top: 100px;">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold mb-4">Sumar Comandă</h4>
+
+                        <div class="order-items">
+                            <?php foreach ($cartItems as $item): ?>
+                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                                <div>
+                                    <h6 class="fw-bold mb-1"><?php echo htmlspecialchars($item['name']); ?></h6>
+                                    <small class="text-muted">Cantitate: <?php echo $item['quantity']; ?></small>
+                                </div>
+                                <div class="text-end">
+                                    <?php
+                                    $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
+                                    echo number_format($price, 2);
+                                    ?> LEI
+                                </div>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-
-                    <hr>
-
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal:</span>
-                        <strong><?php echo number_format($subtotal, 2); ?> LEI</strong>
-                    </div>
-
-                    <?php if ($discount > 0): ?>
-                        <div class="d-flex justify-content-between text-success mb-2">
-                            <span>
-                                Reducere (<?php echo htmlspecialchars($appliedCoupon['code']); ?>):
-                            </span>
-                            <strong>-<?php echo number_format($discount, 2); ?> LEI</strong>
+                            <?php endforeach; ?>
                         </div>
-                    <?php endif; ?>
 
-                    <hr>
+                        <div class="mt-4 pt-4 border-top">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <strong><?php echo number_format($subtotal, 2); ?> LEI</strong>
+                            </div>
 
-                    <div class="d-flex justify-content-between mb-3">
-                        <h5>Total:</h5>
-                        <h5 class="text-primary"><?php echo number_format($total, 2); ?> LEI</h5>
-                    </div>
+                            <?php if ($discount > 0): ?>
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Reducere:</span>
+                                <strong>-<?php echo number_format($discount, 2); ?> LEI</strong>
+                            </div>
+                            <?php endif; ?>
 
-                    <div class="alert alert-info small mb-0">
-                        <i class="bi bi-info-circle me-2"></i>
-                        Produsele digitale vor fi trimise pe email după confirmarea plății.
+                            <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                                <h5 class="fw-bold mb-0">Total:</h5>
+                                <h5 class="fw-bold mb-0 text-primary"><?php echo number_format($total, 2); ?> LEI</h5>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
+<!-- Stripe Scripts -->
+<script src="https://js.stripe.com/v3/"></script>
 <script>
-// Bootstrap form validation
-(function () {
-    'use strict'
-    var forms = document.querySelectorAll('.needs-validation')
-    Array.prototype.slice.call(forms).forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
-            }
-            form.classList.add('was-validated')
-        }, false)
-    })
-})()
+const stripe = Stripe('<?php echo STRIPE_PUBLISHABLE_KEY; ?>');
+const elements = stripe.elements();
+const paymentElement = elements.create('payment');
 
-// Phone validation
-document.getElementById('customer_phone').addEventListener('input', function(e) {
-    this.value = this.value.replace(/\D/g, '').substring(0, 10);
+paymentElement.mount('#payment-element');
+
+const checkoutForm = document.getElementById('checkoutForm');
+
+checkoutForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesez...';
+
+    const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: paymentElement
+    });
+
+    if (error) {
+        alert('Eroare: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> LEI';
+        return;
+    }
+
+    // Trimite plata la server
+    try {
+        const response = await fetch('<?php echo SITE_URL; ?>/ajax/process_payment.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                payment_method_id: paymentMethod.id,
+                cart_id: document.getElementById('cart_id').value,
+                csrf_token: document.getElementById('csrf_token').value
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Plată procesată cu succes!');
+            window.location.href = result.redirect_url;
+        } else if (result.requires_action) {
+            const { error } = await stripe.confirmCardPayment(result.client_secret);
+            if (error) {
+                alert('Eroare 3D Secure: ' + error.message);
+            } else {
+                window.location.href = '<?php echo SITE_URL; ?>/pages/order_confirmation.php';
+            }
+        } else {
+            alert('Eroare: ' + result.error);
+        }
+    } catch (err) {
+        alert('Eroare de rețea: ' + err.message);
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> LEI';
 });
 </script>
 
