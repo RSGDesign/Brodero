@@ -31,8 +31,28 @@ $db = getDB();
 $userId = $_SESSION['user_id'];
 
 // Verificare fișier încărcat
-if (!isset($_FILES['avatar']) || $_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
-    echo json_encode(['success' => false, 'message' => 'Eroare la încărcarea fișierului.']);
+if (!isset($_FILES['avatar'])) {
+    echo json_encode(['success' => false, 'message' => 'Niciun fișier încărcat.']);
+    exit;
+}
+
+if ($_FILES['avatar']['error'] !== UPLOAD_ERR_OK) {
+    $errorMsg = 'Eroare la încărcare: ';
+    switch ($_FILES['avatar']['error']) {
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE:
+            $errorMsg .= 'Fișierul este prea mare.';
+            break;
+        case UPLOAD_ERR_PARTIAL:
+            $errorMsg .= 'Fișierul a fost încărcat parțial.';
+            break;
+        case UPLOAD_ERR_NO_FILE:
+            $errorMsg .= 'Niciun fișier selectat.';
+            break;
+        default:
+            $errorMsg .= 'Eroare necunoscută.';
+    }
+    echo json_encode(['success' => false, 'message' => $errorMsg]);
     exit;
 }
 
@@ -65,18 +85,35 @@ $filePath = $avatarDir . $fileName;
 $relativeFilePath = 'avatars/' . $fileName;
 
 // Procesare imagine - redimensionare la 300x300
-$imageType = exif_imagetype($file['tmp_name']);
+if (!function_exists('exif_imagetype')) {
+    // Fallback dacă exif_imagetype nu este disponibil
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+    
+    $imageType = IMAGETYPE_JPEG; // default
+    if ($mimeType === 'image/png') {
+        $imageType = IMAGETYPE_PNG;
+    }
+} else {
+    $imageType = @exif_imagetype($file['tmp_name']);
+    if ($imageType === false) {
+        echo json_encode(['success' => false, 'message' => 'Fișierul nu este o imagine validă.']);
+        exit;
+    }
+}
+
 $sourceImage = null;
 
 switch ($imageType) {
     case IMAGETYPE_JPEG:
-        $sourceImage = imagecreatefromjpeg($file['tmp_name']);
+        $sourceImage = @imagecreatefromjpeg($file['tmp_name']);
         break;
     case IMAGETYPE_PNG:
-        $sourceImage = imagecreatefrompng($file['tmp_name']);
+        $sourceImage = @imagecreatefrompng($file['tmp_name']);
         break;
     default:
-        echo json_encode(['success' => false, 'message' => 'Format imagine nesuportat.']);
+        echo json_encode(['success' => false, 'message' => 'Format imagine nesuportat. Folosește JPG sau PNG.']);
         exit;
 }
 
@@ -95,7 +132,13 @@ $x = ($width - $size) / 2;
 $y = ($height - $size) / 2;
 
 // Creare imagine nouă 300x300
-$targetImage = imagecreatetruecolor(300, 300);
+$targetImage = @imagecreatetruecolor(300, 300);
+
+if (!$targetImage) {
+    imagedestroy($sourceImage);
+    echo json_encode(['success' => false, 'message' => 'Eroare la crearea imaginii. Verifică extensia GD.']);
+    exit;
+}
 
 // Păstrare transparență pentru PNG
 if ($imageType === IMAGETYPE_PNG) {
@@ -111,9 +154,9 @@ imagecopyresampled($targetImage, $sourceImage, 0, 0, $x, $y, 300, 300, $size, $s
 // Salvare imagine
 $saved = false;
 if ($imageType === IMAGETYPE_JPEG) {
-    $saved = imagejpeg($targetImage, $filePath, 90);
+    $saved = @imagejpeg($targetImage, $filePath, 90);
 } else {
-    $saved = imagepng($targetImage, $filePath, 9);
+    $saved = @imagepng($targetImage, $filePath, 9);
 }
 
 // Eliberare memorie
@@ -121,7 +164,9 @@ imagedestroy($sourceImage);
 imagedestroy($targetImage);
 
 if (!$saved) {
-    echo json_encode(['success' => false, 'message' => 'Eroare la salvarea fișierului.']);
+    $lastError = error_get_last();
+    $errorDetail = $lastError ? $lastError['message'] : 'necunoscut';
+    echo json_encode(['success' => false, 'message' => 'Eroare la salvarea fișierului: ' . $errorDetail]);
     exit;
 }
 
