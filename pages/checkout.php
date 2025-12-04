@@ -83,7 +83,7 @@ $total = $subtotal - $discount;
 // Preia date utilizator dacă e logat
 $userData = [];
 if ($userId) {
-    $stmt = $db->prepare("SELECT username, email FROM users WHERE id = ?");
+    $stmt = $db->prepare("SELECT username, email, phone, first_name, last_name FROM users WHERE id = ?");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $userData = $stmt->get_result()->fetch_assoc();
@@ -109,7 +109,7 @@ if ($userId) {
                             <div class="col-md-6">
                                 <label for="customer_name" class="form-label">Nume Complet *</label>
                                 <input type="text" class="form-control" id="customer_name" name="customer_name" 
-                                       value="<?php echo htmlspecialchars($userData['username'] ?? ''); ?>" required>
+                                       value="<?php echo htmlspecialchars(trim(($userData['first_name'] ?? '') . ' ' . ($userData['last_name'] ?? '')) ?: ($userData['username'] ?? '')); ?>" required>
                                 <div class="invalid-feedback">
                                     Introdu numele complet.
                                 </div>
@@ -128,7 +128,7 @@ if ($userId) {
                             <div class="col-md-6">
                                 <label for="customer_phone" class="form-label">Telefon *</label>
                                 <input type="tel" class="form-control" id="customer_phone" name="customer_phone" 
-                                       pattern="[0-9]{10}" placeholder="07XXXXXXXX" required>
+                                       value="<?php echo htmlspecialchars($userData['phone'] ?? ''); ?>" pattern="[0-9]{10}" placeholder="07XXXXXXXX" required>
                                 <div class="invalid-feedback">
                                     Introdu un număr de telefon valid (10 cifre).
                                 </div>
