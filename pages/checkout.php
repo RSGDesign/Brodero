@@ -184,6 +184,12 @@ if ($userId) {
                                 </div>
                             </div>
 
+                            <!-- Avertizare AdBlocker -->
+                            <div id="adblocker-warning" class="alert alert-warning mt-3" style="display: none;">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Avertisment:</strong> Te rugăm să dezactivezi AdBlocker pentru acest site pentru a procesa plata cu cardul.
+                            </div>
+
                             <!-- Stripe Embedded Checkout (ascuns inițial) -->
                             <div id="stripe-payment-section" style="display: none;">
                                 <div id="checkout" class="mb-4"></div>
@@ -303,7 +309,15 @@ document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
                     
                 } catch (error) {
                     console.error('Stripe Checkout Error:', error);
-                    alert('Eroare la inițializarea plății: ' + error.message);
+                    
+                    // Verifică dacă e eroare de AdBlocker
+                    if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('ERR_BLOCKED_BY_CLIENT'))) {
+                        document.getElementById('adblocker-warning').style.display = 'block';
+                        alert('AdBlocker detectat! Te rugăm să dezactivezi AdBlocker pentru acest site și să încerci din nou.');
+                    } else {
+                        alert('Eroare la inițializarea plății: ' + error.message);
+                    }
+                    
                     stripeSection.style.display = 'none';
                     document.getElementById('payment_bank').checked = true;
                     submitBtn.disabled = false;
