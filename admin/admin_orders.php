@@ -433,14 +433,19 @@ document.querySelectorAll('.update-status-form').forEach(form => {
         button.disabled = true;
         button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Se actualizează...';
         
-        fetch('<?php echo SITE_URL; ?>/admin/update_order_status.php', {
+        fetch('update_order_status.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: `order_id=${orderId}&status=${status}&csrf_token=${encodeURIComponent(csrfToken)}`
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('HTTP error ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 // Afișează notificare success
@@ -454,7 +459,7 @@ document.querySelectorAll('.update-status-form').forEach(form => {
                     location.reload();
                 }, 1500);
             } else {
-                alert('Eroare: ' + data.message);
+                alert('Eroare: ' + (data.message || 'Eroare necunoscută'));
                 button.disabled = false;
                 button.innerHTML = originalText;
             }
