@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Funcție pentru adăugare în coș (va fi folosită în pagina magazin)
 function addToCart(productId) {
-    fetch('/pages/add-to-cart.php', {
+    fetch('../pages/add_to_cart.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
