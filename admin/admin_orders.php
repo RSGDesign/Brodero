@@ -432,20 +432,27 @@ document.querySelectorAll('.update-status-form').forEach(form => {
         
         const orderId = this.querySelector('input[name="order_id"]').value;
         const status = this.querySelector('select[name="status"]').value;
+        const paymentStatus = this.querySelector('select[name="payment_status"]') ? this.querySelector('select[name="payment_status"]').value : '';
         const csrfToken = this.querySelector('input[name="csrf_token"]').value;
         const button = this.querySelector('.update-status-btn');
+        const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
         
         // Disable button și adaug loading
         const originalText = button.innerHTML;
         button.disabled = true;
         button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Se actualizează...';
         
+        let bodyData = `order_id=${orderId}&status=${status}&csrf_token=${encodeURIComponent(csrfToken)}`;
+        if (paymentStatus) {
+            bodyData += `&payment_status=${paymentStatus}`;
+        }
+        
         fetch('update_order_status.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
-            body: `order_id=${orderId}&status=${status}&csrf_token=${encodeURIComponent(csrfToken)}`
+            body: bodyData
         })
         .then(response => {
             if (!response.ok) {
@@ -455,16 +462,19 @@ document.querySelectorAll('.update-status-form').forEach(form => {
         })
         .then(data => {
             if (data.success) {
+                // Închide modalul
+                if (modal) modal.hide();
+                
                 // Afișează notificare success
                 const alert = document.createElement('div');
                 alert.className = 'alert alert-success alert-dismissible fade show m-3';
                 alert.innerHTML = `${data.message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
                 document.body.insertBefore(alert, document.body.firstChild);
                 
-                // Reîncarcă pagina după 1.5 secunde
+                // Reîncarcă pagina după 2 secunde
                 setTimeout(() => {
                     location.reload();
-                }, 1500);
+                }, 2000);
             } else {
                 alert('Eroare: ' + (data.message || 'Eroare necunoscută'));
                 button.disabled = false;
@@ -473,7 +483,7 @@ document.querySelectorAll('.update-status-form').forEach(form => {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Eroare de conexiune');
+            alert('Eroare de conexiune: ' + error.message);
             button.disabled = false;
             button.innerHTML = originalText;
         });
