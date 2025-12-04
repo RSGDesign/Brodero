@@ -379,54 +379,6 @@ function getPaymentStatusBadge($status) {
                                                     <i class="bi bi-trash"></i>
                                                 </a>
                                             </div>
-                                            
-                                            <!-- Modal Update Status -->
-                                            <div class="modal fade" id="statusModal<?php echo $order['id']; ?>" tabindex="-1">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Actualizare Status</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <form method="POST" class="needs-validation" novalidate>
-                                                            <div class="modal-body">
-                                                                <p><strong>Comandă:</strong> #<?php echo htmlspecialchars($order['order_number']); ?></p>
-                                                                <p><strong>Client:</strong> <?php echo htmlspecialchars($order['email']); ?></p>
-                                                                <hr>
-                                                                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
-                                                                <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
-                                                                
-                                                                <div class="mb-3">
-                                                                    <label class="form-label"><strong>Status Comandă</strong></label>
-                                                                    <select name="status" class="form-select">
-                                                                        <option value="">--- Nu modifica ---</option>
-                                                                        <option value="pending" <?php echo $order['status'] === 'pending' ? 'selected' : ''; ?>>În așteptare</option>
-                                                                        <option value="processing" <?php echo $order['status'] === 'processing' ? 'selected' : ''; ?>>În procesare</option>
-                                                                        <option value="completed" <?php echo $order['status'] === 'completed' ? 'selected' : ''; ?>>Finalizată</option>
-                                                                        <option value="cancelled" <?php echo $order['status'] === 'cancelled' ? 'selected' : ''; ?>>Anulată</option>
-                                                                    </select>
-                                                                </div>
-                                                                
-                                                                <div class="mb-3">
-                                                                    <label class="form-label"><strong>Status Plată</strong></label>
-                                                                    <select name="payment_status" class="form-select">
-                                                                        <option value="">--- Nu modifica ---</option>
-                                                                        <option value="unpaid" <?php echo $order['payment_status'] === 'unpaid' ? 'selected' : ''; ?>>Neachitat</option>
-                                                                        <option value="paid" <?php echo $order['payment_status'] === 'paid' ? 'selected' : ''; ?>>Plătit</option>
-                                                                        <option value="refunded" <?php echo $order['payment_status'] === 'refunded' ? 'selected' : ''; ?>>Rambursat</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                                                <button type="submit" class="btn btn-primary">
-                                                                    <i class="bi bi-check-circle me-2"></i>Actualizează
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -442,6 +394,56 @@ function getPaymentStatusBadge($status) {
                     </table>
                 </div>
             </div>
+            
+            <!-- Modals Update Status (outside table to prevent flickering) -->
+            <?php foreach ($orders as $order): ?>
+                <div class="modal fade" id="statusModal<?php echo $order['id']; ?>" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Actualizare Status</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form method="POST" class="needs-validation" novalidate>
+                                <div class="modal-body">
+                                    <p><strong>Comandă:</strong> #<?php echo htmlspecialchars($order['order_number']); ?></p>
+                                    <p><strong>Client:</strong> <?php echo htmlspecialchars($order['email']); ?></p>
+                                    <hr>
+                                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                                    <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Status Comandă</strong></label>
+                                        <select name="status" class="form-select">
+                                            <option value="">--- Nu modifica ---</option>
+                                            <option value="pending" <?php echo $order['status'] === 'pending' ? 'selected' : ''; ?>>În așteptare</option>
+                                            <option value="processing" <?php echo $order['status'] === 'processing' ? 'selected' : ''; ?>>În procesare</option>
+                                            <option value="completed" <?php echo $order['status'] === 'completed' ? 'selected' : ''; ?>>Finalizată</option>
+                                            <option value="cancelled" <?php echo $order['status'] === 'cancelled' ? 'selected' : ''; ?>>Anulată</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label"><strong>Status Plată</strong></label>
+                                        <select name="payment_status" class="form-select">
+                                            <option value="">--- Nu modifica ---</option>
+                                            <option value="unpaid" <?php echo $order['payment_status'] === 'unpaid' ? 'selected' : ''; ?>>Neachitat</option>
+                                            <option value="paid" <?php echo $order['payment_status'] === 'paid' ? 'selected' : ''; ?>>Plătit</option>
+                                            <option value="refunded" <?php echo $order['payment_status'] === 'refunded' ? 'selected' : ''; ?>>Rambursat</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle me-2"></i>Actualizează
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
             
             <!-- Pagination -->
             <?php if ($totalPages > 1): ?>
