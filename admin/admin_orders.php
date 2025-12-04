@@ -22,8 +22,19 @@ if (!isAdmin()) {
 
 $db = getDB();
 
+// Inițializare CSRF token dacă nu există
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Procesare actualizare status rapid
 if (isset($_POST['update_status']) && !empty($_POST['order_id'])) {
+    // Validare CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        setMessage("Token CSRF invalid. Încearcă din nou.", "danger");
+        redirect('/admin/admin_orders.php');
+    }
+    
     $orderId = (int)$_POST['order_id'];
     $newStatus = cleanInput($_POST['status']);
     
@@ -343,6 +354,7 @@ function getPaymentStatusBadge($status) {
                                                                 <p><strong>Comandă:</strong> #<?php echo htmlspecialchars($order['order_number']); ?></p>
                                                                 <p><strong>Client:</strong> <?php echo htmlspecialchars($order['email']); ?></p>
                                                                 <hr>
+                                                                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                                                 <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
                                                                 <div class="mb-3">
                                                                     <label class="form-label">Status nou:</label>
