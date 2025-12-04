@@ -117,7 +117,7 @@ function getPaymentStatusBadge($status) {
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <?php if (!empty($item['product_image'])): ?>
-                                                <img src="<?php echo SITE_URL; ?>/<?php echo htmlspecialchars($item['product_image']); ?>" 
+                                                <img src="<?php echo SITE_URL; ?>/uploads/<?php echo htmlspecialchars($item['product_image']); ?>" 
                                                      alt="<?php echo htmlspecialchars($item['product_name']); ?>"
                                                      class="me-3 rounded"
                                                      style="width: 50px; height: 50px; object-fit: cover;">

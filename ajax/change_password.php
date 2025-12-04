@@ -1,8 +1,11 @@
 <?php
 /**
  * Schimbare parolă utilizator
- * AJAX endpoint cu validare hash bcrypt
+ * AJAX endpoint pentru actualizare parolă
  */
+
+error_reporting(0);
+ini_set('display_errors', 0);
 
 ob_start();
 

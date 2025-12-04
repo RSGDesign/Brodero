@@ -4,6 +4,10 @@
  * AJAX endpoint cu crop și redimensionare
  */
 
+// Dezactivează afișarea erorilor pentru a nu corupe JSON-ul
+error_reporting(0);
+ini_set('display_errors', 0);
+
 // Oprește orice output înainte de JSON
 ob_start();
 
