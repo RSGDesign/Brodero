@@ -189,7 +189,9 @@ if ($result && $result->num_rows > 0) {
 .hero-image-wrapper {
     overflow: hidden;
     border-radius: 0.5rem;
-    max-height: 600px;
+    max-height: 350px;
+    max-width: 450px;
+    margin: 0 auto;
 }
 
 .hero-image {
