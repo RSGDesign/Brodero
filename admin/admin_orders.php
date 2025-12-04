@@ -27,7 +27,50 @@ if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Procesare actualizare status rapid (deprecated - folosiți AJAX endpoint)
+// Procesare actualizare status (form POST simplu)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
+    // Validare CSRF
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        setMessage("Token CSRF invalid.", "danger");
+    } else {
+        $orderId = (int)$_POST['order_id'];
+        $newStatus = cleanInput($_POST['status'] ?? '');
+        $newPaymentStatus = cleanInput($_POST['payment_status'] ?? '');
+        
+        $db = getDB();
+        $updated = false;
+        
+        // Actualizare status comandă
+        if (!empty($newStatus)) {
+            $validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+            if (in_array($newStatus, $validStatuses)) {
+                $stmt = $db->prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?");
+                $stmt->bind_param("si", $newStatus, $orderId);
+                $stmt->execute();
+                $stmt->close();
+                $updated = true;
+            }
+        }
+        
+        // Actualizare status plată
+        if (!empty($newPaymentStatus)) {
+            $validPaymentStatuses = ['unpaid', 'paid', 'refunded'];
+            if (in_array($newPaymentStatus, $validPaymentStatuses)) {
+                $stmt = $db->prepare("UPDATE orders SET payment_status = ?, updated_at = NOW() WHERE id = ?");
+                $stmt->bind_param("si", $newPaymentStatus, $orderId);
+                $stmt->execute();
+                $stmt->close();
+                $updated = true;
+            }
+        }
+        
+        if ($updated) {
+            setMessage("Status actualizat cu succes!", "success");
+        } else {
+            setMessage("Nu s-a selectat nimic de actualizat.", "warning");
+        }
+    }
+}
 
 // Procesare ștergere comandă
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
@@ -336,28 +379,32 @@ function getPaymentStatusBadge($status) {
                                                 <div class="modal-dialog modal-dialog-centered">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
-                                                            <h5 class="modal-title">Actualizare Status Comandă</h5>
+                                                            <h5 class="modal-title">Actualizare Status</h5>
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                         </div>
-                                                        <form class="update-status-form">
+                                                        <form method="POST" class="needs-validation" novalidate>
                                                             <div class="modal-body">
                                                                 <p><strong>Comandă:</strong> #<?php echo htmlspecialchars($order['order_number']); ?></p>
                                                                 <p><strong>Client:</strong> <?php echo htmlspecialchars($order['email']); ?></p>
                                                                 <hr>
                                                                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                                                 <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                                                
                                                                 <div class="mb-3">
-                                                                    <label class="form-label">Status comandă:</label>
-                                                                    <select name="status" class="form-select" required>
+                                                                    <label class="form-label"><strong>Status Comandă</strong></label>
+                                                                    <select name="status" class="form-select">
+                                                                        <option value="">--- Nu modifica ---</option>
                                                                         <option value="pending" <?php echo $order['status'] === 'pending' ? 'selected' : ''; ?>>În așteptare</option>
                                                                         <option value="processing" <?php echo $order['status'] === 'processing' ? 'selected' : ''; ?>>În procesare</option>
                                                                         <option value="completed" <?php echo $order['status'] === 'completed' ? 'selected' : ''; ?>>Finalizată</option>
                                                                         <option value="cancelled" <?php echo $order['status'] === 'cancelled' ? 'selected' : ''; ?>>Anulată</option>
                                                                     </select>
                                                                 </div>
+                                                                
                                                                 <div class="mb-3">
-                                                                    <label class="form-label">Status plată:</label>
-                                                                    <select name="payment_status" class="form-select" required>
+                                                                    <label class="form-label"><strong>Status Plată</strong></label>
+                                                                    <select name="payment_status" class="form-select">
+                                                                        <option value="">--- Nu modifica ---</option>
                                                                         <option value="unpaid" <?php echo $order['payment_status'] === 'unpaid' ? 'selected' : ''; ?>>Neachitat</option>
                                                                         <option value="paid" <?php echo $order['payment_status'] === 'paid' ? 'selected' : ''; ?>>Plătit</option>
                                                                         <option value="refunded" <?php echo $order['payment_status'] === 'refunded' ? 'selected' : ''; ?>>Rambursat</option>
@@ -366,7 +413,7 @@ function getPaymentStatusBadge($status) {
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                                                <button type="submit" class="btn btn-primary update-status-btn">
+                                                                <button type="submit" class="btn btn-primary">
                                                                     <i class="bi bi-check-circle me-2"></i>Actualizează
                                                                 </button>
                                                             </div>
@@ -424,71 +471,6 @@ function getPaymentStatusBadge($status) {
     </div>
 </section>
 
-<script>
-// AJAX form submission pentru update status
-document.querySelectorAll('.update-status-form').forEach(form => {
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const orderId = this.querySelector('input[name="order_id"]').value;
-        const status = this.querySelector('select[name="status"]').value;
-        const paymentStatus = this.querySelector('select[name="payment_status"]') ? this.querySelector('select[name="payment_status"]').value : '';
-        const csrfToken = this.querySelector('input[name="csrf_token"]').value;
-        const button = this.querySelector('.update-status-btn');
-        const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
-        
-        // Disable button și adaug loading
-        const originalText = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Se actualizează...';
-        
-        let bodyData = `order_id=${orderId}&status=${status}&csrf_token=${encodeURIComponent(csrfToken)}`;
-        if (paymentStatus) {
-            bodyData += `&payment_status=${paymentStatus}`;
-        }
-        
-        fetch('update_order_status.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: bodyData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('HTTP error ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Închide modalul
-                if (modal) modal.hide();
-                
-                // Afișează notificare success
-                const alert = document.createElement('div');
-                alert.className = 'alert alert-success alert-dismissible fade show m-3';
-                alert.innerHTML = `${data.message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-                document.body.insertBefore(alert, document.body.firstChild);
-                
-                // Reîncarcă pagina după 2 secunde
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
-            } else {
-                alert('Eroare: ' + (data.message || 'Eroare necunoscută'));
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Eroare de conexiune: ' + error.message);
-            button.disabled = false;
-            button.innerHTML = originalText;
-        });
-    });
-});
-</script>
+</section>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
