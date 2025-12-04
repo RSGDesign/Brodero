@@ -27,11 +27,11 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
-                <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1617039487369-8b0e70c7ac04?w=600&h=400&fit=crop" 
-                         alt="Broderie" 
-                         class="img-fluid rounded-custom shadow-custom">
-                    <div class="position-absolute bottom-0 end-0 bg-primary text-white p-4 rounded-custom m-3">
+                <div class="position-relative about-image-wrapper">
+                    <img src="<?php echo SITE_URL; ?>/assets/images/about/poza1.jpg" 
+                         alt="Broderie manuală - Lucru artistic de înaltă calitate" 
+                         class="img-fluid rounded-custom shadow-custom about-image">
+                    <div class="position-absolute bottom-0 end-0 bg-primary text-white p-4 rounded-custom m-3 about-badge">
                         <h3 class="fw-bold mb-0">3+</h3>
                         <p class="mb-0">Ani de Experiență</p>
                     </div>
@@ -66,9 +66,11 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-lg-6 order-lg-2">
-                <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop" 
-                     alt="Misiune" 
-                     class="img-fluid rounded-custom shadow-custom">
+                <div class="about-image-wrapper">
+                    <img src="<?php echo SITE_URL; ?>/assets/images/about/poza2.jpg" 
+                         alt="Broderie în cerc - Design creativ și colorat" 
+                         class="img-fluid rounded-custom shadow-custom about-image">
+                </div>
             </div>
             <div class="col-lg-6 order-lg-1">
                 <h2 class="section-title mb-4">Misiunea Noastră</h2>
@@ -208,5 +210,44 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </section>
+
+<style>
+.about-image-wrapper {
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+
+.about-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    max-height: 500px;
+    transition: transform 0.3s ease;
+}
+
+.about-image:hover {
+    transform: scale(1.03);
+}
+
+.about-badge {
+    backdrop-filter: blur(10px);
+    background-color: rgba(45, 55, 72, 0.9) !important;
+}
+
+@media (max-width: 768px) {
+    .about-image {
+        max-height: 350px;
+    }
+    
+    .about-badge {
+        padding: 0.75rem !important;
+    }
+    
+    .about-badge h3 {
+        font-size: 1.5rem;
+    }
+}
+</style>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
