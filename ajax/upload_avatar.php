@@ -4,8 +4,14 @@
  * AJAX endpoint cu crop și redimensionare
  */
 
+// Oprește orice output înainte de JSON
+ob_start();
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+
+// Curăță buffer-ul de output
+ob_end_clean();
 
 header('Content-Type: application/json');
 

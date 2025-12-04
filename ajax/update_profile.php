@@ -4,8 +4,12 @@
  * AJAX endpoint pentru salvare date personale
  */
 
+ob_start();
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+
+ob_end_clean();
 
 header('Content-Type: application/json');
 
