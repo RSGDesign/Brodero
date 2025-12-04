@@ -164,14 +164,36 @@ if ($userId) {
 
                             <h3 class="fw-bold mb-4">Metodă de Plată</h3>
 
-                            <!-- Stripe Payment Element -->
-                            <div id="payment-element" class="mb-4"></div>
+                            <div class="payment-methods mb-4">
+                                <!-- Transfer Bancar -->
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_bank" value="bank_transfer" checked>
+                                    <label class="form-check-label" for="payment_bank">
+                                        <i class="bi bi-bank me-2"></i><strong>Transfer Bancar</strong>
+                                        <small class="text-muted d-block">Vei primi instrucțiunile de plată pe email</small>
+                                    </label>
+                                </div>
+
+                                <!-- Stripe Card Payment -->
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_stripe" value="stripe">
+                                    <label class="form-check-label" for="payment_stripe">
+                                        <i class="bi bi-credit-card me-2"></i><strong>Card Bancar (Stripe)</strong>
+                                        <small class="text-muted d-block">Plată securizată prin Stripe</small>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Stripe Embedded Checkout (ascuns inițial) -->
+                            <div id="stripe-payment-section" style="display: none;">
+                                <div id="checkout" class="mb-4"></div>
+                            </div>
 
                             <input type="hidden" id="csrf_token" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                             <input type="hidden" id="cart_id" name="cart_id" value="1">
 
                             <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
-                                <i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> LEI
+                                <i class="bi bi-check-circle me-2"></i>Finalizează Comanda
                             </button>
                         </form>
                     </div>
@@ -229,68 +251,61 @@ if ($userId) {
 <!-- Stripe Scripts -->
 <script src="https://js.stripe.com/v3/"></script>
 <script>
+// Inițializare Stripe
 const stripe = Stripe('<?php echo STRIPE_PUBLISHABLE_KEY; ?>');
-const elements = stripe.elements();
-const paymentElement = elements.create('payment');
+let checkout = null;
 
-paymentElement.mount('#payment-element');
+// Gestionare schimbare metodă plată
+document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+    radio.addEventListener('change', async function() {
+        const stripeSection = document.getElementById('stripe-payment-section');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (this.value === 'stripe') {
+            stripeSection.style.display = 'block';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Încărcare formular...';
+            
+            // Inițializare Stripe Embedded Checkout dacă nu există
+            if (!checkout) {
+                const fetchClientSecret = async () => {
+                    const response = await fetch("<?php echo SITE_URL; ?>/ajax/process_payment.php", {
+                        method: "POST",
+                    });
+                    const { clientSecret } = await response.json();
+                    return clientSecret;
+                };
+
+                checkout = await stripe.initEmbeddedCheckout({
+                    fetchClientSecret,
+                });
+
+                checkout.mount('#checkout');
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> LEI';
+        } else {
+            stripeSection.style.display = 'none';
+            submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Finalizează Comanda';
+        }
+    });
+});
 
 const checkoutForm = document.getElementById('checkoutForm');
 
-checkoutForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+checkoutForm.addEventListener('submit', (e) => {
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
 
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesez...';
-
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: paymentElement
-    });
-
-    if (error) {
-        alert('Eroare: ' + error.message);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> LEI';
-        return;
+    if (paymentMethod === 'bank_transfer') {
+        // Trimite formular clasic pentru transfer bancar
+        checkoutForm.action = '<?php echo SITE_URL; ?>/pages/checkout_process.php';
+        checkoutForm.method = 'POST';
+        checkoutForm.submit();
+    } else {
+        // Pentru Stripe, Embedded Checkout gestionează automat plata
+        e.preventDefault();
     }
-
-    // Trimite plata la server
-    try {
-        const response = await fetch('<?php echo SITE_URL; ?>/ajax/process_payment.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                payment_method_id: paymentMethod.id,
-                cart_id: document.getElementById('cart_id').value,
-                csrf_token: document.getElementById('csrf_token').value
-            })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            alert('Plată procesată cu succes!');
-            window.location.href = result.redirect_url;
-        } else if (result.requires_action) {
-            const { error } = await stripe.confirmCardPayment(result.client_secret);
-            if (error) {
-                alert('Eroare 3D Secure: ' + error.message);
-            } else {
-                window.location.href = '<?php echo SITE_URL; ?>/pages/order_confirmation.php';
-            }
-        } else {
-            alert('Eroare: ' + result.error);
-        }
-    } catch (err) {
-        alert('Eroare de rețea: ' + err.message);
-    }
-
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> LEI';
 });
 </script>
 
