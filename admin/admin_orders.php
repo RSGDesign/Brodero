@@ -32,44 +32,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
     // Validare CSRF
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         setMessage("Token CSRF invalid.", "danger");
-    } else {
-        $orderId = (int)$_POST['order_id'];
-        $newStatus = cleanInput($_POST['status'] ?? '');
-        $newPaymentStatus = cleanInput($_POST['payment_status'] ?? '');
-        
-        $db = getDB();
-        $updated = false;
-        
-        // Actualizare status comandă
-        if (!empty($newStatus)) {
-            $validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
-            if (in_array($newStatus, $validStatuses)) {
-                $stmt = $db->prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?");
-                $stmt->bind_param("si", $newStatus, $orderId);
-                $stmt->execute();
-                $stmt->close();
-                $updated = true;
-            }
-        }
-        
-        // Actualizare status plată
-        if (!empty($newPaymentStatus)) {
-            $validPaymentStatuses = ['unpaid', 'paid', 'refunded'];
-            if (in_array($newPaymentStatus, $validPaymentStatuses)) {
-                $stmt = $db->prepare("UPDATE orders SET payment_status = ?, updated_at = NOW() WHERE id = ?");
-                $stmt->bind_param("si", $newPaymentStatus, $orderId);
-                $stmt->execute();
-                $stmt->close();
-                $updated = true;
-            }
-        }
-        
-        if ($updated) {
-            setMessage("Status actualizat cu succes!", "success");
-        } else {
-            setMessage("Nu s-a selectat nimic de actualizat.", "warning");
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+    
+    $orderId = (int)$_POST['order_id'];
+    $newStatus = cleanInput($_POST['status'] ?? '');
+    $newPaymentStatus = cleanInput($_POST['payment_status'] ?? '');
+    
+    $db = getDB();
+    $updated = false;
+    
+    // Actualizare status comandă
+    if (!empty($newStatus)) {
+        $validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+        if (in_array($newStatus, $validStatuses)) {
+            $stmt = $db->prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->bind_param("si", $newStatus, $orderId);
+            $stmt->execute();
+            $stmt->close();
+            $updated = true;
         }
     }
+    
+    // Actualizare status plată
+    if (!empty($newPaymentStatus)) {
+        $validPaymentStatuses = ['unpaid', 'paid', 'refunded'];
+        if (in_array($newPaymentStatus, $validPaymentStatuses)) {
+            $stmt = $db->prepare("UPDATE orders SET payment_status = ?, updated_at = NOW() WHERE id = ?");
+            $stmt->bind_param("si", $newPaymentStatus, $orderId);
+            $stmt->execute();
+            $stmt->close();
+            $updated = true;
+        }
+    }
+    
+    if ($updated) {
+        setMessage("Status actualizat cu succes!", "success");
+    } else {
+        setMessage("Nu s-a selectat nimic de actualizat.", "warning");
+    }
+    
+    // Redirect pentru a preveni re-submit
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
 }
 
 // Procesare ștergere comandă
