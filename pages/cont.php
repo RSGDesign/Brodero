@@ -6,7 +6,8 @@
 
 $pageTitle = "Contul Meu";
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_downloads.php';
 
 // Verificare autentificare
@@ -17,6 +18,25 @@ if (!isLoggedIn()) {
 
 $db = getDB();
 $userId = $_SESSION['user_id'];
+
+// Procesare actualizare profil ÎNAINTE de header
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
+    $firstName = cleanInput($_POST['first_name'] ?? '');
+    $lastName = cleanInput($_POST['last_name'] ?? '');
+    $phone = cleanInput($_POST['phone'] ?? '');
+    
+    $stmt = $db->prepare("UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?");
+    $stmt->bind_param("sssi", $firstName, $lastName, $phone, $userId);
+    
+    if ($stmt->execute()) {
+        $_SESSION['user_name'] = $firstName . ' ' . $lastName;
+        setMessage("Profilul a fost actualizat cu succes!", "success");
+        redirect('/pages/cont.php');
+    } else {
+        setMessage("Eroare la actualizarea profilului.", "danger");
+    }
+    $stmt->close();
+}
 
 // Obține informații utilizator
 $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
@@ -36,26 +56,9 @@ $stmt->close();
 // Obține fișiere descărcabile folosind funcția helper
 $downloads = getUserDownloadableFiles($userId);
 
-// Procesare actualizare profil
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    $firstName = cleanInput($_POST['first_name'] ?? '');
-    $lastName = cleanInput($_POST['last_name'] ?? '');
-    $phone = cleanInput($_POST['phone'] ?? '');
-    
-    $stmt = $db->prepare("UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?");
-    $stmt->bind_param("sssi", $firstName, $lastName, $phone, $userId);
-    
-    if ($stmt->execute()) {
-        $_SESSION['user_name'] = $firstName . ' ' . $lastName;
-        setMessage("Profilul a fost actualizat cu succes!", "success");
-        redirect('/pages/cont.php');
-    } else {
-        setMessage("Eroare la actualizarea profilului.", "danger");
-    }
-    $stmt->close();
-}
-
 $activeTab = $_GET['tab'] ?? 'comenzi';
+
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
