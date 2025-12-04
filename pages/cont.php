@@ -737,19 +737,32 @@ document.getElementById('avatarInput').addEventListener('change', function(e) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        // Verificăm dacă răspunsul este JSON valid
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            return response.json();
+        } else {
+            // Dacă nu e JSON, citim text-ul pentru debugging
+            return response.text().then(text => {
+                console.error('Răspuns non-JSON:', text);
+                throw new Error('Răspuns invalid de la server');
+            });
+        }
+    })
     .then(data => {
         if (data.success) {
             showNotification(data.message, 'success');
             if (data.avatar_url) {
-                document.getElementById('avatarPreview').src = data.avatar_url;
+                document.getElementById('avatarPreview').src = data.avatar_url + '?' + new Date().getTime();
             }
         } else {
             showNotification(data.message, 'danger');
         }
     })
     .catch(error => {
-        showNotification('Eroare la upload. Încearcă din nou.', 'danger');
+        console.error('Upload error:', error);
+        showNotification('Eroare la upload. Verifică consola pentru detalii.', 'danger');
     });
 });
 
