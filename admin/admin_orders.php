@@ -481,23 +481,4 @@ function getPaymentStatusBadge($status) {
 
 </section>
 
-<style>
-/* Fix pentru modal flicker on hover */
-.modal {
-    pointer-events: none;
-}
-
-.modal.show {
-    pointer-events: auto;
-}
-
-.modal-dialog {
-    pointer-events: auto;
-}
-
-.modal-backdrop {
-    pointer-events: none;
-}
-</style>
-
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
