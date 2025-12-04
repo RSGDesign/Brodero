@@ -27,28 +27,7 @@ if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
-// Procesare actualizare status rapid
-if (isset($_POST['update_status']) && !empty($_POST['order_id'])) {
-    // Validare CSRF token
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        setMessage("Token CSRF invalid. Încearcă din nou.", "danger");
-        redirect('/admin/admin_orders.php');
-    }
-    
-    $orderId = (int)$_POST['order_id'];
-    $newStatus = cleanInput($_POST['status']);
-    
-    $stmt = $db->prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?");
-    $stmt->bind_param("si", $newStatus, $orderId);
-    
-    if ($stmt->execute()) {
-        setMessage("Status comandă actualizat cu succes!", "success");
-    } else {
-        setMessage("Eroare la actualizarea statusului.", "danger");
-    }
-    $stmt->close();
-    redirect('/admin/admin_orders.php');
-}
+// Procesare actualizare status rapid (deprecated - folosiți AJAX endpoint)
 
 // Procesare ștergere comandă
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
@@ -360,10 +339,11 @@ function getPaymentStatusBadge($status) {
                                                             <h5 class="modal-title">Actualizare Status Comandă</h5>
                                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                         </div>
-                                                        <form method="POST">
+                                                        <form class="update-status-form">
                                                             <div class="modal-body">
                                                                 <p><strong>Comandă:</strong> #<?php echo htmlspecialchars($order['order_number']); ?></p>
                                                                 <p><strong>Client:</strong> <?php echo htmlspecialchars($order['email']); ?></p>
+                                                                <p><strong>Status plată:</strong> <span class="badge bg-<?php echo ($order['payment_status'] === 'paid' ? 'success' : 'warning'); ?>"><?php echo ($order['payment_status'] === 'paid' ? 'Plătit' : 'Neachitat'); ?></span></p>
                                                                 <hr>
                                                                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                                                 <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
@@ -379,7 +359,7 @@ function getPaymentStatusBadge($status) {
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                                                <button type="submit" name="update_status" value="1" class="btn btn-primary">
+                                                                <button type="submit" class="btn btn-primary update-status-btn">
                                                                     <i class="bi bi-check-circle me-2"></i>Actualizează
                                                                 </button>
                                                             </div>
@@ -436,5 +416,57 @@ function getPaymentStatusBadge($status) {
         </div>
     </div>
 </section>
+
+<script>
+// AJAX form submission pentru update status
+document.querySelectorAll('.update-status-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const orderId = this.querySelector('input[name="order_id"]').value;
+        const status = this.querySelector('select[name="status"]').value;
+        const csrfToken = this.querySelector('input[name="csrf_token"]').value;
+        const button = this.querySelector('.update-status-btn');
+        
+        // Disable button și adaug loading
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Se actualizează...';
+        
+        fetch('<?php echo SITE_URL; ?>/admin/update_order_status.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `order_id=${orderId}&status=${status}&csrf_token=${encodeURIComponent(csrfToken)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Afișează notificare success
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-success alert-dismissible fade show m-3';
+                alert.innerHTML = `${data.message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+                document.body.insertBefore(alert, document.body.firstChild);
+                
+                // Reîncarcă pagina după 1.5 secunde
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                alert('Eroare: ' + data.message);
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Eroare de conexiune');
+            button.disabled = false;
+            button.innerHTML = originalText;
+        });
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
