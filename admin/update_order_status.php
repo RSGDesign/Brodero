@@ -49,22 +49,38 @@ if (empty($_POST['order_id']) || empty($_POST['status'])) {
 
 $orderId = (int)$_POST['order_id'];
 $newStatus = cleanInput($_POST['status']);
+$newPaymentStatus = cleanInput($_POST['payment_status'] ?? '');
 
-// Validare status
+// Validare status comandă
 $validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
 if (!in_array($newStatus, $validStatuses)) {
-    sendJSON(['success' => false, 'message' => 'Status invalid.']);
+    sendJSON(['success' => false, 'message' => 'Status comandă invalid.']);
+}
+
+// Validare status plată (opțional)
+$validPaymentStatuses = ['unpaid', 'paid', 'refunded'];
+if (!empty($newPaymentStatus) && !in_array($newPaymentStatus, $validPaymentStatuses)) {
+    sendJSON(['success' => false, 'message' => 'Status plată invalid.']);
 }
 
 $db = getDB();
 
-// Actualizare status
-$stmt = $db->prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?");
-if (!$stmt) {
-    sendJSON(['success' => false, 'message' => 'Eroare la pregătire query.']);
+// Construieste query în funcție de ce se actualizează
+if (!empty($newPaymentStatus)) {
+    // Actualizare status comandă și plată
+    $stmt = $db->prepare("UPDATE orders SET status = ?, payment_status = ?, updated_at = NOW() WHERE id = ?");
+    if (!$stmt) {
+        sendJSON(['success' => false, 'message' => 'Eroare la pregătire query.']);
+    }
+    $stmt->bind_param("ssi", $newStatus, $newPaymentStatus, $orderId);
+} else {
+    // Actualizare doar status comandă
+    $stmt = $db->prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?");
+    if (!$stmt) {
+        sendJSON(['success' => false, 'message' => 'Eroare la pregătire query.']);
+    }
+    $stmt->bind_param("si", $newStatus, $orderId);
 }
-
-$stmt->bind_param("si", $newStatus, $orderId);
 
 if ($stmt->execute()) {
     sendJSON(['success' => true, 'message' => 'Status comandă actualizat cu succes!']);
