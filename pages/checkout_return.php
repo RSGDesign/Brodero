@@ -129,7 +129,7 @@ try {
                         </div>
 
                         <div class="d-grid gap-2">
-                            <a href="<?php echo SITE_URL; ?>/pages/user_orders.php" class="btn btn-primary">
+                            <a href="<?php echo SITE_URL; ?>/pages/cont.php?tab=comenzi" class="btn btn-primary">
                                 <i class="bi bi-list-ul me-2"></i>Vezi Comenzile Mele
                             </a>
                             <a href="<?php echo SITE_URL; ?>/index.php" class="btn btn-outline-secondary">
