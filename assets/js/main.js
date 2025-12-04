@@ -223,10 +223,9 @@ function addToCart(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Actualizare număr coș
-            const cartCount = document.querySelector('.badge.rounded-pill');
-            if (cartCount) {
-                cartCount.textContent = data.cartCount;
+            // Actualizare număr coș folosind funcția dedicată
+            if (data.cart_count !== undefined) {
+                updateCartCount(data.cart_count);
             }
             
             // Afișare mesaj succes

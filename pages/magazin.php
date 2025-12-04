@@ -347,7 +347,11 @@ document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
                 const cartCount = document.querySelector('.cart-count');
                 if (cartCount) {
                     cartCount.textContent = data.cart_count;
+                    cartCount.style.display = 'inline-block';
                     cartCount.classList.add('animate__animated', 'animate__pulse');
+                    setTimeout(() => {
+                        cartCount.classList.remove('animate__animated', 'animate__pulse');
+                    }, 1000);
                 }
                 
                 // Success feedback
