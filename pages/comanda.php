@@ -156,7 +156,7 @@ function getPaymentStatusBadge($status) {
                             <i class="bi bi-download me-2"></i>Descarcă Fișierele
                         </h5>
                         <p class="mb-3">Comanda ta a fost plătită! Poți descărca fișierele din secțiunea dedicată.</p>
-                        <a href="<?php echo SITE_URL; ?>/pages/cont/fisiere-descarcabile.php" class="btn btn-success">
+                        <a href="<?php echo SITE_URL; ?>/pages/cont.php?tab=fisiere" class="btn btn-success">
                             <i class="bi bi-folder-fill me-2"></i>Vezi Fișiere Descărcabile
                         </a>
                     </div>
