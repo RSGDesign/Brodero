@@ -73,6 +73,17 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 
 require_once __DIR__ . '/../includes/header.php';
 
+// Afișare mesaje
+if (isset($_SESSION['message'])) {
+    $messageType = $_SESSION['message_type'] ?? 'success';
+    echo '<div class="alert alert-' . htmlspecialchars($messageType) . ' alert-dismissible fade show m-3" role="alert">';
+    echo htmlspecialchars($_SESSION['message']);
+    echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+    echo '</div>';
+    unset($_SESSION['message']);
+    unset($_SESSION['message_type']);
+}
+
 // Filtre și căutare
 $whereConditions = [];
 $searchQuery = '';
@@ -368,7 +379,7 @@ function getPaymentStatusBadge($status) {
                                                             </div>
                                                             <div class="modal-footer">
                                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                                                <button type="submit" name="update_status" class="btn btn-primary">
+                                                                <button type="submit" name="update_status" value="1" class="btn btn-primary">
                                                                     <i class="bi bi-check-circle me-2"></i>Actualizează
                                                                 </button>
                                                             </div>
