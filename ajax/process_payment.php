@@ -5,6 +5,7 @@
  */
 
 header('Content-Type: application/json');
+error_log("=== STRIPE CHECKOUT SESSION START ===");
 
 try {
     require_once __DIR__ . '/../config/config.php';
@@ -22,16 +23,23 @@ try {
         throw new Exception('Metoda nu este permisă');
     }
 
+    // Verificare chei Stripe
+    if (!defined('STRIPE_SECRET_KEY') || empty(STRIPE_SECRET_KEY)) {
+        throw new Exception('Stripe nu este configurat corect');
+    }
+
     // Inițializare Stripe
-    $stripe = new \Stripe\StripeClient(STRIPE_SECRET_KEY);
+    \Stripe\Stripe::setApiKey(STRIPE_SECRET_KEY);
 
     // Obțineți utilizatorul și coșul
     $db = getDB();
     $userId = $_SESSION['user_id'] ?? null;
     $sessionId = $_SESSION['session_id'] ?? null;
 
+    error_log("User ID: " . ($userId ?? 'null') . ", Session ID: " . ($sessionId ?? 'null'));
+
     if (!$userId && !$sessionId) {
-        throw new Exception('Utilizator neautentificat');
+        throw new Exception('Sesiune invalidă. Te rugăm să adaugi produse în coș.');
     }
 
     // Obțineți comenzile din coș
@@ -57,14 +65,19 @@ try {
     $cartItems = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 
+    error_log("Cart items count: " . count($cartItems));
+
     if (empty($cartItems)) {
-        throw new Exception('Coșul este gol');
+        throw new Exception('Coșul este gol. Adaugă produse înainte de plată.');
     }
 
     // Construire line items pentru Stripe
     $lineItems = [];
     foreach ($cartItems as $item) {
-        $price = ($item['sale_price'] > 0 ? $item['sale_price'] : $item['price']) * 100; // Convertire în cenți
+        $price = ($item['sale_price'] > 0 ? $item['sale_price'] : $item['price']);
+        $priceInCents = (int)($price * 100); // Convertire în cenți
+        
+        error_log("Product: {$item['name']}, Price: {$price} RON, Cents: {$priceInCents}");
         
         $lineItems[] = [
             'price_data' => [
@@ -72,29 +85,42 @@ try {
                 'product_data' => [
                     'name' => $item['name'],
                 ],
-                'unit_amount' => (int)$price,
+                'unit_amount' => $priceInCents,
             ],
-            'quantity' => 1,
+            'quantity' => (int)$item['quantity'],
         ];
     }
 
+    error_log("Creating Stripe session with " . count($lineItems) . " items");
+
     // Creare Checkout Session
-    $checkoutSession = $stripe->checkout->sessions->create([
+    $checkoutSession = \Stripe\Checkout\Session::create([
         'line_items' => $lineItems,
         'mode' => 'payment',
         'ui_mode' => 'embedded',
         'return_url' => SITE_URL . '/pages/checkout_return.php?session_id={CHECKOUT_SESSION_ID}',
     ]);
 
-    echo json_encode(['clientSecret' => $checkoutSession->client_secret]);
+    error_log("Stripe session created: " . $checkoutSession->id);
+    error_log("=== STRIPE CHECKOUT SESSION SUCCESS ===");
+
+    echo json_encode([
+        'clientSecret' => $checkoutSession->client_secret
+    ]);
 
 } catch (\Stripe\Exception\ApiErrorException $e) {
+    error_log("Stripe API Error: " . $e->getMessage());
+    error_log("=== STRIPE CHECKOUT SESSION FAILED ===");
+    
     http_response_code(500);
     echo json_encode([
         'error' => 'Eroare Stripe: ' . $e->getMessage()
     ]);
 
 } catch (Exception $e) {
+    error_log("General Error: " . $e->getMessage());
+    error_log("=== STRIPE CHECKOUT SESSION FAILED ===");
+    
     http_response_code(500);
     echo json_encode([
         'error' => $e->getMessage()

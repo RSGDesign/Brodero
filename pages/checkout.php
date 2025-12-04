@@ -268,19 +268,48 @@ document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
             
             // Inițializare Stripe Embedded Checkout dacă nu există
             if (!checkout) {
-                const fetchClientSecret = async () => {
-                    const response = await fetch("<?php echo SITE_URL; ?>/ajax/process_payment.php", {
-                        method: "POST",
+                try {
+                    const fetchClientSecret = async () => {
+                        const response = await fetch("<?php echo SITE_URL; ?>/ajax/process_payment.php", {
+                            method: "POST",
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Eroare la crearea sesiunii de plată');
+                        }
+                        
+                        const data = await response.json();
+                        console.log('Client Secret received:', data.clientSecret ? 'Yes' : 'No');
+                        
+                        if (!data.clientSecret) {
+                            throw new Error('Client secret lipsește din răspuns');
+                        }
+                        
+                        return data.clientSecret;
+                    };
+
+                    console.log('Initializing Stripe Embedded Checkout...');
+                    checkout = await stripe.initEmbeddedCheckout({
+                        fetchClientSecret,
                     });
-                    const { clientSecret } = await response.json();
-                    return clientSecret;
-                };
 
-                checkout = await stripe.initEmbeddedCheckout({
-                    fetchClientSecret,
-                });
-
-                checkout.mount('#checkout');
+                    console.log('Mounting checkout...');
+                    checkout.mount('#checkout');
+                    console.log('Checkout mounted successfully');
+                    
+                } catch (error) {
+                    console.error('Stripe Checkout Error:', error);
+                    alert('Eroare la inițializarea plății: ' + error.message);
+                    stripeSection.style.display = 'none';
+                    document.getElementById('payment_bank').checked = true;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Finalizează Comanda';
+                    return;
+                }
             }
             
             submitBtn.disabled = false;
