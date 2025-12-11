@@ -4,19 +4,19 @@
  * Listare, adăugare, editare, ștergere categorii
  */
 
-$pageTitle = "Gestionare Categorii";
+// Include config ÎNAINTE de orice output
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
-require_once __DIR__ . '/../includes/header.php';
-
-// Verificare acces admin
-if (!isAdmin()) {
+// Verificare acces admin ÎNAINTE de header
+if (!isLoggedIn() || !isAdmin()) {
     setMessage("Nu ai acces la această pagină.", "danger");
     redirect('/');
 }
 
 $db = getDB();
 
-// Procesare ștergere categorie
+// Procesare ștergere categorie ÎNAINTE de includerea header.php
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     $deleteId = (int)$_GET['delete'];
     
@@ -40,13 +40,15 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     }
     
     redirect('/admin/admin_categories.php');
+    exit; // IMPORTANT: oprește execuția aici
 }
 
-// Obține toate categoriile
-$categories = $db->query("SELECT c.*, 
-                          (SELECT COUNT(*) FROM products WHERE category_id = c.id) as product_count 
-                          FROM categories c 
-                          ORDER BY c.display_order ASC, c.name ASC")->fetch_all(MYSQLI_ASSOC);
+// Acum includem header.php DUPĂ procesarea ștergerii
+$pageTitle = "Gestionare Categorii";
+require_once __DIR__ . '/../includes/header.php';
+
+// Obține toate categoriile cu numărul corect de produse (many-to-many)
+$categories = getCategoriesWithProductCount();
 
 // Statistici
 $totalCategories = count($categories);

@@ -4,19 +4,19 @@
  * Listare, adăugare, editare, ștergere produse
  */
 
-$pageTitle = "Gestionare Produse";
+// Include config ÎNAINTE de orice output
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
-require_once __DIR__ . '/../includes/header.php';
-
-// Verificare acces admin
-if (!isAdmin()) {
+// Verificare acces admin ÎNAINTE de header
+if (!isLoggedIn() || !isAdmin()) {
     setMessage("Nu ai acces la această pagină.", "danger");
     redirect('/');
 }
 
 $db = getDB();
 
-// Procesare ștergere produs
+// Procesare ștergere produs ÎNAINTE de includerea header.php
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     $deleteId = (int)$_GET['delete'];
     
@@ -59,7 +59,12 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     }
     
     redirect('/admin/admin_products.php');
+    exit; // IMPORTANT: oprește execuția aici
 }
+
+// Acum includem header.php DUPĂ procesarea ștergerii
+$pageTitle = "Gestionare Produse";
+require_once __DIR__ . '/../includes/header.php';
 
 // Obține toate produsele
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -70,13 +75,21 @@ $offset = ($page - 1) * $perPage;
 $totalProducts = $db->query("SELECT COUNT(*) as total FROM products")->fetch_assoc()['total'];
 $totalPages = ceil($totalProducts / $perPage);
 
-// Obține produse
-$query = "SELECT p.*, c.name as category_name 
+// Obține produse (fără JOIN pe categories - folosim funcția getProductCategories)
+$query = "SELECT p.* 
           FROM products p 
-          LEFT JOIN categories c ON p.category_id = c.id 
           ORDER BY p.created_at DESC 
           LIMIT $perPage OFFSET $offset";
 $products = $db->query($query)->fetch_all(MYSQLI_ASSOC);
+
+// Adaugă categoriile pentru fiecare produs
+foreach ($products as &$product) {
+    $categories = getProductCategories($product['id']);
+    $product['categories'] = $categories;
+    $product['category_names'] = array_map(function($cat) {
+        return $cat['name'];
+    }, $categories);
+}
 
 // Obține categorii pentru filtru
 $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetch_all(MYSQLI_ASSOC);
@@ -181,8 +194,10 @@ $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetch_all(MY
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <?php if ($product['category_name']): ?>
-                                                <span class="badge bg-info"><?php echo htmlspecialchars($product['category_name']); ?></span>
+                                            <?php if (!empty($product['category_names'])): ?>
+                                                <?php foreach ($product['category_names'] as $catName): ?>
+                                                    <span class="badge bg-info me-1 mb-1"><?php echo htmlspecialchars($catName); ?></span>
+                                                <?php endforeach; ?>
                                             <?php else: ?>
                                                 <span class="text-muted">-</span>
                                             <?php endif; ?>

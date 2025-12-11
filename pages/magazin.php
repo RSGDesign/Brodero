@@ -21,84 +21,45 @@ $perPage = isset($_GET['per_page']) ? (int)$_GET['per_page'] : PRODUCTS_PER_PAGE
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $perPage;
 
-// Construire query
-$whereConditions = ["p.is_active = 1"];
-$params = [];
-$types = "";
+// Construire filtre pentru funcția getProductsWithFilters
+$filters = [
+    'is_active' => 1,
+    'min_price' => $minPrice,
+    'max_price' => $maxPrice
+];
 
 if ($category > 0) {
-    $whereConditions[] = "p.category_id = ?";
-    $params[] = $category;
-    $types .= "i";
+    $filters['category_ids'] = [$category];
 }
 
 if (!empty($search)) {
-    $whereConditions[] = "(p.name LIKE ? OR p.description LIKE ?)";
-    $searchParam = "%$search%";
-    $params[] = $searchParam;
-    $params[] = $searchParam;
-    $types .= "ss";
+    $filters['search'] = $search;
 }
-
-$whereConditions[] = "COALESCE(p.sale_price, p.price) >= ?";
-$whereConditions[] = "COALESCE(p.sale_price, p.price) <= ?";
-$params[] = $minPrice;
-$params[] = $maxPrice;
-$types .= "dd";
-
-$whereClause = implode(" AND ", $whereConditions);
 
 // Sortare
-switch ($sortBy) {
-    case 'price_asc':
-        $orderBy = "COALESCE(p.sale_price, p.price) ASC";
-        break;
-    case 'price_desc':
-        $orderBy = "COALESCE(p.sale_price, p.price) DESC";
-        break;
-    case 'name_asc':
-        $orderBy = "p.name ASC";
-        break;
-    case 'popular':
-        $orderBy = "p.views DESC";
-        break;
-    default:
-        $orderBy = "p.created_at DESC";
-}
+$orderByMap = [
+    'price_asc' => 'price_asc',
+    'price_desc' => 'price_desc',
+    'name_asc' => 'name_asc',
+    'popular' => 'popular',
+    'newest' => 'newest'
+];
+$filters['order_by'] = isset($orderByMap[$sortBy]) ? $orderByMap[$sortBy] : 'newest';
 
-// Count total produse
-$countQuery = "SELECT COUNT(*) as total FROM products p WHERE $whereClause";
-$stmt = $db->prepare($countQuery);
-if (!empty($types)) {
-    $stmt->bind_param($types, ...$params);
-}
-$stmt->execute();
-$totalProducts = $stmt->get_result()->fetch_assoc()['total'];
-$stmt->close();
-
+// Obține total produse cu filtrele aplicate
+$totalProducts = countProductsWithFilters($filters);
 $totalPages = ceil($totalProducts / $perPage);
 
-// Obține produse
-$query = "SELECT p.*, c.name as category_name 
-          FROM products p 
-          LEFT JOIN categories c ON p.category_id = c.id 
-          WHERE $whereClause 
-          ORDER BY $orderBy 
-          LIMIT ? OFFSET ?";
+// Obține produse folosind funcția cu many-to-many
+$products = getProductsWithFilters($filters, $perPage, $offset);
 
-$params[] = $perPage;
-$params[] = $offset;
-$types .= "ii";
-
-$stmt = $db->prepare($query);
-$stmt->bind_param($types, ...$params);
-$stmt->execute();
-$result = $stmt->get_result();
-$products = [];
-while ($row = $result->fetch_assoc()) {
-    $products[] = $row;
+// Adaugă categoriile pentru fiecare produs (pentru afișare)
+foreach ($products as &$product) {
+    $product['categories'] = getProductCategories($product['id']);
+    $product['category_names'] = array_map(function($cat) {
+        return $cat['name'];
+    }, $product['categories']);
 }
-$stmt->close();
 
 // Obține categorii pentru filtre
 $categoriesQuery = "SELECT * FROM categories WHERE is_active = 1 ORDER BY display_order, name";
@@ -240,10 +201,12 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                          alt="<?php echo htmlspecialchars($product['name']); ?>">
                                     
                                     <div class="card-body d-flex flex-column">
-                                        <?php if ($product['category_name']): ?>
-                                            <span class="badge bg-light text-primary mb-2 align-self-start">
-                                                <?php echo htmlspecialchars($product['category_name']); ?>
-                                            </span>
+                                        <?php if (!empty($product['category_names'])): ?>
+                                            <div class="mb-2">
+                                                <?php foreach ($product['category_names'] as $catName): ?>
+                                                    <span class="badge bg-light text-primary me-1"><?php echo htmlspecialchars($catName); ?></span>
+                                                <?php endforeach; ?>
+                                            </div>
                                         <?php endif; ?>
                                         
                                         <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>

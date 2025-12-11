@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = floatval($_POST['price']);
     $sale_price = !empty($_POST['sale_price']) ? floatval($_POST['sale_price']) : null;
     $description = cleanInput($_POST['description']);
-    $category_id = (int)$_POST['category_id'];
+    $category_ids = isset($_POST['category_ids']) ? $_POST['category_ids'] : [];
     $stock_status = $_POST['stock_status'];
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     $is_featured = isset($_POST['is_featured']) ? 1 : 0;
@@ -43,8 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($description)) {
         $errors[] = "Descrierea este obligatorie.";
     }
-    if ($category_id <= 0) {
-        $errors[] = "Selectează o categorie validă.";
+    if (empty($category_ids)) {
+        $errors[] = "Selectează cel puțin o categorie.";
     }
     
     // Upload imagine principală
@@ -85,25 +85,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Salvare în baza de date
     if (empty($errors)) {
-        $stmt = $db->prepare("INSERT INTO products (name, description, price, sale_price, image, gallery, category_id, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        // Inserare produs (fără category_id - folosim tabelul product_categories)
+        $stmt = $db->prepare("INSERT INTO products (name, description, price, sale_price, image, gallery, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         
-        $stmt->bind_param("ssddssissi", 
+        $stmt->bind_param("ssddssiii", 
             $name, 
             $description, 
             $price, 
             $sale_price, 
             $mainImage, 
             $galleryJson, 
-            $category_id, 
             $stock_status, 
             $is_active, 
             $is_featured
         );
         
         if ($stmt->execute()) {
-            $success = true;
-            setMessage("Produsul a fost adăugat cu succes!", "success");
-            redirect('/admin/admin_products.php');
+            $product_id = $db->insert_id;
+            
+            // Atribuie categoriile la produs
+            if (assignCategoriesToProduct($product_id, $category_ids)) {
+                $success = true;
+                setMessage("Produsul a fost adăugat cu succes!", "success");
+                redirect('/admin/admin_products.php');
+            } else {
+                $errors[] = "Produsul a fost creat dar categoriile nu au putut fi atribuite.";
+            }
         } else {
             $errors[] = "Eroare la salvarea în baza de date: " . $stmt->error;
         }
@@ -264,16 +271,22 @@ function uploadImage($file, $subfolder = '') {
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label for="category_id" class="form-label">Categorie <span class="text-danger">*</span></label>
-                                <select class="form-select" id="category_id" name="category_id" required>
-                                    <option value="">-- Selectează Categorie --</option>
+                                <label class="form-label">Categorii <span class="text-danger">*</span></label>
+                                <small class="text-muted d-block mb-2">Selectează una sau mai multe categorii</small>
+                                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
                                     <?php foreach ($categories as $cat): ?>
-                                        <option value="<?php echo $cat['id']; ?>"
-                                                <?php echo (isset($_POST['category_id']) && $_POST['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($cat['name']); ?>
-                                        </option>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="category_<?php echo $cat['id']; ?>" 
+                                                   name="category_ids[]" 
+                                                   value="<?php echo $cat['id']; ?>"
+                                                   <?php echo (isset($_POST['category_ids']) && in_array($cat['id'], $_POST['category_ids'])) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="category_<?php echo $cat['id']; ?>">
+                                                <?php echo htmlspecialchars($cat['name']); ?>
+                                            </label>
+                                        </div>
                                     <?php endforeach; ?>
-                                </select>
+                                </div>
                             </div>
 
                             <div class="mb-3">

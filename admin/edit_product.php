@@ -40,6 +40,9 @@ if ($result->num_rows === 0) {
 $product = $result->fetch_assoc();
 $stmt->close();
 
+// Obține categoriile existente ale produsului
+$currentCategoryIds = getProductCategoryIds($productId);
+
 // Procesare formular
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validare câmpuri
@@ -47,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = floatval($_POST['price']);
     $sale_price = !empty($_POST['sale_price']) ? floatval($_POST['sale_price']) : null;
     $description = cleanInput($_POST['description']);
-    $category_id = (int)$_POST['category_id'];
+    $category_ids = isset($_POST['category_ids']) ? $_POST['category_ids'] : [];
     $stock_status = $_POST['stock_status'];
     $is_active = isset($_POST['is_active']) ? 1 : 0;
     $is_featured = isset($_POST['is_featured']) ? 1 : 0;
@@ -65,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($description)) {
         $errors[] = "Descrierea este obligatorie.";
     }
-    if ($category_id <= 0) {
-        $errors[] = "Selectează o categorie validă.";
+    if (empty($category_ids)) {
+        $errors[] = "Selectează cel puțin o categorie.";
     }
     
     // Upload imagine principală (dacă există fișier nou)
@@ -124,16 +127,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Actualizare în baza de date
     if (empty($errors)) {
-        $stmt = $db->prepare("UPDATE products SET name = ?, description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, category_id = ?, stock_status = ?, is_active = ?, is_featured = ?, updated_at = NOW() WHERE id = ?");
+        // Actualizare produs (fără category_id - folosim tabelul product_categories)
+        $stmt = $db->prepare("UPDATE products SET name = ?, description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, stock_status = ?, is_active = ?, is_featured = ?, updated_at = NOW() WHERE id = ?");
         
-        $stmt->bind_param("ssddssissii", 
+        $stmt->bind_param("ssddssiii", 
             $name, 
             $description, 
             $price, 
             $sale_price, 
             $mainImage, 
             $galleryJson, 
-            $category_id, 
             $stock_status, 
             $is_active, 
             $is_featured,
@@ -141,9 +144,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         
         if ($stmt->execute()) {
-            $success = true;
-            setMessage("Produsul a fost actualizat cu succes!", "success");
-            redirect('/admin/admin_products.php');
+            // Actualizează categoriile produsului
+            if (assignCategoriesToProduct($productId, $category_ids)) {
+                $success = true;
+                $currentCategoryIds = $category_ids; // Actualizează pentru afișare
+                setMessage("Produsul a fost actualizat cu succes!", "success");
+                redirect('/admin/admin_products.php');
+            } else {
+                $errors[] = "Produsul a fost actualizat dar categoriile nu au putut fi salvate.";
+            }
         } else {
             $errors[] = "Eroare la actualizarea în baza de date: " . $stmt->error;
         }
@@ -360,16 +369,22 @@ function uploadImage($file, $subfolder = '') {
                         </div>
                         <div class="card-body">
                             <div class="mb-3">
-                                <label for="category_id" class="form-label">Categorie <span class="text-danger">*</span></label>
-                                <select class="form-select" id="category_id" name="category_id" required>
-                                    <option value="">-- Selectează Categorie --</option>
+                                <label class="form-label">Categorii <span class="text-danger">*</span></label>
+                                <small class="text-muted d-block mb-2">Selectează una sau mai multe categorii</small>
+                                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
                                     <?php foreach ($categories as $cat): ?>
-                                        <option value="<?php echo $cat['id']; ?>"
-                                                <?php echo ($product['category_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($cat['name']); ?>
-                                        </option>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="category_<?php echo $cat['id']; ?>" 
+                                                   name="category_ids[]" 
+                                                   value="<?php echo $cat['id']; ?>"
+                                                   <?php echo in_array($cat['id'], $currentCategoryIds) ? 'checked' : ''; ?>>
+                                            <label class="form-check-label" for="category_<?php echo $cat['id']; ?>">
+                                                <?php echo htmlspecialchars($cat['name']); ?>
+                                            </label>
+                                        </div>
                                     <?php endforeach; ?>
-                                </select>
+                                </div>
                             </div>
 
                             <div class="mb-3">

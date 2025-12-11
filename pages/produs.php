@@ -17,12 +17,9 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $productId = (int)$_GET['id'];
 
-// Obține detalii produs
+// Obține detalii produs (fără JOIN pe categories - folosim many-to-many)
 $db = getDB();
-$stmt = $db->prepare("SELECT p.*, c.name as category_name, c.slug as category_slug 
-                      FROM products p 
-                      LEFT JOIN categories c ON p.category_id = c.id 
-                      WHERE p.id = ? AND p.is_active = 1");
+$stmt = $db->prepare("SELECT p.* FROM products p WHERE p.id = ? AND p.is_active = 1");
 $stmt->bind_param("i", $productId);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -35,16 +32,32 @@ if ($result->num_rows === 0) {
 $product = $result->fetch_assoc();
 $stmt->close();
 
+// Obține categoriile produsului
+$productCategories = getProductCategories($productId);
+$product['categories'] = $productCategories;
+$product['category_names'] = array_map(function($cat) {
+    return $cat['name'];
+}, $productCategories);
+
 // Incrementare vizualizări
 $db->query("UPDATE products SET views = views + 1 WHERE id = $productId");
 
-// Obține produse similare
+// Obține produse similare (din aceleași categorii)
 $similarProducts = [];
-if ($product['category_id']) {
-    $stmt = $db->prepare("SELECT * FROM products 
-                          WHERE category_id = ? AND id != ? AND is_active = 1 
+if (!empty($productCategories)) {
+    $categoryIds = array_map(function($cat) { return $cat['id']; }, $productCategories);
+    $placeholders = str_repeat('?,', count($categoryIds) - 1) . '?';
+    
+    $stmt = $db->prepare("SELECT DISTINCT p.* FROM products p
+                          INNER JOIN product_categories pc ON p.id = pc.product_id
+                          WHERE pc.category_id IN ($placeholders) 
+                          AND p.id != ? 
+                          AND p.is_active = 1 
                           ORDER BY RAND() LIMIT 4");
-    $stmt->bind_param("ii", $product['category_id'], $productId);
+    
+    $params = array_merge($categoryIds, [$productId]);
+    $types = str_repeat('i', count($params));
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
@@ -88,12 +101,12 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Acasă</a></li>
+                <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Ōasa</a></li>
                 <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>/pages/magazin.php">Magazin</a></li>
-                <?php if ($product['category_name']): ?>
+                <?php if (!empty($productCategories)): ?>
                     <li class="breadcrumb-item">
-                        <a href="<?php echo SITE_URL; ?>/pages/magazin.php?category=<?php echo $product['category_id']; ?>">
-                            <?php echo htmlspecialchars($product['category_name']); ?>
+                        <a href="<?php echo SITE_URL; ?>/pages/magazin.php?category=<?php echo $productCategories[0]['id']; ?>">
+                            <?php echo htmlspecialchars($productCategories[0]['name']); ?>
                         </a>
                     </li>
                 <?php endif; ?>
@@ -184,12 +197,16 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
             
             <!-- Product Info -->
             <div class="col-lg-6">
-                <!-- Category Badge -->
-                <?php if ($product['category_name']): ?>
-                    <a href="<?php echo SITE_URL; ?>/pages/magazin.php?category=<?php echo $product['category_id']; ?>" 
-                       class="badge bg-primary text-decoration-none mb-2">
-                        <?php echo htmlspecialchars($product['category_name']); ?>
-                    </a>
+                <!-- Category Badges -->
+                <?php if (!empty($product['category_names'])): ?>
+                    <div class="mb-2">
+                        <?php foreach ($productCategories as $cat): ?>
+                            <a href="<?php echo SITE_URL; ?>/pages/magazin.php?category=<?php echo $cat['id']; ?>" 
+                               class="badge bg-primary text-decoration-none me-1">
+                                <?php echo htmlspecialchars($cat['name']); ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
                 
                 <!-- Product Title -->

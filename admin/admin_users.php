@@ -4,19 +4,19 @@
  * Gestionare completă utilizatori - vizualizare, editare, dezactivare, ștergere
  */
 
-$pageTitle = "Gestionare Utilizatori";
+// Include config ÎNAINTE de orice output
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
-require_once __DIR__ . '/../includes/header.php';
-
-// Verificare acces admin
-if (!isAdmin()) {
+// Verificare acces admin ÎNAINTE de header
+if (!isLoggedIn() || !isAdmin()) {
     setMessage("Nu ai acces la această pagină.", "danger");
     redirect('/');
 }
 
 $db = getDB();
 
-// Procesare acțiuni POST
+// Procesare acțiuni POST ÎNAINTE de includerea header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Toggle status utilizator
@@ -41,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         redirect('/admin/admin_users.php' . ($_GET ? '?' . http_build_query($_GET) : ''));
+        exit;
     }
     
     // Ștergere utilizator
@@ -69,8 +70,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         redirect('/admin/admin_users.php' . ($_GET ? '?' . http_build_query($_GET) : ''));
+        exit;
     }
 }
+
+// Acum includem header.php DUPĂ procesarea acțiunilor
+$pageTitle = "Gestionare Utilizatori";
+require_once __DIR__ . '/../includes/header.php';
 
 // Adăugăm coloana is_active dacă nu există (pentru compatibilitate)
 $db->query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active TINYINT(1) DEFAULT 1");

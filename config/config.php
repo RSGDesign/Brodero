@@ -4,6 +4,11 @@
  * Definește constante și setări globale
  */
 
+// Activare output buffering pentru a preveni erori de header
+if (!ob_get_level()) {
+    ob_start();
+}
+
 // Pornire sesiune dacă nu este deja pornită
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -18,7 +23,7 @@ define('DB_NAME', 'u107933880_brodero');
 // Configurare site
 define('SITE_NAME', 'Brodero');
 define('SITE_URL', 'https://brodero.online');
-define('SITE_EMAIL', 'radusebastiangabriel2001@gmail.com');
+define('SITE_EMAIL', 'contact@brodero.online');
 define('SITE_PHONE', '0741133343');
 
 // Configurare paths
@@ -88,6 +93,9 @@ function isAdmin() {
 
 // Redirecționare
 function redirect($url) {
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
     header("Location: " . SITE_URL . $url);
     exit();
 }
@@ -99,4 +107,8 @@ function cleanInput($data) {
     $data = htmlspecialchars($data);
     return $data;
 }
-?>
+
+// Include funcții pentru categorii many-to-many
+if (file_exists(__DIR__ . '/../includes/category_functions.php')) {
+    require_once __DIR__ . '/../includes/category_functions.php';
+}
