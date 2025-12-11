@@ -4,15 +4,17 @@
  * Formular de contact cu upload fișiere și informații de contact
  */
 
-$pageTitle = "Contact";
-$pageDescription = "Contactează echipa Brodero pentru orice întrebări sau sugestii.";
-
-// INCLUDE HEADER LA ÎNCEPUT - EXACT CA ÎN NEWSLETTER
-require_once __DIR__ . '/../includes/header.php';
+// IMPORTANT: Include config și database PRIMUL (pentru a putea face redirect fără erori)
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
 $db = getDB();
+$errors = [];
 
-// PROCESARE FORMULAR - DUPĂ HEADER (ca în Newsletter)
+// ═══════════════════════════════════════════════════════════════════════════
+// PROCESARE FORMULAR ÎNAINTE DE ORICE OUTPUT HTML
+// Aceasta este singura modalitate corectă de a preveni eroarea "headers already sent"
+// ═══════════════════════════════════════════════════════════════════════════
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
     
@@ -58,54 +60,133 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     $attachments = [];
+    $attachmentErrors = [];
     
-    // Procesare fișiere uploadate
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PROCESARE FIȘIERE UPLOADATE (ATAȘAMENTE)
+    // ═══════════════════════════════════════════════════════════════════════════
     if (isset($_FILES['attachments']) && $_FILES['attachments']['error'][0] !== UPLOAD_ERR_NO_FILE) {
         $uploadDir = UPLOAD_PATH . 'contact/';
+        
+        // Creare director pentru fișiere de contact dacă nu există
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+            if (!mkdir($uploadDir, 0755, true)) {
+                $errors[] = "Eroare: Nu s-a putut crea directorul pentru atașamente.";
+            }
         }
         
+        // Verifică permisiunile directorului
+        if (!is_writable($uploadDir)) {
+            $errors[] = "Eroare: Directorul pentru atașamente nu este accesibil pentru scriere.";
+        }
+        
+        // Procesare fiecare fișier uploadat
         foreach ($_FILES['attachments']['tmp_name'] as $key => $tmpName) {
+            // Verifică dacă fișierul a fost uploadat cu succes
             if ($_FILES['attachments']['error'][$key] === UPLOAD_ERR_OK) {
                 $fileName = $_FILES['attachments']['name'][$key];
                 $fileSize = $_FILES['attachments']['size'][$key];
+                $fileType = $_FILES['attachments']['type'][$key];
                 $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
                 
+                // VALIDARE 1: Verifică dimensiunea fișierului
                 if ($fileSize > MAX_FILE_SIZE) {
-                    $errors[] = "Fișierul $fileName este prea mare (max 5MB).";
+                    $fileSizeMB = round(MAX_FILE_SIZE / 1024 / 1024, 1);
+                    $attachmentErrors[] = "Fișierul <strong>" . htmlspecialchars($fileName) . "</strong> este prea mare (" . round($fileSize/1024/1024, 2) . " MB). Maxim permis: {$fileSizeMB} MB.";
                     continue;
                 }
                 
+                // VALIDARE 2: Verifică extensia fișierului
                 if (!in_array($fileExt, ALLOWED_EXTENSIONS)) {
-                    $errors[] = "Tipul fișierului $fileName nu este permis.";
+                    $allowedList = implode(', ', ALLOWED_EXTENSIONS);
+                    $attachmentErrors[] = "Fișierul <strong>" . htmlspecialchars($fileName) . "</strong> are o extensie nepermisă (<strong>.{$fileExt}</strong>). Extensii permise: {$allowedList}.";
                     continue;
                 }
                 
-                $newFileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
+                // VALIDARE 3: Verifică fișierul temporar
+                if (!is_uploaded_file($tmpName)) {
+                    $attachmentErrors[] = "Eroare de securitate: Fișierul <strong>" . htmlspecialchars($fileName) . "</strong> nu este valid.";
+                    continue;
+                }
+                
+                // VALIDARE 4: Verifică tipul MIME real (nu doar extensia)
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $realMimeType = finfo_file($finfo, $tmpName);
+                finfo_close($finfo);
+                
+                $allowedMimeTypes = [
+                    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+                    'application/pdf',
+                    'application/zip', 'application/x-zip-compressed'
+                ];
+                
+                if (!in_array($realMimeType, $allowedMimeTypes)) {
+                    $attachmentErrors[] = "Fișierul <strong>" . htmlspecialchars($fileName) . "</strong> are un tip MIME invalid ({$realMimeType}).";
+                    continue;
+                }
+                
+                // Generare nume unic și sigur pentru fișier
+                $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '', pathinfo($fileName, PATHINFO_FILENAME));
+                $newFileName = uniqid('contact_') . '_' . time() . '_' . substr($safeName, 0, 50) . '.' . $fileExt;
                 $destination = $uploadDir . $newFileName;
                 
+                // Mutare fișier din locația temporară în destinație
                 if (move_uploaded_file($tmpName, $destination)) {
                     $attachments[] = $newFileName;
+                } else {
+                    $attachmentErrors[] = "Eroare la încărcarea fișierului <strong>" . htmlspecialchars($fileName) . "</strong>. Te rugăm să încerci din nou.";
                 }
+            } elseif ($_FILES['attachments']['error'][$key] !== UPLOAD_ERR_NO_FILE) {
+                // Tratare alte erori de upload
+                $errorMsg = "Eroare la uploadul fișierului <strong>" . htmlspecialchars($_FILES['attachments']['name'][$key]) . "</strong>: ";
+                switch ($_FILES['attachments']['error'][$key]) {
+                    case UPLOAD_ERR_INI_SIZE:
+                    case UPLOAD_ERR_FORM_SIZE:
+                        $errorMsg .= "Fișierul este prea mare.";
+                        break;
+                    case UPLOAD_ERR_PARTIAL:
+                        $errorMsg .= "Fișierul a fost uploadat parțial.";
+                        break;
+                    case UPLOAD_ERR_NO_TMP_DIR:
+                        $errorMsg .= "Lipsește directorul temporar.";
+                        break;
+                    case UPLOAD_ERR_CANT_WRITE:
+                        $errorMsg .= "Eroare la scrierea pe disc.";
+                        break;
+                    default:
+                        $errorMsg .= "Eroare necunoscută.";
+                }
+                $attachmentErrors[] = $errorMsg;
             }
         }
     }
     
+    // Adaugă erorile de atașamente la lista principală de erori
+    if (!empty($attachmentErrors)) {
+        $errors = array_merge($errors, $attachmentErrors);
+    }
+    
     if (empty($errors)) {
-        // ═══════════════════════════════════════════════════════════════
-        // TRIMITERE EMAIL - EXACT CA ÎN NEWSLETTER (FUNCȚIONEAZĂ!)
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TRIMITERE EMAIL CU ATAȘAMENTE - MIME MULTIPART
+        // Această metodă permite trimiterea de fișiere atașate prin funcția mail()
+        // ═══════════════════════════════════════════════════════════════════════════
         
-        $toEmail = 'radusebastiangabriel2001@gmail.com';
+        $toEmail = 'contact@brodero.online';
         $emailSubject = "Mesaj nou din formular: " . $subject;
         
-        // Construire listă atașamente pentru afișare
+        // Generare boundary unic pentru MIME multipart
+        $boundary = md5(uniqid(time()));
+        
+        // Construire listă atașamente pentru afișare în email
         $attachmentsList = '';
         if (!empty($attachments)) {
-            $attachmentsList = '<p><strong>Fișiere atașate:</strong></p><ul>';
+            $attachmentsList = '<p><strong>Fișiere atașate (' . count($attachments) . '):</strong></p><ul>';
             foreach ($attachments as $file) {
-                $attachmentsList .= '<li>' . htmlspecialchars($file) . '</li>';
+                $filePath = UPLOAD_PATH . 'contact/' . $file;
+                $fileSize = file_exists($filePath) ? filesize($filePath) : 0;
+                $fileSizeKB = round($fileSize / 1024, 2);
+                $attachmentsList .= '<li>' . htmlspecialchars($file) . ' (' . $fileSizeKB . ' KB)</li>';
             }
             $attachmentsList .= '</ul>';
         }
@@ -200,34 +281,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 </html>';
         
-        // Headers pentru HTML email - EXACT CA ÎN NEWSLETTER
+        // ═══════════════════════════════════════════════════════════════════════════
+        // HEADERS PENTRU EMAIL CU ATAȘAMENTE (MIME Multipart)
+        // ═══════════════════════════════════════════════════════════════════════════
         $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         $headers .= "From: Brodero <noreply@brodero.online>\r\n";
         $headers .= "Reply-To: " . $email . "\r\n";
+        $headers .= "Content-Type: multipart/mixed; boundary=\"{$boundary}\"\r\n";
         
-        // TRIMITERE EMAIL - FUNCȚIA mail() CARE FUNCȚIONEAZĂ
-        if (mail($toEmail, $emailSubject, $emailContent, $headers)) {
-            // Salvează și în database pentru backup (folosim $db definit la începutul paginii)
+        // ═══════════════════════════════════════════════════════════════════════════
+        // CONSTRUIRE BODY EMAIL - MIME MULTIPART FORMAT
+        // Partea 1: Conținut HTML
+        // Partea 2+: Fișiere atașate (dacă există)
+        // ═══════════════════════════════════════════════════════════════════════════
+        $emailBody = "--{$boundary}\r\n";
+        $emailBody .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $emailBody .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
+        $emailBody .= $emailContent . "\r\n\r\n";
+        
+        // ATAȘARE FIȘIERE (dacă există)
+        if (!empty($attachments)) {
+            foreach ($attachments as $attachmentFile) {
+                $filePath = UPLOAD_PATH . 'contact/' . $attachmentFile;
+                
+                // Verifică dacă fișierul există
+                if (!file_exists($filePath)) {
+                    continue; // Skip dacă fișierul nu există
+                }
+                
+                // Citește conținutul fișierului și encodează în base64
+                $fileContent = file_get_contents($filePath);
+                $fileContentEncoded = chunk_split(base64_encode($fileContent));
+                
+                // Detectare tip MIME
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_file($finfo, $filePath);
+                finfo_close($finfo);
+                
+                // Adaugă fișierul atașat în email
+                $emailBody .= "--{$boundary}\r\n";
+                $emailBody .= "Content-Type: {$mimeType}; name=\"{$attachmentFile}\"\r\n";
+                $emailBody .= "Content-Transfer-Encoding: base64\r\n";
+                $emailBody .= "Content-Disposition: attachment; filename=\"{$attachmentFile}\"\r\n\r\n";
+                $emailBody .= $fileContentEncoded . "\r\n";
+            }
+        }
+        
+        // Închide boundary-ul multipart
+        $emailBody .= "--{$boundary}--";
+        
+        // ═══════════════════════════════════════════════════════════════════════════
+        // TRIMITERE EMAIL CU FIȘIERE ATAȘATE
+        // ═══════════════════════════════════════════════════════════════════════════
+        if (mail($toEmail, $emailSubject, $emailBody, $headers)) {
+            // ✅ EMAIL TRIMIS CU SUCCES
+            
+            // Salvează în database pentru backup
             $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, attachments, status, created_at) VALUES (?, ?, ?, ?, ?, 'new', NOW())");
             $attachmentsJson = json_encode($attachments);
             $stmt->bind_param("sssss", $name, $email, $subject, $message, $attachmentsJson);
             $stmt->execute();
+            $stmt->close();
             
-            setMessage("Mesajul tău a fost trimis cu succes! Îți vom răspunde în cel mai scurt timp.", "success");
+            // Șterge fișierele temporare după trimitere (opțional - pentru a economisi spațiu)
+            // COMENTEAZĂ această secțiune dacă vrei să păstrezi fișierele pe server
+            /*
+            foreach ($attachments as $attachmentFile) {
+                $filePath = UPLOAD_PATH . 'contact/' . $attachmentFile;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+            */
+            
+            // Mesaj de succes cu detalii
+            $successMsg = "Mesajul tău a fost trimis cu succes!";
+            if (!empty($attachments)) {
+                $successMsg .= " (" . count($attachments) . " fișier(e) atașat(e))";
+            }
+            $successMsg .= " Îți vom răspunde în cel mai scurt timp.";
+            
+            setMessage($successMsg, "success");
             redirect('/pages/contact.php');
-            exit;
+            exit; // IMPORTANT: exit după redirect
         } else {
-            $errors[] = "Eroare la trimiterea emailului. Te rugăm să încerci din nou.";
+            // ❌ EROARE LA TRIMITERE
+            $errors[] = "Eroare la trimiterea emailului. Te rugăm să încerci din nou sau contactează-ne direct la contact@brodero.online";
+            
+            // Șterge fișierele uploadate dacă emailul nu a putut fi trimis
+            foreach ($attachments as $attachmentFile) {
+                $filePath = UPLOAD_PATH . 'contact/' . $attachmentFile;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
         }
     }
     
+    // Setează mesaje de eroare în sesiune pentru afișare după redirect
     if (!empty($errors)) {
         foreach ($errors as $error) {
             setMessage($error, "danger");
         }
     }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ACUM INCLUDEM HEADER.PHP (DUPĂ procesarea POST)
+// Acesta este momentul corect pentru a începe output-ul HTML
+// ═══════════════════════════════════════════════════════════════════════════
+$pageTitle = "Contact";
+$pageDescription = "Contactează echipa Brodero pentru orice întrebări sau sugestii.";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
@@ -461,5 +626,113 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </section>
+
+<!-- JavaScript pentru Preview Fișiere Atașate -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const attachmentsInput = document.getElementById('attachments');
+    
+    if (attachmentsInput) {
+        // Creare div pentru preview
+        const previewDiv = document.createElement('div');
+        previewDiv.id = 'attachments-preview';
+        previewDiv.style.marginTop = '15px';
+        attachmentsInput.parentNode.appendChild(previewDiv);
+        
+        attachmentsInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            previewDiv.innerHTML = '';
+            
+            if (files.length === 0) {
+                return;
+            }
+            
+            // Afișare informații despre fișierele selectate
+            const title = document.createElement('div');
+            title.style.fontWeight = 'bold';
+            title.style.marginBottom = '10px';
+            title.style.color = '#667eea';
+            title.innerHTML = `<i class="bi bi-paperclip"></i> Fișiere selectate (${files.length}):`;
+            previewDiv.appendChild(title);
+            
+            const fileList = document.createElement('div');
+            fileList.style.display = 'flex';
+            fileList.style.flexDirection = 'column';
+            fileList.style.gap = '8px';
+            
+            Array.from(files).forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.style.padding = '10px';
+                fileItem.style.background = '#f8f9fa';
+                fileItem.style.borderRadius = '5px';
+                fileItem.style.display = 'flex';
+                fileItem.style.justifyContent = 'space-between';
+                fileItem.style.alignItems = 'center';
+                fileItem.style.border = '1px solid #dee2e6';
+                
+                // Verificare validitate fișier
+                const fileSize = file.size;
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                const allowedExts = ['jpg', 'jpeg', 'png', 'pdf', 'zip'];
+                
+                let status = '';
+                let statusColor = '#28a745';
+                
+                if (fileSize > maxSize) {
+                    status = '❌ Prea mare (' + (fileSize / 1024 / 1024).toFixed(2) + ' MB)';
+                    statusColor = '#dc3545';
+                } else if (!allowedExts.includes(fileExt)) {
+                    status = '❌ Extensie nepermisă (.' + fileExt + ')';
+                    statusColor = '#dc3545';
+                } else {
+                    status = '✅ Valid (' + (fileSize / 1024).toFixed(1) + ' KB)';
+                    statusColor = '#28a745';
+                }
+                
+                // Icon pe baza extensiei
+                let icon = 'bi-file-earmark';
+                if (['jpg', 'jpeg', 'png'].includes(fileExt)) {
+                    icon = 'bi-file-earmark-image';
+                } else if (fileExt === 'pdf') {
+                    icon = 'bi-file-earmark-pdf';
+                } else if (fileExt === 'zip') {
+                    icon = 'bi-file-earmark-zip';
+                }
+                
+                fileItem.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="bi ${icon}" style="font-size: 24px; color: #667eea;"></i>
+                        <div>
+                            <div style="font-weight: 500;">${file.name}</div>
+                            <div style="font-size: 12px; color: #6c757d;">
+                                ${(fileSize / 1024).toFixed(1)} KB · .${fileExt.toUpperCase()}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size: 13px; font-weight: 500; color: ${statusColor};">
+                        ${status}
+                    </div>
+                `;
+                
+                fileList.appendChild(fileItem);
+            });
+            
+            previewDiv.appendChild(fileList);
+            
+            // Mesaj informativ
+            const info = document.createElement('div');
+            info.style.marginTop = '10px';
+            info.style.padding = '10px';
+            info.style.background = '#e7f3ff';
+            info.style.borderRadius = '5px';
+            info.style.fontSize = '13px';
+            info.style.color = '#004085';
+            info.innerHTML = '<i class="bi bi-info-circle"></i> Doar fișierele valide vor fi atașate la email.';
+            previewDiv.appendChild(info);
+        });
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

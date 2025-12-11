@@ -4,11 +4,11 @@
  * Formular și procesare pentru adăugarea unei categorii noi
  */
 
-$pageTitle = "Adăugare Categorie Nouă";
+// Include config PRIMUL (pentru redirect fără erori)
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
-require_once __DIR__ . '/../includes/header.php';
-
-// Verificare acces admin
+// Verificare acces admin ÎNAINTE de orice output
 if (!isAdmin()) {
     setMessage("Nu ai acces la această pagină.", "danger");
     redirect('/');
@@ -27,7 +27,7 @@ function generateSlug($text) {
     return $text;
 }
 
-// Procesare formular
+// Procesare formular ÎNAINTE de header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validare câmpuri
     $name = cleanInput($_POST['name']);
@@ -120,6 +120,10 @@ function uploadCategoryImage($file) {
         return ['success' => false, 'error' => 'Eroare la încărcarea fișierului'];
     }
 }
+
+// ACUM include header.php (DUPĂ procesarea POST)
+$pageTitle = "Adăugare Categorie Nouă";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->

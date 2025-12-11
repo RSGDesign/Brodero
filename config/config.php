@@ -4,7 +4,14 @@
  * Definește constante și setări globale
  */
 
-// Activare output buffering pentru a preveni erori de header
+// ═══════════════════════════════════════════════════════════════════════════
+// ACTIVARE OUTPUT BUFFERING - CRITICAL!
+// Previne eroarea "Cannot modify header information - headers already sent"
+// 
+// Output buffering captează tot conținutul HTML și îl trimite doar la final,
+// permițând astfel apelarea funcției header() oriunde în cod.
+// Această setare este esențială pentru redirect-uri și trimiterea de headere HTTP.
+// ═══════════════════════════════════════════════════════════════════════════
 if (!ob_get_level()) {
     ob_start();
 }

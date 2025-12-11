@@ -4,11 +4,11 @@
  * Formular și procesare pentru adăugarea unui produs nou
  */
 
-$pageTitle = "Adăugare Produs Nou";
+// Include config și database PRIMUL (pentru redirect fără erori)
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
-require_once __DIR__ . '/../includes/header.php';
-
-// Verificare acces admin
+// Verificare acces admin ÎNAINTE de orice output
 if (!isAdmin()) {
     setMessage("Nu ai acces la această pagină.", "danger");
     redirect('/');
@@ -18,7 +18,7 @@ $db = getDB();
 $errors = [];
 $success = false;
 
-// Procesare formular
+// Procesare formular ÎNAINTE de header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validare câmpuri
     $name = cleanInput($_POST['name']);
@@ -163,6 +163,10 @@ function uploadImage($file, $subfolder = '') {
         return ['success' => false, 'error' => 'Eroare la încărcarea fișierului'];
     }
 }
+
+// ACUM include header.php (DUPĂ procesarea POST)
+$pageTitle = "Adăugare Produs Nou";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
