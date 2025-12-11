@@ -11,6 +11,10 @@ class ComposerStaticInitb3d52de8a19747c65483c1902857a9db
         array (
             'Stripe\\' => 7,
         ),
+        'P' =>
+        array (
+            'PHPMailer\\PHPMailer\\' => 20,
+        ),
         'B' =>
         array (
             'Brodero\\' => 8,
@@ -21,6 +25,10 @@ class ComposerStaticInitb3d52de8a19747c65483c1902857a9db
         'Stripe\\' =>
         array (
             0 => __DIR__ . '/..' . '/stripe/stripe-php/lib',
+        ),
+        'PHPMailer\\PHPMailer\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
         'Brodero\\' =>
         array (

@@ -4,23 +4,14 @@
  * Formular de contact cu upload fișiere și informații de contact
  */
 
-// IMPORTANT: Procesare formular ÎNAINTE de orice output HTML
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../config/smtp_config.php'; // Pentru logging
+// ================================================================
+// ÎNCĂRCARE BOOTSTRAP (Autoload + Toate Configurările)
+// ================================================================
 
-// Funcție simplă de logging (dacă nu este deja definită)
-if (!function_exists('logMail')) {
-    function logMail($message, $level = 'INFO') {
-        if (!defined('MAIL_LOG_ENABLED') || !MAIL_LOG_ENABLED) return;
-        $logDir = dirname(MAIL_LOG_FILE);
-        if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
-        $timestamp = date('Y-m-d H:i:s');
-        $ip = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
-        $logMessage = "[$timestamp] [$level] [$ip] $message" . PHP_EOL;
-        @file_put_contents(MAIL_LOG_FILE, $logMessage, FILE_APPEND | LOCK_EX);
-    }
-}
+// Include bootstrap pentru încărcare automată dependențe
+require_once __DIR__ . '/../bootstrap.php';
+
+// logMail() este acum disponibil prin bootstrap.php
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];

@@ -12,12 +12,14 @@
  * - Encoding UTF-8 corect
  */
 
-// Include configurare SMTP
-require_once __DIR__ . '/../../config/smtp_config.php';
+// ================================================================
+// ÎNCĂRCARE BOOTSTRAP (Autoload + Configs)
+// ================================================================
 
-// Include PHPMailer (via Composer)
-require_once __DIR__ . '/../../vendor/autoload.php';
+// Include bootstrap pentru autoload robust
+require_once __DIR__ . '/../../bootstrap.php';
 
+// PHPMailer este acum disponibil prin autoload
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
