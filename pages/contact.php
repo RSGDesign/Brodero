@@ -4,12 +4,10 @@
  * Formular de contact cu upload fișiere și informații de contact
  */
 
-$pageTitle = "Contact";
-$pageDescription = "Contactează echipa Brodero pentru orice întrebări sau sugestii.";
+// IMPORTANT: Procesare formular ÎNAINTE de orice output HTML
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
-require_once __DIR__ . '/../includes/header.php';
-
-// Procesare formular
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = cleanInput($_POST['name'] ?? '');
     $email = cleanInput($_POST['email'] ?? '');
@@ -73,18 +71,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     if (empty($errors)) {
+        // Salvare în baza de date
         $db = getDB();
-        $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, attachments) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, attachments, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         $attachmentsJson = !empty($attachments) ? json_encode($attachments) : null;
         $stmt->bind_param("sssss", $name, $email, $subject, $message, $attachmentsJson);
         
         if ($stmt->execute()) {
-            setMessage("Mesajul tău a fost trimis cu succes! Îți vom răspunde în cel mai scurt timp.", "success");
+            // Trimitere email
+            require_once __DIR__ . '/../includes/forms/process_contact.php';
+            $emailSent = sendContactEmail($name, $email, $subject, $message, $attachments);
+            
+            if ($emailSent) {
+                setMessage("Mesajul tău a fost trimis cu succes! Îți vom răspunde în cel mai scurt timp.", "success");
+            } else {
+                setMessage("Mesajul a fost salvat, dar emailul nu a putut fi trimis. Te vom contacta în curând.", "warning");
+            }
+            $stmt->close();
             redirect('/pages/contact.php');
         } else {
             $errors[] = "Eroare la trimiterea mesajului. Te rugăm să încerci din nou.";
         }
-        $stmt->close();
     }
     
     if (!empty($errors)) {
@@ -93,6 +100,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// După procesare, includem header-ul (care va afișa HTML-ul)
+$pageTitle = "Contact";
+$pageDescription = "Contactează echipa Brodero pentru orice întrebări sau sugestii.";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
