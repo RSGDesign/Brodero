@@ -4,11 +4,11 @@
  * Formular și procesare pentru editarea unui produs
  */
 
-$pageTitle = "Editare Produs";
+// Include config PRIMUL (pentru verificări și funcții)
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
-require_once __DIR__ . '/../includes/header.php';
-
-// Verificare acces admin
+// Verificare acces admin ÎNAINTE de orice output
 if (!isAdmin()) {
     setMessage("Nu ai acces la această pagină.", "danger");
     redirect('/');
@@ -43,7 +43,7 @@ $stmt->close();
 // Obține categoriile existente ale produsului
 $currentCategoryIds = getProductCategoryIds($productId);
 
-// Procesare formular
+// Procesare formular ÎNAINTE de header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validare câmpuri
     $name = cleanInput($_POST['name']);
@@ -217,6 +217,10 @@ function uploadImage($file, $subfolder = '') {
         return ['success' => false, 'error' => 'Eroare la încărcarea fișierului'];
     }
 }
+
+// ACUM include header.php (DUPĂ procesarea POST)
+$pageTitle = "Editare Produs";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
