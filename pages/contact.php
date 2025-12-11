@@ -4,12 +4,16 @@
  * Formular de contact cu upload fișiere și informații de contact
  */
 
-// PROCESARE FORMULAR - ÎNAINTE DE ORICE OUTPUT
+$pageTitle = "Contact";
+$pageDescription = "Contactează echipa Brodero pentru orice întrebări sau sugestii.";
+
+// INCLUDE HEADER LA ÎNCEPUT - EXACT CA ÎN NEWSLETTER
+require_once __DIR__ . '/../includes/header.php';
+
+$db = getDB();
+
+// PROCESARE FORMULAR - DUPĂ HEADER (ca în Newsletter)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Include doar configurările necesare - FĂRĂ output
-    require_once __DIR__ . '/../config/config.php';
-    require_once __DIR__ . '/../config/database.php';
-    
     $errors = [];
     
     // CSRF Token Verification
@@ -204,8 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // TRIMITERE EMAIL - FUNCȚIA mail() CARE FUNCȚIONEAZĂ
         if (mail($toEmail, $emailSubject, $emailContent, $headers)) {
-            // Salvează și în database pentru backup
-            $db = getDB();
+            // Salvează și în database pentru backup (folosim $db definit la începutul paginii)
             $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, attachments, status, created_at) VALUES (?, ?, ?, ?, ?, 'new', NOW())");
             $attachmentsJson = json_encode($attachments);
             $stmt->bind_param("sssss", $name, $email, $subject, $message, $attachmentsJson);
@@ -225,11 +228,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
-// După procesare completă, includem header-ul
-$pageTitle = "Contact";
-$pageDescription = "Contactează echipa Brodero pentru orice întrebări sau sugestii.";
-require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
