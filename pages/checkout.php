@@ -113,50 +113,51 @@ if ($userId) {
 
                         <form id="checkoutForm" class="checkout-form">
                             <div class="row g-3">
-                                <!-- Prenume -->
-                                <div class="col-md-6">
-                                    <label for="firstName" class="form-label">Prenume <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="firstName" name="first_name" 
-                                           value="<?php echo htmlspecialchars($firstName); ?>" required>
-                                </div>
-
-                                <!-- Nume -->
-                                <div class="col-md-6">
-                                    <label for="lastName" class="form-label">Nume <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="lastName" name="last_name" 
-                                           value="<?php echo htmlspecialchars($lastName); ?>" required>
+                                <!-- Nume Complet -->
+                                <div class="col-12">
+                                    <label for="customerName" class="form-label">Nume Complet <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="customerName" name="customer_name" 
+                                           value="<?php echo htmlspecialchars(trim($firstName . ' ' . $lastName)); ?>" 
+                                           placeholder="Ex: Ion Popescu"
+                                           required>
+                                    <small class="text-muted">Prenume și nume de familie</small>
                                 </div>
 
                                 <!-- Email -->
                                 <div class="col-md-6">
-                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="email" name="email" 
-                                           value="<?php echo htmlspecialchars($email); ?>" required>
+                                    <label for="customerEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="customerEmail" name="customer_email" 
+                                           value="<?php echo htmlspecialchars($email); ?>" 
+                                           placeholder="exemplu@email.com"
+                                           required>
                                 </div>
 
                                 <!-- Telefon -->
                                 <div class="col-md-6">
-                                    <label for="phone" class="form-label">Telefon <span class="text-danger">*</span></label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" 
-                                           value="<?php echo htmlspecialchars($phone); ?>" required>
+                                    <label for="customerPhone" class="form-label">Telefon <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="customerPhone" name="customer_phone" 
+                                           value="<?php echo htmlspecialchars($phone); ?>" 
+                                           placeholder="0712345678"
+                                           required>
+                                    <small class="text-muted">Minim 10 cifre</small>
                                 </div>
 
-                                <!-- Adresă -->
+                                <!-- Adresă Completă -->
                                 <div class="col-12">
-                                    <label for="address" class="form-label">Adresă <span class="text-danger">*</span></label>
-                                    <textarea class="form-control" id="address" name="address" rows="2" placeholder="Strada, număr, bloc, scară, etaj, apartament" required></textarea>
+                                    <label for="shippingAddress" class="form-label">Adresă Completă de Livrare <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="shippingAddress" name="shipping_address" 
+                                              rows="3" 
+                                              placeholder="Strada, număr, bloc, scară, etaj, apartament, oraș, județ, cod poștal&#10;Ex: Str. Exemplu Nr. 10, Bl. A, Sc. 1, Et. 2, Ap. 5, București, Sector 1, 010101" 
+                                              required></textarea>
+                                    <small class="text-muted">Include oraș, județ și cod poștal</small>
                                 </div>
 
-                                <!-- Oraș -->
-                                <div class="col-md-6">
-                                    <label for="city" class="form-label">Oraș <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="city" name="city" required>
-                                </div>
-
-                                <!-- Cod Poștal -->
-                                <div class="col-md-6">
-                                    <label for="zipCode" class="form-label">Cod Poștal <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="zipCode" name="zip_code" required>
+                                <!-- Notițe Opționale -->
+                                <div class="col-12">
+                                    <label for="orderNotes" class="form-label">Notițe Comandă <small class="text-muted">(opțional)</small></label>
+                                    <textarea class="form-control" id="orderNotes" name="notes" 
+                                              rows="2" 
+                                              placeholder="Informații suplimentare despre comandă..."></textarea>
                                 </div>
                             </div>
 
@@ -338,18 +339,86 @@ document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
 const checkoutForm = document.getElementById('checkoutForm');
 
 checkoutForm.addEventListener('submit', (e) => {
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    e.preventDefault(); // Previne submit automat
+    
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+    
+    if (!paymentMethod) {
+        alert('Te rugăm să selectezi o metodă de plată.');
+        return false;
+    }
 
-    if (paymentMethod === 'bank_transfer') {
+    // Validare câmpuri înainte de submit
+    const customerName = document.getElementById('customerName').value.trim();
+    const customerEmail = document.getElementById('customerEmail').value.trim();
+    const customerPhone = document.getElementById('customerPhone').value.trim();
+    const shippingAddress = document.getElementById('shippingAddress').value.trim();
+
+    if (!customerName || !customerEmail || !customerPhone || !shippingAddress) {
+        alert('Te rugăm să completezi toate câmpurile obligatorii marcate cu *');
+        return false;
+    }
+
+    // Validare email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+        alert('Te rugăm să introduci o adresă de email validă.');
+        document.getElementById('customerEmail').focus();
+        return false;
+    }
+
+    // Validare telefon (minimum 10 cifre)
+    const phoneDigits = customerPhone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) {
+        alert('Numărul de telefon trebuie să conțină cel puțin 10 cifre.');
+        document.getElementById('customerPhone').focus();
+        return false;
+    }
+
+    if (paymentMethod.value === 'bank_transfer') {
         // Trimite formular clasic pentru transfer bancar
         checkoutForm.action = '<?php echo SITE_URL; ?>/pages/checkout_process.php';
         checkoutForm.method = 'POST';
+        
+        // Dezactivează butonul pentru a preveni submit-uri multiple
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Se procesează...';
+        
         checkoutForm.submit();
     } else {
         // Pentru Stripe, Embedded Checkout gestionează automat plata
-        e.preventDefault();
+        // Nu facem nimic, checkout-ul Stripe se ocupă
+        console.log('Stripe checkout - handled by embedded form');
     }
 });
+
+// Salvare date în localStorage pentru persistență la erori
+const formInputs = ['customerName', 'customerEmail', 'customerPhone', 'shippingAddress', 'orderNotes'];
+formInputs.forEach(inputId => {
+    const input = document.getElementById(inputId);
+    if (input && input.value === '') {
+        // Restaurează valori salvate anterior (la eroare)
+        const savedValue = localStorage.getItem('checkout_' + inputId);
+        if (savedValue) {
+            input.value = savedValue;
+        }
+    }
+    
+    // Salvează la modificare
+    if (input) {
+        input.addEventListener('input', function() {
+            localStorage.setItem('checkout_' + inputId, this.value);
+        });
+    }
+});
+
+// Curăță localStorage după submit reușit (detection la întoarcere success)
+if (window.location.search.includes('success')) {
+    formInputs.forEach(inputId => {
+        localStorage.removeItem('checkout_' + inputId);
+    });
+}
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

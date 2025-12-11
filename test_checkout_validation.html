@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Validare Checkout - Brodero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background: #f5f5f5; padding: 40px 0; }
+        .test-container { max-width: 800px; margin: 0 auto; }
+        .result-box { margin-top: 20px; padding: 15px; border-radius: 8px; }
+        .result-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .result-error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .field-status { font-size: 12px; margin-top: 3px; }
+        .field-valid { color: #28a745; }
+        .field-invalid { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="test-container">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-bug me-2"></i>
+                        Test Validare Formular Checkout
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Scop Test:</strong> Verifică că toate câmpurile sunt trimise corect către PHP și validarea funcționează.
+                    </div>
+
+                    <form id="testCheckoutForm">
+                        <div class="row g-3">
+                            <!-- Nume Complet -->
+                            <div class="col-12">
+                                <label for="customerName" class="form-label">
+                                    Nume Complet <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="customerName" 
+                                       name="customer_name" 
+                                       placeholder="Ex: Ion Popescu"
+                                       required>
+                                <div class="field-status" id="status_name"></div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label for="customerEmail" class="form-label">
+                                    Email <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" class="form-control" id="customerEmail" 
+                                       name="customer_email" 
+                                       placeholder="exemplu@email.com"
+                                       required>
+                                <div class="field-status" id="status_email"></div>
+                            </div>
+
+                            <!-- Telefon -->
+                            <div class="col-md-6">
+                                <label for="customerPhone" class="form-label">
+                                    Telefon <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel" class="form-control" id="customerPhone" 
+                                       name="customer_phone" 
+                                       placeholder="0712345678"
+                                       required>
+                                <div class="field-status" id="status_phone"></div>
+                            </div>
+
+                            <!-- Adresă -->
+                            <div class="col-12">
+                                <label for="shippingAddress" class="form-label">
+                                    Adresă Completă <span class="text-danger">*</span>
+                                </label>
+                                <textarea class="form-control" id="shippingAddress" 
+                                          name="shipping_address" 
+                                          rows="3" 
+                                          placeholder="Strada, număr, bloc, oraș, județ, cod poștal"
+                                          required></textarea>
+                                <div class="field-status" id="status_address"></div>
+                            </div>
+
+                            <!-- Notițe -->
+                            <div class="col-12">
+                                <label for="orderNotes" class="form-label">
+                                    Notițe (opțional)
+                                </label>
+                                <textarea class="form-control" id="orderNotes" 
+                                          name="notes" 
+                                          rows="2"></textarea>
+                            </div>
+
+                            <!-- Metodă Plată -->
+                            <div class="col-12">
+                                <label class="form-label">Metodă Plată</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" 
+                                           id="payment_bank" value="bank_transfer" checked>
+                                    <label class="form-check-label" for="payment_bank">
+                                        Transfer Bancar
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" 
+                                           id="payment_stripe" value="stripe">
+                                    <label class="form-check-label" for="payment_stripe">
+                                        Card (Stripe)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success btn-lg" onclick="validateForm()">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Validează Formular (Test Client-Side)
+                            </button>
+                            <button type="button" class="btn btn-primary btn-lg" onclick="simulateSubmit()">
+                                <i class="bi bi-send me-2"></i>
+                                Simulează Trimitere POST
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="resultBox" class="result-box" style="display: none;"></div>
+
+                    <!-- Scurtături Test -->
+                    <div class="card mt-4 bg-light">
+                        <div class="card-body">
+                            <h6 class="mb-3"><i class="bi bi-lightning me-2"></i>Scurtături Test Rapid:</h6>
+                            <div class="btn-group-vertical w-100" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="fillValid()">
+                                    ✅ Completează Date Valide
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="fillInvalid()">
+                                    ❌ Lasă Câmpuri Goale
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="fillWhitespace()">
+                                    ⚠️ Completează cu Spații Goale
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearForm()">
+                                    🔄 Resetează Formular
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ghid Validare -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="mb-3"><i class="bi bi-list-check me-2"></i>Reguli Validare:</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Câmp</th>
+                                <th>Regulă</th>
+                                <th>Nume POST</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Nume Complet</td>
+                                <td>Nu poate fi gol (după trim)</td>
+                                <td><code>customer_name</code></td>
+                            </tr>
+                            <tr>
+                                <td>Email</td>
+                                <td>Format valid + nu gol</td>
+                                <td><code>customer_email</code></td>
+                            </tr>
+                            <tr>
+                                <td>Telefon</td>
+                                <td>Minimum 10 cifre</td>
+                                <td><code>customer_phone</code></td>
+                            </tr>
+                            <tr>
+                                <td>Adresă</td>
+                                <td>Nu poate fi goală</td>
+                                <td><code>shipping_address</code></td>
+                            </tr>
+                            <tr>
+                                <td>Notițe</td>
+                                <td>Opțional</td>
+                                <td><code>notes</code></td>
+                            </tr>
+                            <tr>
+                                <td>Metodă Plată</td>
+                                <td>bank_transfer sau stripe</td>
+                                <td><code>payment_method</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Validare în timp real
+        const fields = [
+            { id: 'customerName', name: 'Nume Complet', statusId: 'status_name', validation: (val) => val.trim() !== '' },
+            { id: 'customerEmail', name: 'Email', statusId: 'status_email', validation: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim()) },
+            { id: 'customerPhone', name: 'Telefon', statusId: 'status_phone', validation: (val) => val.replace(/\D/g, '').length >= 10 },
+            { id: 'shippingAddress', name: 'Adresă', statusId: 'status_address', validation: (val) => val.trim() !== '' }
+        ];
+
+        fields.forEach(field => {
+            const input = document.getElementById(field.id);
+            input.addEventListener('input', function() {
+                const statusDiv = document.getElementById(field.statusId);
+                const isValid = field.validation(this.value);
+                
+                if (this.value === '') {
+                    statusDiv.innerHTML = '';
+                } else if (isValid) {
+                    statusDiv.className = 'field-status field-valid';
+                    statusDiv.innerHTML = `<i class="bi bi-check-circle"></i> ${field.name} valid`;
+                } else {
+                    statusDiv.className = 'field-status field-invalid';
+                    statusDiv.innerHTML = `<i class="bi bi-x-circle"></i> ${field.name} invalid`;
+                }
+            });
+        });
+
+        function validateForm() {
+            const resultBox = document.getElementById('resultBox');
+            const errors = [];
+            
+            fields.forEach(field => {
+                const input = document.getElementById(field.id);
+                const value = input.value;
+                
+                if (!field.validation(value)) {
+                    errors.push(field.name);
+                }
+            });
+
+            if (errors.length === 0) {
+                resultBox.className = 'result-box result-success';
+                resultBox.innerHTML = `
+                    <strong><i class="bi bi-check-circle-fill me-2"></i>Validare Reușită!</strong><br>
+                    Toate câmpurile obligatorii sunt completate corect.
+                `;
+            } else {
+                resultBox.className = 'result-box result-error';
+                resultBox.innerHTML = `
+                    <strong><i class="bi bi-x-circle-fill me-2"></i>Validare Eșuată!</strong><br>
+                    Câmpuri invalide: ${errors.join(', ')}
+                `;
+            }
+            
+            resultBox.style.display = 'block';
+        }
+
+        function simulateSubmit() {
+            const formData = new FormData(document.getElementById('testCheckoutForm'));
+            const resultBox = document.getElementById('resultBox');
+            
+            resultBox.className = 'result-box result-success';
+            resultBox.innerHTML = `
+                <strong><i class="bi bi-code-square me-2"></i>Date POST care vor fi trimise:</strong>
+                <pre style="background: #f8f9fa; padding: 10px; margin-top: 10px; border-radius: 5px; font-size: 12px;">`;
+            
+            for (let [key, value] of formData.entries()) {
+                const trimmedValue = value.trim();
+                resultBox.innerHTML += `<strong>${key}:</strong> "${trimmedValue}" (lungime: ${trimmedValue.length})\n`;
+            }
+            
+            resultBox.innerHTML += `</pre>`;
+            resultBox.style.display = 'block';
+        }
+
+        function fillValid() {
+            document.getElementById('customerName').value = 'Ion Popescu';
+            document.getElementById('customerEmail').value = 'ion.popescu@example.com';
+            document.getElementById('customerPhone').value = '0712345678';
+            document.getElementById('shippingAddress').value = 'Str. Exemplu Nr. 10, București, Sector 1, 010101';
+            document.getElementById('orderNotes').value = 'Livrare rapidă, vă rog!';
+            
+            // Trigger validation
+            fields.forEach(field => {
+                document.getElementById(field.id).dispatchEvent(new Event('input'));
+            });
+        }
+
+        function fillInvalid() {
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('shippingAddress').value = '';
+        }
+
+        function fillWhitespace() {
+            document.getElementById('customerName').value = '   ';
+            document.getElementById('customerEmail').value = '   ';
+            document.getElementById('customerPhone').value = '   ';
+            document.getElementById('shippingAddress').value = '   ';
+        }
+
+        function clearForm() {
+            document.getElementById('testCheckoutForm').reset();
+            document.getElementById('resultBox').style.display = 'none';
+            fields.forEach(field => {
+                document.getElementById(field.statusId).innerHTML = '';
+            });
+        }
+    </script>
+</body>
+</html>

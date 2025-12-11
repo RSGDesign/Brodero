@@ -12,22 +12,42 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('/pages/cart.php');
 }
 
+// Debugging: logare POST data (doar în development)
+if (defined('DEBUG_MODE') && DEBUG_MODE === true) {
+    error_log("=== CHECKOUT POST DATA ===");
+    error_log("POST Keys: " . implode(", ", array_keys($_POST)));
+    error_log("customer_name: " . ($_POST['customer_name'] ?? 'MISSING'));
+    error_log("customer_email: " . ($_POST['customer_email'] ?? 'MISSING'));
+    error_log("customer_phone: " . ($_POST['customer_phone'] ?? 'MISSING'));
+    error_log("shipping_address: " . ($_POST['shipping_address'] ?? 'MISSING'));
+    error_log("payment_method: " . ($_POST['payment_method'] ?? 'MISSING'));
+}
+
 // Verificare CSRF token
 if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
     setMessage("Token invalid. Încearcă din nou.", "danger");
     redirect('/pages/checkout.php');
 }
 
-// Validare date POST
-$customerName = trim($_POST['customer_name'] ?? '');
-$customerEmail = trim($_POST['customer_email'] ?? '');
-$customerPhone = trim($_POST['customer_phone'] ?? '');
-$shippingAddress = trim($_POST['shipping_address'] ?? '');
-$paymentMethod = $_POST['payment_method'] ?? '';
-$notes = trim($_POST['notes'] ?? '');
+// Validare date POST - extragere și curățare
+$customerName = isset($_POST['customer_name']) ? trim($_POST['customer_name']) : '';
+$customerEmail = isset($_POST['customer_email']) ? trim($_POST['customer_email']) : '';
+$customerPhone = isset($_POST['customer_phone']) ? trim($_POST['customer_phone']) : '';
+$shippingAddress = isset($_POST['shipping_address']) ? trim($_POST['shipping_address']) : '';
+$paymentMethod = isset($_POST['payment_method']) ? trim($_POST['payment_method']) : '';
+$notes = isset($_POST['notes']) ? trim($_POST['notes']) : '';
 
-if (empty($customerName) || empty($customerEmail) || empty($customerPhone) || empty($shippingAddress)) {
-    setMessage("Completează toate câmpurile obligatorii.", "danger");
+// Validare câmpuri obligatorii - verifică dacă sunt complet goale DUPĂ trim
+if ($customerName === '' || $customerEmail === '' || $customerPhone === '' || $shippingAddress === '') {
+    // Debugging: loghează ce câmpuri lipsesc
+    $missingFields = [];
+    if ($customerName === '') $missingFields[] = 'Nume Complet';
+    if ($customerEmail === '') $missingFields[] = 'Email';
+    if ($customerPhone === '') $missingFields[] = 'Telefon';
+    if ($shippingAddress === '') $missingFields[] = 'Adresă Livrare';
+    
+    $errorMsg = "Completează toate câmpurile obligatorii: " . implode(', ', $missingFields);
+    setMessage($errorMsg, "danger");
     redirect('/pages/checkout.php');
 }
 
