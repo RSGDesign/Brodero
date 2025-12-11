@@ -18,6 +18,50 @@ $db = getDB();
 $errors = [];
 $success = false;
 
+/**
+ * Funcție pentru generare slug URL-friendly din text
+ */
+function generateSlug($text) {
+    $text = strtolower($text);
+    $text = str_replace(['ă', 'â', 'î', 'ș', 'ț', 'Ă', 'Â', 'Î', 'Ș', 'Ț'], ['a', 'a', 'i', 's', 't', 'a', 'a', 'i', 's', 't'], $text);
+    $text = preg_replace('/[^a-z0-9]+/', '-', $text);
+    $text = trim($text, '-');
+    return $text;
+}
+
+/**
+ * Funcție pentru generare slug unic în baza de date
+ */
+function generateUniqueSlug($db, $text, $table = 'products', $exclude_id = null) {
+    $slug = generateSlug($text);
+    $originalSlug = $slug;
+    $counter = 1;
+    
+    while (true) {
+        if ($exclude_id) {
+            $stmt = $db->prepare("SELECT id FROM {$table} WHERE slug = ? AND id != ?");
+            $stmt->bind_param("si", $slug, $exclude_id);
+        } else {
+            $stmt = $db->prepare("SELECT id FROM {$table} WHERE slug = ?");
+            $stmt->bind_param("s", $slug);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            break;
+        }
+        
+        $stmt->close();
+        $slug = $originalSlug . '-' . $counter;
+        $counter++;
+    }
+    
+    return $slug;
+}
+
 // Verificare ID produs
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     setMessage("ID produs invalid.", "danger");
@@ -127,13 +171,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Actualizare în baza de date
     if (empty($errors)) {
-        // Actualizare produs (fără category_id - folosim tabelul product_categories)
-        $stmt = $db->prepare("UPDATE products SET name = ?, description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, stock_status = ?, is_active = ?, is_featured = ?, updated_at = NOW() WHERE id = ?");
+        // Generare/actualizare slug doar dacă numele s-a schimbat
+        $slug = $product['slug']; // Păstrează slug-ul existent
+        if ($name !== $product['name']) {
+            // Numele s-a schimbat, generează slug nou
+            $slug = generateUniqueSlug($db, $name, 'products', $productId);
+        }
+        
+        // Actualizare produs (cu slug)
+        $stmt = $db->prepare("UPDATE products SET name = ?, slug = ?, description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, stock_status = ?, is_active = ?, is_featured = ?, updated_at = NOW() WHERE id = ?");
         
         // Tipuri: s=string, d=double, i=integer
-        // name(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i), productId(i)
-        $stmt->bind_param("ssddsssiii", 
-            $name, 
+        // name(s), slug(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i), productId(i)
+        $stmt->bind_param("sssddsssiii", 
+            $name,
+            $slug,
             $description, 
             $price, 
             $sale_price, 

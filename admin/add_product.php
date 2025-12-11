@@ -18,6 +18,56 @@ $db = getDB();
 $errors = [];
 $success = false;
 
+/**
+ * Funcție pentru generare slug URL-friendly din text
+ */
+function generateSlug($text) {
+    // Convertește la lowercase
+    $text = strtolower($text);
+    // Înlocuiește caractere speciale românești
+    $text = str_replace(['ă', 'â', 'î', 'ș', 'ț', 'Ă', 'Â', 'Î', 'Ș', 'Ț'], ['a', 'a', 'i', 's', 't', 'a', 'a', 'i', 's', 't'], $text);
+    // Înlocuiește orice caracter non-alfanumeric cu dash
+    $text = preg_replace('/[^a-z0-9]+/', '-', $text);
+    // Elimină dash-uri de la început și final
+    $text = trim($text, '-');
+    return $text;
+}
+
+/**
+ * Funcție pentru generare slug unic în baza de date
+ */
+function generateUniqueSlug($db, $text, $table = 'products', $exclude_id = null) {
+    $slug = generateSlug($text);
+    $originalSlug = $slug;
+    $counter = 1;
+    
+    // Verifică dacă slug-ul există deja
+    while (true) {
+        if ($exclude_id) {
+            $stmt = $db->prepare("SELECT id FROM {$table} WHERE slug = ? AND id != ?");
+            $stmt->bind_param("si", $slug, $exclude_id);
+        } else {
+            $stmt = $db->prepare("SELECT id FROM {$table} WHERE slug = ?");
+            $stmt->bind_param("s", $slug);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            break; // Slug-ul este unic
+        }
+        
+        $stmt->close();
+        // Slug-ul există, adaugă counter
+        $slug = $originalSlug . '-' . $counter;
+        $counter++;
+    }
+    
+    return $slug;
+}
+
 // Procesare formular ÎNAINTE de header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validare câmpuri
@@ -85,13 +135,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Salvare în baza de date
     if (empty($errors)) {
-        // Inserare produs (fără category_id - folosim tabelul product_categories)
-        $stmt = $db->prepare("INSERT INTO products (name, description, price, sale_price, image, gallery, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        // Generare slug unic din numele produsului
+        $slug = generateUniqueSlug($db, $name, 'products');
+        
+        // Inserare produs (cu slug unic)
+        $stmt = $db->prepare("INSERT INTO products (name, slug, description, price, sale_price, image, gallery, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         
         // Tipuri: s=string, d=double, i=integer
-        // name(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i)
-        $stmt->bind_param("ssddsssii", 
-            $name, 
+        // name(s), slug(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i)
+        $stmt->bind_param("sssddsssii", 
+            $name,
+            $slug,
             $description, 
             $price, 
             $sale_price, 
