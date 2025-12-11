@@ -68,6 +68,27 @@ function generateUniqueSlug($db, $text, $table = 'products', $exclude_id = null)
     return $slug;
 }
 
+/**
+ * Funcții pentru gestionarea fișierelor descărcabile
+ */
+function sanitizeFilename($name) {
+    $name = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
+    return trim($name, '_');
+}
+
+function allowedFileExtension($ext) {
+    $allowed = ['zip','rar','7z','pdf','png','jpg','jpeg','gif','svg','txt','doc','docx','xls','xlsx','ppt','pptx','mp3','wav','mp4','avi','mkv'];
+    return in_array(strtolower($ext), $allowed, true);
+}
+
+function ensureProductDownloadFolder($productId) {
+    $base = __DIR__ . '/../uploads/downloads/' . intval($productId);
+    if (!is_dir($base)) {
+        mkdir($base, 0775, true);
+    }
+    return $base;
+}
+
 // Procesare formular ÎNAINTE de header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validare câmpuri
@@ -162,7 +183,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Atribuie categoriile la produs
             if (assignCategoriesToProduct($product_id, $category_ids)) {
                 $success = true;
-                setMessage("Produsul a fost adăugat cu succes!", "success");
+                
+                // PROCESARE FIȘIERE DESCĂRCABILE
+                $fileErrors = [];
+                $fileSuccessCount = 0;
+                
+                if (isset($_FILES['downloadable_files']) && !empty($_FILES['downloadable_files']['name'][0])) {
+                    $totalFiles = count($_FILES['downloadable_files']['name']);
+                    
+                    for ($i = 0; $i < $totalFiles; $i++) {
+                        // Verifică dacă fișierul a fost încărcat corect
+                        if ($_FILES['downloadable_files']['error'][$i] !== UPLOAD_ERR_OK) {
+                            if ($_FILES['downloadable_files']['error'][$i] !== UPLOAD_ERR_NO_FILE) {
+                                $fileErrors[] = "Fișier {$_FILES['downloadable_files']['name'][$i]}: Eroare la încărcare.";
+                            }
+                            continue;
+                        }
+                        
+                        $fileName = $_FILES['downloadable_files']['name'][$i];
+                        $fileTmpName = $_FILES['downloadable_files']['tmp_name'][$i];
+                        $fileSize = $_FILES['downloadable_files']['size'][$i];
+                        
+                        // Validare dimensiune (max 200MB)
+                        if ($fileSize <= 0) {
+                            $fileErrors[] = "Fișier {$fileName}: Fișier gol.";
+                            continue;
+                        }
+                        if ($fileSize > 200 * 1024 * 1024) {
+                            $fileErrors[] = "Fișier {$fileName}: Prea mare (max 200MB).";
+                            continue;
+                        }
+                        
+                        // Validare extensie
+                        $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
+                        if (!allowedFileExtension($fileExt)) {
+                            $fileErrors[] = "Fișier {$fileName}: Extensie nepermisă.";
+                            continue;
+                        }
+                        
+                        // Sanitizare nume fișier
+                        $safeFileName = sanitizeFilename(pathinfo($fileName, PATHINFO_FILENAME)) . '.' . strtolower($fileExt);
+                        
+                        // Creare director pentru produs
+                        $downloadFolder = ensureProductDownloadFolder($product_id);
+                        $destinationPath = $downloadFolder . '/' . $safeFileName;
+                        
+                        // Mutare fișier încărcat
+                        if (move_uploaded_file($fileTmpName, $destinationPath)) {
+                            // Salvare în baza de date
+                            $relativePath = 'uploads/downloads/' . $product_id . '/' . $safeFileName;
+                            $actualFileSize = filesize($destinationPath);
+                            
+                            // Obține limitele și status pentru fiecare fișier
+                            $downloadLimit = isset($_POST['download_limits'][$i]) ? intval($_POST['download_limits'][$i]) : 0;
+                            $fileStatus = isset($_POST['file_statuses'][$i]) && $_POST['file_statuses'][$i] === 'active' ? 'active' : 'inactive';
+                            
+                            $fileStmt = $db->prepare("INSERT INTO product_files (product_id, file_name, file_path, file_size, status, download_limit, download_count, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, 0, NOW())");
+                            $fileStmt->bind_param('issisi', $product_id, $safeFileName, $relativePath, $actualFileSize, $fileStatus, $downloadLimit);
+                            
+                            if ($fileStmt->execute()) {
+                                $fileSuccessCount++;
+                            } else {
+                                $fileErrors[] = "Fișier {$fileName}: Eroare la salvare în DB.";
+                                // Șterge fișierul fizic dacă nu s-a salvat în DB
+                                @unlink($destinationPath);
+                            }
+                            $fileStmt->close();
+                        } else {
+                            $fileErrors[] = "Fișier {$fileName}: Nu s-a putut salva pe server.";
+                        }
+                    }
+                }
+                
+                // Mesaj final de succes
+                $successMessage = "Produsul a fost adăugat cu succes!";
+                if ($fileSuccessCount > 0) {
+                    $successMessage .= " Au fost încărcate {$fileSuccessCount} fișier(e) descărcabil(e).";
+                }
+                if (!empty($fileErrors)) {
+                    $successMessage .= " Erori fișiere: " . implode("; ", $fileErrors);
+                }
+                
+                setMessage($successMessage, "success");
                 redirect('/admin/admin_products.php');
             } else {
                 $errors[] = "Produsul a fost creat dar categoriile nu au putut fi atribuite.";
@@ -321,6 +423,34 @@ require_once __DIR__ . '/../includes/header.php';
                             </div>
                         </div>
                     </div>
+
+                    <!-- Fișiere Descărcabile -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-download me-2"></i>Fișiere Descărcabile</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Informații:</strong> Poți încărca multiple fișiere simultan (PDF, ZIP, etc.). 
+                                Maximum 200MB per fișier. Extensii permise: zip, rar, 7z, pdf, doc, docx, xls, xlsx, ppt, pptx, imagini, video, audio.
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="downloadable_files" class="form-label">Selectează Fișiere</label>
+                                <input type="file" class="form-control" id="downloadable_files" 
+                                       name="downloadable_files[]" multiple>
+                                <small class="text-muted">
+                                    <i class="bi bi-check-circle text-success"></i> 
+                                    Poți selecta mai multe fișiere simultan (Ctrl+Click sau Shift+Click)
+                                </small>
+                            </div>
+
+                            <div id="downloadable_files_preview" class="mt-3">
+                                <!-- Preview-ul fișierelor va apărea aici -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Setări -->
@@ -398,7 +528,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </section>
 
-<!-- JavaScript pentru Preview Imagini -->
+<!-- JavaScript pentru Preview Imagini și Fișiere -->
 <script>
 // Preview imagine principală
 document.getElementById('main_image').addEventListener('change', function(e) {
@@ -432,6 +562,113 @@ document.getElementById('gallery_images').addEventListener('change', function(e)
         reader.readAsDataURL(file);
     }
 });
+
+// Preview și configurare fișiere descărcabile
+document.getElementById('downloadable_files').addEventListener('change', function(e) {
+    const preview = document.getElementById('downloadable_files_preview');
+    preview.innerHTML = '';
+    
+    const files = e.target.files;
+    
+    if (files.length === 0) {
+        return;
+    }
+    
+    // Header pentru lista de fișiere
+    preview.innerHTML = `
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle me-2"></i>
+            <strong>${files.length} fișier(e) selectat(e)</strong>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40%;">Nume Fișier</th>
+                        <th style="width: 15%;">Dimensiune</th>
+                        <th style="width: 15%;">Tip</th>
+                        <th style="width: 15%;">Limită Descărcări</th>
+                        <th style="width: 15%;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="files_table_body">
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    const tbody = document.getElementById('files_table_body');
+    
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileName = file.name;
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2); // MB
+        const fileExt = fileName.split('.').pop().toLowerCase();
+        
+        // Verificare extensie
+        const allowedExt = ['zip','rar','7z','pdf','png','jpg','jpeg','gif','svg','txt','doc','docx','xls','xlsx','ppt','pptx','mp3','wav','mp4','avi','mkv'];
+        const isValidExt = allowedExt.includes(fileExt);
+        
+        // Verificare dimensiune (max 200MB)
+        const isValidSize = file.size <= (200 * 1024 * 1024);
+        
+        let statusBadge = '';
+        if (!isValidExt) {
+            statusBadge = '<span class="badge bg-danger">Extensie nepermisă</span>';
+        } else if (!isValidSize) {
+            statusBadge = '<span class="badge bg-danger">Prea mare (max 200MB)</span>';
+        } else {
+            statusBadge = '<span class="badge bg-success">Valid</span>';
+        }
+        
+        const row = document.createElement('tr');
+        row.className = (!isValidExt || !isValidSize) ? 'table-danger' : '';
+        row.innerHTML = `
+            <td>
+                <i class="bi bi-file-earmark-${getFileIcon(fileExt)} me-2"></i>
+                <strong>${escapeHtml(fileName)}</strong>
+            </td>
+            <td>${fileSize} MB</td>
+            <td><span class="badge bg-secondary">${fileExt.toUpperCase()}</span></td>
+            <td>
+                <input type="number" name="download_limits[]" class="form-control form-control-sm" 
+                       value="0" min="0" placeholder="0 = nelimitat" style="width: 100px;"
+                       ${(!isValidExt || !isValidSize) ? 'disabled' : ''}>
+            </td>
+            <td>
+                <select name="file_statuses[]" class="form-select form-select-sm"
+                        ${(!isValidExt || !isValidSize) ? 'disabled' : ''}>
+                    <option value="active">Activ</option>
+                    <option value="inactive">Inactiv</option>
+                </select>
+            </td>
+        `;
+        tbody.appendChild(row);
+    }
+});
+
+// Helper pentru icoane fișiere
+function getFileIcon(ext) {
+    const icons = {
+        'pdf': 'pdf',
+        'zip': 'zip', 'rar': 'zip', '7z': 'zip',
+        'doc': 'word', 'docx': 'word',
+        'xls': 'excel', 'xlsx': 'excel',
+        'ppt': 'ppt', 'pptx': 'ppt',
+        'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image', 'svg': 'image',
+        'mp3': 'music', 'wav': 'music',
+        'mp4': 'play', 'avi': 'play', 'mkv': 'play',
+        'txt': 'text'
+    };
+    return icons[ext] || 'file';
+}
+
+// Helper pentru escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

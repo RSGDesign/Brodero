@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload Fișiere - Brodero</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background: #f5f5f5; padding: 40px 0; }
+        .test-card { max-width: 1200px; margin: 0 auto; }
+        .file-item { transition: all 0.3s; }
+        .file-item:hover { background: #f8f9fa; }
+        .badge-custom { font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="test-card">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cloud-upload me-2"></i>
+                        Test Upload Fișiere Descărcabile
+                    </h4>
+                    <small>Verificare funcționalitate add_product.php</small>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Instrucțiuni:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Selectează unul sau mai multe fișiere</li>
+                            <li>Verifică validarea automată (extensie, dimensiune)</li>
+                            <li>Configurează limita de descărcări și statusul</li>
+                            <li>Testează cu fișiere valide și invalide</li>
+                        </ul>
+                    </div>
+
+                    <form id="testForm" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="test_files" class="form-label">
+                                <i class="bi bi-file-earmark-arrow-up me-2"></i>
+                                <strong>Selectează Fișiere pentru Test</strong>
+                            </label>
+                            <input type="file" class="form-control form-control-lg" 
+                                   id="test_files" name="downloadable_files[]" multiple>
+                            <small class="text-muted">
+                                <i class="bi bi-check-circle text-success me-1"></i>
+                                Extensii permise: zip, rar, 7z, pdf, doc, docx, xls, xlsx, ppt, pptx, imagini, video, audio
+                                <br>
+                                <i class="bi bi-exclamation-triangle text-warning me-1"></i>
+                                Maximum 200MB per fișier
+                            </small>
+                        </div>
+
+                        <div id="files_preview" class="mt-4">
+                            <!-- Preview-ul va apărea aici -->
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Statistici Test -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h2 class="text-primary mb-0" id="stat_total">0</h2>
+                            <small class="text-muted">Total Fișiere</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h2 class="text-success mb-0" id="stat_valid">0</h2>
+                            <small class="text-muted">Valide</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h2 class="text-danger mb-0" id="stat_invalid">0</h2>
+                            <small class="text-muted">Invalide</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h2 class="text-info mb-0" id="stat_size">0</h2>
+                            <small class="text-muted">Dimensiune (MB)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legenda -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="mb-3"><i class="bi bi-info-square me-2"></i>Legenda</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-success me-2">Valid</span>
+                                <small>Fișier va fi acceptat la upload</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-danger me-2">Extensie nepermisă</span>
+                                <small>Tipul fișierului nu este permis</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-danger me-2">Prea mare</span>
+                                <small>Fișierul depășește 200MB</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-warning text-dark me-2">0 = nelimitat</span>
+                                <small>Limita de descărcări</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Același cod JavaScript ca în add_product.php
+        document.getElementById('test_files').addEventListener('change', function(e) {
+            const preview = document.getElementById('files_preview');
+            const files = e.target.files;
+            
+            // Reset statistici
+            let totalFiles = files.length;
+            let validFiles = 0;
+            let invalidFiles = 0;
+            let totalSize = 0;
+            
+            if (files.length === 0) {
+                preview.innerHTML = '';
+                updateStats(0, 0, 0, 0);
+                return;
+            }
+            
+            // Header
+            preview.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>${files.length} fișier(e) selectat(e)</strong>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 5%;">#</th>
+                                <th style="width: 35%;">Nume Fișier</th>
+                                <th style="width: 12%;">Dimensiune</th>
+                                <th style="width: 10%;">Tip</th>
+                                <th style="width: 15%;">Validare</th>
+                                <th style="width: 12%;">Limită</th>
+                                <th style="width: 11%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="files_table_body">
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            const tbody = document.getElementById('files_table_body');
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileName = file.name;
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                const fileExt = fileName.split('.').pop().toLowerCase();
+                
+                totalSize += parseFloat(fileSize);
+                
+                // Validare
+                const allowedExt = ['zip','rar','7z','pdf','png','jpg','jpeg','gif','svg','txt',
+                                   'doc','docx','xls','xlsx','ppt','pptx','mp3','wav','mp4','avi','mkv'];
+                const isValidExt = allowedExt.includes(fileExt);
+                const isValidSize = file.size <= (200 * 1024 * 1024);
+                
+                let statusBadge = '';
+                let rowClass = '';
+                
+                if (!isValidExt) {
+                    statusBadge = '<span class="badge bg-danger badge-custom">Extensie nepermisă</span>';
+                    rowClass = 'table-danger';
+                    invalidFiles++;
+                } else if (!isValidSize) {
+                    statusBadge = '<span class="badge bg-danger badge-custom">Prea mare (max 200MB)</span>';
+                    rowClass = 'table-danger';
+                    invalidFiles++;
+                } else {
+                    statusBadge = '<span class="badge bg-success badge-custom">Valid</span>';
+                    rowClass = 'table-success';
+                    validFiles++;
+                }
+                
+                const row = document.createElement('tr');
+                row.className = `${rowClass} file-item`;
+                row.innerHTML = `
+                    <td class="text-center"><strong>${i + 1}</strong></td>
+                    <td>
+                        <i class="bi bi-file-earmark-${getFileIcon(fileExt)} me-2"></i>
+                        ${escapeHtml(fileName)}
+                    </td>
+                    <td><strong>${fileSize}</strong> MB</td>
+                    <td>
+                        <span class="badge bg-secondary badge-custom">${fileExt.toUpperCase()}</span>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <input type="number" name="download_limits[]" 
+                               class="form-control form-control-sm" 
+                               value="0" min="0" placeholder="0"
+                               ${(!isValidExt || !isValidSize) ? 'disabled' : ''}>
+                    </td>
+                    <td>
+                        <select name="file_statuses[]" class="form-select form-select-sm"
+                                ${(!isValidExt || !isValidSize) ? 'disabled' : ''}>
+                            <option value="active">Activ</option>
+                            <option value="inactive">Inactiv</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            updateStats(totalFiles, validFiles, invalidFiles, totalSize.toFixed(2));
+        });
+
+        function getFileIcon(ext) {
+            const icons = {
+                'pdf': 'pdf', 'zip': 'zip', 'rar': 'zip', '7z': 'zip',
+                'doc': 'word', 'docx': 'word',
+                'xls': 'excel', 'xlsx': 'excel',
+                'ppt': 'ppt', 'pptx': 'ppt',
+                'jpg': 'image', 'jpeg': 'image', 'png': 'image', 'gif': 'image', 'svg': 'image',
+                'mp3': 'music', 'wav': 'music',
+                'mp4': 'play', 'avi': 'play', 'mkv': 'play',
+                'txt': 'text'
+            };
+            return icons[ext] || 'file';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateStats(total, valid, invalid, size) {
+            document.getElementById('stat_total').textContent = total;
+            document.getElementById('stat_valid').textContent = valid;
+            document.getElementById('stat_invalid').textContent = invalid;
+            document.getElementById('stat_size').textContent = size;
+        }
+    </script>
+</body>
+</html>
