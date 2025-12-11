@@ -1,0 +1,40 @@
+# ==============================
+# Brodero - .gitignore
+# ==============================
+
+# Configurare sensibilă
+config/smtp_config.php
+config/database.php
+
+# Fișiere temporare și logs
+logs/
+*.log
+uploads/temp/
+
+# Composer dependencies
+vendor/
+
+# IDE și editoare
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Fișiere de sistem
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Fișiere test (NU trebuie publicate)
+test_*.php
+debug_*.php
+
+# Backup-uri
+*.backup
+*.bak
+*.old
+
+# Environment variables
+.env
+.env.local

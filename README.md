@@ -12,6 +12,7 @@ Brodero este o platformă modernă și elegantă pentru vânzarea de design-uri 
 - PHP 7.4+
 - MySQL 5.7+
 - Apache/Nginx
+- Composer (pentru PHPMailer și dependențe)
 
 ### 2. Pași de Instalare
 
@@ -19,17 +20,25 @@ Brodero este o platformă modernă și elegantă pentru vânzarea de design-uri 
 # 1. Clonați/Copiați proiectul în directorul web
 # Exemplu: C:\xampp\htdocs\brodero
 
-# 2. Creați baza de date
+# 2. Instalați dependențe Composer
+composer update
+
+# 3. Creați baza de date
 # - Accesați phpMyAdmin
 # - Creați baza de date: brodero_db
 # - Importați: database.sql
 
-# 3. Configurați conexiunea
+# 4. Configurați conexiunea
 # Editați config/config.php:
 # - DB_HOST, DB_USER, DB_PASS, DB_NAME
 # - SITE_URL
 
-# 4. Accesați site-ul
+# 5. Configurați emailul (IMPORTANT!)
+# Editați config/smtp_config.php:
+# - Setați SMTP_PASSWORD cu parola reală
+# Vezi: DEPLOYMENT_STEPS.md pentru ghid complet
+
+# 6. Accesați site-ul
 # http://localhost/brodero
 ```
 
@@ -38,6 +47,39 @@ Brodero este o platformă modernă și elegantă pentru vânzarea de design-uri 
 - **Parolă:** password
 - ⚠️ **Schimbați parola imediat!**
 
+## 📧 Sistem Email Profesional
+
+### ✅ Implementare Completă PHPMailer + SMTP Hostinger
+
+**Caracteristici:**
+- ✅ **PHPMailer 6.9** cu autentificare SMTP Hostinger
+- ✅ **Logging complet** în `logs/mail.log`
+- ✅ **Protecție anti-spam:** CSRF tokens, honeypot, rate limiting (5/oră, 20/zi)
+- ✅ **Fallback automat** la database dacă SMTP eșuează
+- ✅ **Email templates profesionale** (HTML + plain text)
+
+**Setup Rapid:**
+```bash
+# 1. Instalează PHPMailer
+composer update
+
+# 2. Configurează SMTP
+nano config/smtp_config.php
+# Setează: define('SMTP_PASSWORD', 'parola_ta_reala');
+
+# 3. Test sistem
+# Accesează: https://brodero.online/test_email_smtp.php?key=brodero2025
+# ⚠️ Șterge fișierul după test!
+
+# 4. Verificare logs
+tail -f logs/mail.log
+```
+
+**Documentație Completă:**
+- **DEPLOYMENT_STEPS.md** - Pași obligatorii deployment
+- **SETUP_EMAIL_HOSTINGER.md** - Configurare detaliată SMTP
+- **quick_check.sh** - Script verificare automată
+
 ## 📋 Funcționalități Principale
 
 ### Pentru Vizitatori
@@ -45,7 +87,7 @@ Brodero este o platformă modernă și elegantă pentru vânzarea de design-uri 
 ✅ Filtrare și sortare avansată  
 ✅ Căutare produse  
 ✅ Vizualizare detalii produse  
-✅ Formular contact cu upload fișiere  
+✅ **Formular contact cu protecție anti-spam** (CSRF, honeypot, rate limiting)  
 
 ### Pentru Utilizatori Autentificați
 ✅ Cont personal cu dashboard  

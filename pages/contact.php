@@ -7,18 +7,55 @@
 // IMPORTANT: Procesare formular ÎNAINTE de orice output HTML
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/smtp_config.php'; // Pentru logging
+
+// Funcție simplă de logging (dacă nu este deja definită)
+if (!function_exists('logMail')) {
+    function logMail($message, $level = 'INFO') {
+        if (!defined('MAIL_LOG_ENABLED') || !MAIL_LOG_ENABLED) return;
+        $logDir = dirname(MAIL_LOG_FILE);
+        if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+        $timestamp = date('Y-m-d H:i:s');
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+        $logMessage = "[$timestamp] [$level] [$ip] $message" . PHP_EOL;
+        @file_put_contents(MAIL_LOG_FILE, $logMessage, FILE_APPEND | LOCK_EX);
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $errors = [];
+    
+    // ═══════════════════════════════════════════════════════
+    // VERIFICARE CSRF TOKEN
+    // ═══════════════════════════════════════════════════════
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = "Token de securitate invalid. Te rugăm să reîncerci.";
+        logMail("CSRF token mismatch from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 'WARNING');
+    }
+    
+    // ═══════════════════════════════════════════════════════
+    // VERIFICARE HONEYPOT (anti-spam)
+    // ═══════════════════════════════════════════════════════
+    if (!empty($_POST['website'])) {
+        // Bot a completat câmpul honeypot
+        logMail("Honeypot triggered from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 'WARNING');
+        // Simulează succes pentru a nu alerta bot-ul
+        setMessage("Mesajul tău a fost trimis cu succes!", "success");
+        redirect('/pages/contact.php');
+    }
+    
     $name = cleanInput($_POST['name'] ?? '');
     $email = cleanInput($_POST['email'] ?? '');
     $subject = cleanInput($_POST['subject'] ?? '');
     $message = cleanInput($_POST['message'] ?? '');
     
-    $errors = [];
-    
-    // Validare
+    // ═══════════════════════════════════════════════════════
+    // VALIDARE CÂMPURI
+    // ═══════════════════════════════════════════════════════
     if (empty($name)) {
         $errors[] = "Numele este obligatoriu.";
+    } elseif (strlen($name) < 2) {
+        $errors[] = "Numele trebuie să aibă cel puțin 2 caractere.";
     }
     
     if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -27,10 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($subject)) {
         $errors[] = "Subiectul este obligatoriu.";
+    } elseif (strlen($subject) < 3) {
+        $errors[] = "Subiectul trebuie să aibă cel puțin 3 caractere.";
     }
     
     if (empty($message)) {
         $errors[] = "Mesajul este obligatoriu.";
+    } elseif (strlen($message) < 10) {
+        $errors[] = "Mesajul trebuie să aibă cel puțin 10 caractere.";
     }
     
     $attachments = [];
@@ -71,26 +112,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     if (empty($errors)) {
-        // Salvare în baza de date
-        $db = getDB();
-        $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, attachments, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
-        $attachmentsJson = !empty($attachments) ? json_encode($attachments) : null;
-        $stmt->bind_param("sssss", $name, $email, $subject, $message, $attachmentsJson);
+        // Trimitere email cu PHPMailer (include fallback la DB automat)
+        require_once __DIR__ . '/../includes/forms/process_contact.php';
+        $emailResult = sendContactEmail($name, $email, $subject, $message, $attachments);
         
-        if ($stmt->execute()) {
-            // Trimitere email
-            require_once __DIR__ . '/../includes/forms/process_contact.php';
-            $emailSent = sendContactEmail($name, $email, $subject, $message, $attachments);
-            
-            if ($emailSent) {
+        if ($emailResult['success']) {
+            if ($emailResult['method'] === 'smtp') {
                 setMessage("Mesajul tău a fost trimis cu succes! Îți vom răspunde în cel mai scurt timp.", "success");
-            } else {
-                setMessage("Mesajul a fost salvat, dar emailul nu a putut fi trimis. Te vom contacta în curând.", "warning");
+            } elseif ($emailResult['method'] === 'fallback') {
+                setMessage("Mesajul tău a fost salvat! Te vom contacta în cel mai scurt timp.", "warning");
             }
-            $stmt->close();
             redirect('/pages/contact.php');
         } else {
-            $errors[] = "Eroare la trimiterea mesajului. Te rugăm să încerci din nou.";
+            $errors[] = $emailResult['message'] ?? "Eroare la trimiterea mesajului. Te rugăm să încerci din nou.";
         }
     }
     
@@ -179,6 +213,12 @@ require_once __DIR__ . '/../includes/header.php';
                                         Poți atașa imagini, PDF sau arhive ZIP (max 5MB per fișier).
                                     </div>
                                 </div>
+                                
+                                <!-- Honeypot anti-spam (hidden field) -->
+                                <input type="text" name="website" value="" style="display:none !important" tabindex="-1" autocomplete="off">
+                                
+                                <!-- CSRF Token -->
+                                <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                 
                                 <!-- Submit -->
                                 <div class="col-12">
