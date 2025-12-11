@@ -47,54 +47,50 @@ composer update
 - **Parolă:** password
 - ⚠️ **Schimbați parola imediat!**
 
-## 📧 Sistem Email Profesional
+## 📧 Sistem Email
 
-### ✅ Implementare Completă PHPMailer + SMTP Hostinger
+### ✅ Formular Contact - Implementare Simplă (FUNCȚIONEAZĂ!)
+
+**Metodă:** Funcția PHP `mail()` - identică cu Newsletter-ul din Admin Dashboard
 
 **Caracteristici:**
-- ✅ **PHPMailer 6.9** cu autentificare SMTP Hostinger
-- ✅ **Logging complet** în `logs/mail.log`
-- ✅ **Protecție anti-spam:** CSRF tokens, honeypot, rate limiting (5/oră, 20/zi)
-- ✅ **Fallback automat** la database dacă SMTP eșuează
-- ✅ **Email templates profesionale** (HTML + plain text)
+- ✅ **Template HTML profesional** (gradient header, design modern)
+- ✅ **Protecție anti-spam:** CSRF tokens, honeypot
+- ✅ **Backup automat** în database
+- ✅ **Validare completă** input + fișiere atașate
+- ✅ **Reply-To** setat la email-ul utilizatorului
 
-**Setup Rapid:**
-```bash
-# 1. Instalează PHPMailer
-composer update phpmailer/phpmailer
+**Cum funcționează:**
+```php
+// EXACT CA ÎN NEWSLETTER (care FUNCȚIONEAZĂ!)
+$headers = "MIME-Version: 1.0\r\n";
+$headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+$headers .= "From: Brodero <noreply@brodero.online>\r\n";
+$headers .= "Reply-To: " . $email . "\r\n";
 
-# 2. Verifică instalare (IMPORTANT!)
-php test_phpmailer_quick.php
-# Output așteptat: "🎉 TOATE TESTELE AU TRECUT!"
-
-# 3. Configurează SMTP
-nano config/smtp_config.php
-# Setează: define('SMTP_PASSWORD', 'parola_ta_reala');
-
-# 4. Test sistem complet
-# Accesează: https://brodero.online/test_email_smtp.php?key=brodero2025
-# ⚠️ Șterge fișierul după test!
-
-# 5. Verificare logs
-tail -f logs/mail.log
+mail($toEmail, $subject, $htmlContent, $headers);
 ```
 
-**⚡ TROUBLESHOOTING: "PHPMailer NU este instalat!"**
+**Test formular:**
+1. Accesează: `pages/contact.php`
+2. Completează și trimite formular
+3. Verifică inbox: `contact@brodero.online`
 
-Dacă vezi această eroare, vezi: **QUICK_FIX_PHPMAILER.md**
+**Documentație:**
+- **CONTACT_FINAL_FIX.md** - Implementare completă și testare
+- **test_contact_final.php** - Script verificare
 
-Soluție rapidă:
-```bash
-composer update phpmailer/phpmailer
-php test_phpmailer_quick.php
-```
+### 📬 Newsletter Admin (FUNCȚIONEAZĂ PERFECT!)
 
-**Documentație Completă:**
-- **QUICK_FIX_PHPMAILER.md** - Fix rapid "PHPMailer not found"
-- **FIX_PHPMAILER_HOSTINGER.md** - Soluție completă + detalii tehnice
-- **DEPLOYMENT_STEPS.md** - Pași obligatorii deployment
-- **SETUP_EMAIL_HOSTINGER.md** - Configurare detaliată SMTP
-- **quick_check.sh** - Script verificare automată
+**Locație:** `admin/send_newsletter.php`
+
+**Metodă:** Funcția PHP `mail()` cu HTML templates
+
+**Features:**
+- ✅ Trimitere bulk către abonați
+- ✅ Template HTML profesional
+- ✅ Filtrare destinatari (activi/inactivi/toți)
+- ✅ Statistici trimitere (succes/eșuat)
 
 ## 📋 Funcționalități Principale
 

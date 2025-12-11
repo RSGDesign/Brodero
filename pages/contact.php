@@ -4,35 +4,25 @@
  * Formular de contact cu upload fișiere și informații de contact
  */
 
-// ================================================================
-// ÎNCĂRCARE BOOTSTRAP (Autoload + Toate Configurările)
-// ================================================================
-
-// Include bootstrap pentru încărcare automată dependențe
-require_once __DIR__ . '/../bootstrap.php';
-
-// logMail() este acum disponibil prin bootstrap.php
-
+// PROCESARE FORMULAR - ÎNAINTE DE ORICE OUTPUT
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Include doar configurările necesare - FĂRĂ output
+    require_once __DIR__ . '/../config/config.php';
+    require_once __DIR__ . '/../config/database.php';
+    
     $errors = [];
     
-    // ═══════════════════════════════════════════════════════
-    // VERIFICARE CSRF TOKEN
-    // ═══════════════════════════════════════════════════════
+    // CSRF Token Verification
     if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
         $errors[] = "Token de securitate invalid. Te rugăm să reîncerci.";
-        logMail("CSRF token mismatch from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 'WARNING');
     }
     
-    // ═══════════════════════════════════════════════════════
-    // VERIFICARE HONEYPOT (anti-spam)
-    // ═══════════════════════════════════════════════════════
+    // Honeypot anti-spam
     if (!empty($_POST['website'])) {
-        // Bot a completat câmpul honeypot
-        logMail("Honeypot triggered from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 'WARNING');
-        // Simulează succes pentru a nu alerta bot-ul
+        // Bot detected - fake success
         setMessage("Mesajul tău a fost trimis cu succes!", "success");
         redirect('/pages/contact.php');
+        exit;
     }
     
     $name = cleanInput($_POST['name'] ?? '');
@@ -40,9 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subject = cleanInput($_POST['subject'] ?? '');
     $message = cleanInput($_POST['message'] ?? '');
     
-    // ═══════════════════════════════════════════════════════
-    // VALIDARE CÂMPURI
-    // ═══════════════════════════════════════════════════════
+    // Validare câmpuri
     if (empty($name)) {
         $errors[] = "Numele este obligatoriu.";
     } elseif (strlen($name) < 2) {
@@ -80,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fileSize = $_FILES['attachments']['size'][$key];
                 $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
                 
-                // Validare fișier
                 if ($fileSize > MAX_FILE_SIZE) {
                     $errors[] = "Fișierul $fileName este prea mare (max 5MB).";
                     continue;
@@ -91,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     continue;
                 }
                 
-                // Salvare fișier
                 $newFileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $fileName);
                 $destination = $uploadDir . $newFileName;
                 
@@ -103,19 +89,133 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     if (empty($errors)) {
-        // Trimitere email cu PHPMailer (include fallback la DB automat)
-        require_once __DIR__ . '/../includes/forms/process_contact.php';
-        $emailResult = sendContactEmail($name, $email, $subject, $message, $attachments);
+        // ═══════════════════════════════════════════════════════════════
+        // TRIMITERE EMAIL - EXACT CA ÎN NEWSLETTER (FUNCȚIONEAZĂ!)
+        // ═══════════════════════════════════════════════════════════════
         
-        if ($emailResult['success']) {
-            if ($emailResult['method'] === 'smtp') {
-                setMessage("Mesajul tău a fost trimis cu succes! Îți vom răspunde în cel mai scurt timp.", "success");
-            } elseif ($emailResult['method'] === 'fallback') {
-                setMessage("Mesajul tău a fost salvat! Te vom contacta în cel mai scurt timp.", "warning");
+        $toEmail = 'contact@brodero.online';
+        $emailSubject = "Mesaj nou din formular: " . $subject;
+        
+        // Construire listă atașamente pentru afișare
+        $attachmentsList = '';
+        if (!empty($attachments)) {
+            $attachmentsList = '<p><strong>Fișiere atașate:</strong></p><ul>';
+            foreach ($attachments as $file) {
+                $attachmentsList .= '<li>' . htmlspecialchars($file) . '</li>';
             }
+            $attachmentsList .= '</ul>';
+        }
+        
+        // Template HTML - IDENTIC CU NEWSLETTER-UL
+        $emailContent = '
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            margin: 20px;
+            padding: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #6366f1;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Brodero</h1>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">Mesaj nou din formular de contact</p>
+        </div>
+        <div class="content">
+            <h2>Detalii mesaj:</h2>
+            
+            <div class="info-box">
+                <p><strong>Nume:</strong> ' . htmlspecialchars($name) . '</p>
+                <p><strong>Email:</strong> ' . htmlspecialchars($email) . '</p>
+                <p><strong>Subiect:</strong> ' . htmlspecialchars($subject) . '</p>
+                <p><strong>Data:</strong> ' . date('d.m.Y H:i') . '</p>
+            </div>
+            
+            <h3>Mesaj:</h3>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                ' . nl2br(htmlspecialchars($message)) . '
+            </div>
+            
+            ' . $attachmentsList . '
+            
+            <p style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #666; font-size: 14px;">
+                <strong>IP:</strong> ' . ($_SERVER['REMOTE_ADDR'] ?? 'Unknown') . '<br>
+                <strong>User Agent:</strong> ' . htmlspecialchars($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown') . '
+            </p>
+        </div>
+        <div class="footer">
+            <p><strong>Brodero</strong> - Magazin de design-uri pentru broderie</p>
+            <p>Acest email a fost trimis automat din formularul de contact de pe site.</p>
+        </div>
+    </div>
+</body>
+</html>';
+        
+        // Headers pentru HTML email - EXACT CA ÎN NEWSLETTER
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $headers .= "From: Brodero <noreply@brodero.online>\r\n";
+        $headers .= "Reply-To: " . $email . "\r\n";
+        
+        // TRIMITERE EMAIL - FUNCȚIA mail() CARE FUNCȚIONEAZĂ
+        if (mail($toEmail, $emailSubject, $emailContent, $headers)) {
+            // Salvează și în database pentru backup
+            $db = getDB();
+            $stmt = $db->prepare("INSERT INTO contact_messages (name, email, subject, message, attachments, status, created_at) VALUES (?, ?, ?, ?, ?, 'new', NOW())");
+            $attachmentsJson = json_encode($attachments);
+            $stmt->bind_param("sssss", $name, $email, $subject, $message, $attachmentsJson);
+            $stmt->execute();
+            
+            setMessage("Mesajul tău a fost trimis cu succes! Îți vom răspunde în cel mai scurt timp.", "success");
             redirect('/pages/contact.php');
+            exit;
         } else {
-            $errors[] = $emailResult['message'] ?? "Eroare la trimiterea mesajului. Te rugăm să încerci din nou.";
+            $errors[] = "Eroare la trimiterea emailului. Te rugăm să încerci din nou.";
         }
     }
     
@@ -126,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// După procesare, includem header-ul (care va afișa HTML-ul)
+// După procesare completă, includem header-ul
 $pageTitle = "Contact";
 $pageDescription = "Contactează echipa Brodero pentru orice întrebări sau sugestii.";
 require_once __DIR__ . '/../includes/header.php';
