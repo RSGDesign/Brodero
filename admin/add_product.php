@@ -88,7 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Inserare produs (fără category_id - folosim tabelul product_categories)
         $stmt = $db->prepare("INSERT INTO products (name, description, price, sale_price, image, gallery, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
         
-        $stmt->bind_param("ssddssiii", 
+        // Tipuri: s=string, d=double, i=integer
+        // name(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i)
+        $stmt->bind_param("ssddsssii", 
             $name, 
             $description, 
             $price, 

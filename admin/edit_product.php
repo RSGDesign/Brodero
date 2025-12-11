@@ -130,7 +130,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Actualizare produs (fără category_id - folosim tabelul product_categories)
         $stmt = $db->prepare("UPDATE products SET name = ?, description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, stock_status = ?, is_active = ?, is_featured = ?, updated_at = NOW() WHERE id = ?");
         
-        $stmt->bind_param("ssddssiii", 
+        // Tipuri: s=string, d=double, i=integer
+        // name(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i), productId(i)
+        $stmt->bind_param("ssddsssiii", 
             $name, 
             $description, 
             $price, 
@@ -144,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         
         if ($stmt->execute()) {
-            // Actualizează categoriile produsului
+            // Actualizează categoriile produsului (separat, folosind funcția dedicată)
             if (assignCategoriesToProduct($productId, $category_ids)) {
                 $success = true;
                 $currentCategoryIds = $category_ids; // Actualizează pentru afișare
