@@ -61,21 +61,37 @@ composer update
 **Setup Rapid:**
 ```bash
 # 1. Instalează PHPMailer
-composer update
+composer update phpmailer/phpmailer
 
-# 2. Configurează SMTP
+# 2. Verifică instalare (IMPORTANT!)
+php test_phpmailer_quick.php
+# Output așteptat: "🎉 TOATE TESTELE AU TRECUT!"
+
+# 3. Configurează SMTP
 nano config/smtp_config.php
 # Setează: define('SMTP_PASSWORD', 'parola_ta_reala');
 
-# 3. Test sistem
+# 4. Test sistem complet
 # Accesează: https://brodero.online/test_email_smtp.php?key=brodero2025
 # ⚠️ Șterge fișierul după test!
 
-# 4. Verificare logs
+# 5. Verificare logs
 tail -f logs/mail.log
 ```
 
+**⚡ TROUBLESHOOTING: "PHPMailer NU este instalat!"**
+
+Dacă vezi această eroare, vezi: **QUICK_FIX_PHPMAILER.md**
+
+Soluție rapidă:
+```bash
+composer update phpmailer/phpmailer
+php test_phpmailer_quick.php
+```
+
 **Documentație Completă:**
+- **QUICK_FIX_PHPMAILER.md** - Fix rapid "PHPMailer not found"
+- **FIX_PHPMAILER_HOSTINGER.md** - Soluție completă + detalii tehnice
 - **DEPLOYMENT_STEPS.md** - Pași obligatorii deployment
 - **SETUP_EMAIL_HOSTINGER.md** - Configurare detaliată SMTP
 - **quick_check.sh** - Script verificare automată
