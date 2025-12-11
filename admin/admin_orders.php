@@ -203,9 +203,14 @@ function getPaymentStatusBadge($status) {
                 </h1>
                 <p class="mb-0 text-white-50">Total: <?php echo $totalOrders; ?> comenzi</p>
             </div>
-            <a href="<?php echo SITE_URL; ?>/admin/dashboard.php" class="btn btn-outline-light">
-                <i class="bi bi-speedometer2 me-2"></i>Dashboard
-            </a>
+            <div class="btn-group">
+                <a href="<?php echo SITE_URL; ?>/admin/sync_downloads.php" class="btn btn-warning">
+                    <i class="bi bi-arrow-repeat me-2"></i>Sincronizare Descărcări
+                </a>
+                <a href="<?php echo SITE_URL; ?>/admin/dashboard.php" class="btn btn-outline-light">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+            </div>
         </div>
     </div>
 </section>

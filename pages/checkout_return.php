@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/functions_orders.php';
 
 // Încarcă Stripe SDK
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
@@ -99,6 +100,9 @@ try {
             $stmt->close();
         }
 
+        // ✅ ACTIVARE DESCĂRCĂRI - Plată Stripe confirmată
+        enableOrderDownloads($orderId);
+
         // Curățare coș
         if ($userId) {
             $db->query("DELETE FROM cart WHERE user_id = $userId");
@@ -129,6 +133,9 @@ try {
                         </div>
 
                         <div class="d-grid gap-2">
+                            <a href="<?php echo SITE_URL; ?>/pages/cont.php?tab=fisiere" class="btn btn-success">
+                                <i class="bi bi-download me-2"></i>Descarcă Fișierele
+                            </a>
                             <a href="<?php echo SITE_URL; ?>/pages/cont.php?tab=comenzi" class="btn btn-primary">
                                 <i class="bi bi-list-ul me-2"></i>Vezi Comenzile Mele
                             </a>

@@ -40,20 +40,40 @@ require_once __DIR__ . '/../../includes/header.php';
                             <small class="d-block">Descărcări nelimitate</small>
                         <?php endif; ?>
                     </div>
-                    <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
+                    <div class="card-footer bg-white border-0">
                         <?php if ($canDownload): ?>
                             <?php $token = generateDownloadToken($f['file_id'], $f['order_id'], $userId); ?>
-                            <a class="btn btn-primary btn-sm" href="<?php echo SITE_URL; ?>/pages/download.php?file=<?php echo (int)$f['file_id']; ?>&order=<?php echo (int)$f['order_id']; ?>&token=<?php echo urlencode($token); ?>">
-                                <i class="bi bi-arrow-down-circle me-1"></i>Descarcă
+                            <a class="btn btn-success btn-sm w-100" href="<?php echo SITE_URL; ?>/pages/download.php?file=<?php echo (int)$f['file_id']; ?>&order=<?php echo (int)$f['order_id']; ?>&token=<?php echo urlencode($token); ?>">
+                                <i class="bi bi-arrow-down-circle me-1"></i>Descarcă Fișierul
                             </a>
+                            <small class="text-success d-block mt-2 text-center">
+                                <i class="bi bi-check-circle-fill"></i> Disponibil
+                            </small>
                         <?php else: ?>
-                            <?php if (!$isPaid): ?>
-                                <span class="badge bg-warning text-dark">Plată în așteptare</span>
-                            <?php elseif (!$isEnabled): ?>
-                                <span class="badge bg-info text-dark">În procesare</span>
-                            <?php elseif ($limitReached): ?>
-                                <span class="badge bg-secondary">Limită atinsă</span>
-                            <?php endif; ?>
+                            <div class="d-grid">
+                                <?php if (!$isPaid): ?>
+                                    <span class="badge bg-warning text-dark p-2">
+                                        <i class="bi bi-clock-history"></i> Plată în așteptare
+                                    </span>
+                                    <small class="text-muted text-center mt-2">
+                                        Descărcarea va fi activată după confirmarea plății
+                                    </small>
+                                <?php elseif (!$isEnabled): ?>
+                                    <span class="badge bg-danger p-2">
+                                        <i class="bi bi-x-circle"></i> În procesare
+                                    </span>
+                                    <small class="text-muted text-center mt-2">
+                                        Comanda este plătită, dar descărcările nu sunt activate. Contactează suportul.
+                                    </small>
+                                <?php elseif ($limitReached): ?>
+                                    <span class="badge bg-secondary p-2">
+                                        <i class="bi bi-ban"></i> Limită atinsă
+                                    </span>
+                                    <small class="text-muted text-center mt-2">
+                                        Ai depășit numărul maxim de descărcări permise
+                                    </small>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>

@@ -20,6 +20,7 @@ if (!isAdmin()) {
     exit;
 }
 
+require_once __DIR__ . '/../includes/functions_orders.php';
 $db = getDB();
 
 // Verificare ID comandă
@@ -40,14 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $stmt->bind_param("sssi", $newStatus, $paymentStatus, $notes, $orderId);
     
     if ($stmt->execute()) {
-        // Actualizare permisiuni descărcare în funcție de statusul plății
-        $enableDownloads = ($paymentStatus === 'paid') ? 1 : 0;
-        $stmtDownloads = $db->prepare("UPDATE order_items SET downloads_enabled = ? WHERE order_id = ?");
-        $stmtDownloads->bind_param("ii", $enableDownloads, $orderId);
-        $stmtDownloads->execute();
-        $stmtDownloads->close();
+        // ✅ FOLOSEȘTE FUNCȚIA CENTRALIZATĂ pentru sincronizare descărcări
+        if ($paymentStatus === 'paid') {
+            enableOrderDownloads($orderId);
+        }
 
-        setMessage("Comanda a fost actualizată cu succes!", "success");
+        setMessage("Comanda a fost actualizată cu succes! " . ($paymentStatus === 'paid' ? "Descărcările au fost activate." : ""), "success");
         redirect('/admin/view_order.php?id=' . $orderId);
     } else {
         setMessage("Eroare la actualizarea comenzii.", "danger");

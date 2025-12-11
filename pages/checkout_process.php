@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/functions_orders.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('/pages/cart.php');
@@ -200,10 +201,15 @@ try {
     // Commit tranzacție
     $db->commit();
     
-    // Setează downloads_enabled pe iteme (activat implicit pentru toate metodele de plată)
-    $enableDownloads = 1;
-    $stmt = $db->prepare("UPDATE order_items SET downloads_enabled = ? WHERE order_id = ?");
-    if ($stmt) { $stmt->bind_param("ii", $enableDownloads, $orderId); $stmt->execute(); }
+    // ✅ ACTIVARE DESCĂRCĂRI - Folosește funcția centralizată
+    // Pentru comenzi gratuite (0 RON) sau transfer bancar confirmat
+    if ($totalAmount == 0) {
+        // Comandă gratuită - activează imediat descărcările
+        processFreeOrder($orderId);
+    } elseif ($paymentMethod === 'bank_transfer') {
+        // Transfer bancar - descărcările se vor activa după confirmare admin
+        // Nu activăm automat aici
+    }
 
     // Procesare în funcție de metoda de plată
     if ($paymentMethod === 'bank_transfer') {
