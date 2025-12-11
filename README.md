@@ -1048,21 +1048,21 @@ chmod 755 uploads/contact/
 
 ## 🎯 Roadmap Viitor
 
-### v2.0 (Q1 2025)
+### v2.0 (Q1 2026)
 - [ ] **API REST** pentru integrări externe
 - [ ] **Sistem review-uri** cu rating produse
 - [ ] **Wishlist** salvat în cont
 - [ ] **Notificări email** automate (comanda procesată, expediere)
 - [ ] **Export rapoarte** (PDF/Excel) pentru vânzări
 
-### v2.1 (Q2 2025)
+### v2.1 (Q2 2026)
 - [ ] **Multi-limbă** (RO/EN)
 - [ ] **Wallet utilizator** (credit store)
 - [ ] **Programe fidelitate** (puncte, discount-uri recurente)
 - [ ] **Chat suport** live
 - [ ] **Blog integrat**
 
-### v3.0 (Q3 2025)
+### v3.0 (Q3 2026)
 - [ ] **Mobile app** (React Native)
 - [ ] **AR preview** design-uri pe țesături
 - [ ] **Design customizer** în browser
