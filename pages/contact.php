@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // TRIMITERE EMAIL - EXACT CA ÎN NEWSLETTER (FUNCȚIONEAZĂ!)
         // ═══════════════════════════════════════════════════════════════
         
-        $toEmail = 'contact@brodero.online';
+        $toEmail = 'pepeceltare@smail.com';
         $emailSubject = "Mesaj nou din formular: " . $subject;
         
         // Construire listă atașamente pentru afișare
