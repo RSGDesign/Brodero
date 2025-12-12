@@ -128,7 +128,7 @@ try {
                         <div class="bg-light p-4 rounded mb-4">
                             <h5 class="fw-bold mb-3">Detalii Comandă</h5>
                             <p class="mb-2"><strong>Număr Comandă:</strong> <?php echo $orderNumber; ?></p>
-                            <p class="mb-2"><strong>Total:</strong> <?php echo number_format($totalAmount, 2); ?> LEI</p>
+                            <p class="mb-2"><strong>Total:</strong> <?php echo number_format($totalAmount, 2); ?> RON</p>
                             <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success">Plătită</span></p>
                         </div>
 

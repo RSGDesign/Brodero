@@ -138,7 +138,7 @@ require_once __DIR__ . '/../includes/header.php';
                                             <tr>
                                                 <td class="fw-bold">#<?php echo htmlspecialchars($order['order_number']); ?></td>
                                                 <td><?php echo date('d.m.Y', strtotime($order['created_at'])); ?></td>
-                                                <td><?php echo number_format($order['total_amount'], 2); ?> LEI</td>
+                                                <td><?php echo number_format($order['total_amount'], 2); ?> RON</td>
                                                 <td>
                                                     <?php
                                                     $statusClass = [

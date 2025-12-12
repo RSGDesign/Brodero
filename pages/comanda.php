@@ -128,9 +128,9 @@ function getPaymentStatusBadge($status) {
                                             </div>
                                         </td>
                                         <td class="text-center align-middle"><?php echo (int)$item['quantity']; ?></td>
-                                        <td class="text-end align-middle"><?php echo number_format($item['price'], 2); ?> LEI</td>
+                                        <td class="text-end align-middle"><?php echo number_format($item['price'], 2); ?> RON</td>
                                         <td class="text-end align-middle fw-bold">
-                                            <?php echo number_format($item['price'] * $item['quantity'], 2); ?> LEI
+                                            <?php echo number_format($item['price'] * $item['quantity'], 2); ?> RON
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -139,7 +139,7 @@ function getPaymentStatusBadge($status) {
                                     <tr>
                                         <td colspan="3" class="text-end fw-bold">TOTAL:</td>
                                         <td class="text-end fw-bold text-primary fs-5">
-                                            <?php echo number_format($order['total_amount'], 2); ?> LEI
+                                            <?php echo number_format($order['total_amount'], 2); ?> RON
                                         </td>
                                     </tr>
                                 </tfoot>

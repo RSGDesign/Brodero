@@ -116,17 +116,17 @@ require_once __DIR__ . '/../includes/header.php';
                                 <?php if (isset($order['discount_amount']) && $order['discount_amount'] > 0): ?>
                                 <tr>
                                     <td class="text-start">Subtotal:</td>
-                                    <td class="text-end"><?php echo number_format($order['subtotal'] ?? $order['total_amount'], 2); ?> LEI</td>
+                                    <td class="text-end"><?php echo number_format($order['subtotal'] ?? $order['total_amount'], 2); ?> RON</td>
                                 </tr>
                                 <tr class="text-success">
                                     <td class="text-start">Reducere:</td>
-                                    <td class="text-end">-<?php echo number_format($order['discount_amount'], 2); ?> LEI</td>
+                                    <td class="text-end">-<?php echo number_format($order['discount_amount'], 2); ?> RON</td>
                                 </tr>
                                 <?php endif; ?>
                                 <tr class="table-active">
                                     <td class="text-start fw-bold">Total Plătit:</td>
                                     <td class="text-end fw-bold text-primary fs-5">
-                                        <?php echo number_format($order['total_amount'], 2); ?> LEI
+                                        <?php echo number_format($order['total_amount'], 2); ?> RON
                                     </td>
                                 </tr>
                             </table>

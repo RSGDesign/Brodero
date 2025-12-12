@@ -217,17 +217,17 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                 <div class="mb-4">
                     <?php if ($product['sale_price']): ?>
                         <h3 class="text-primary fw-bold mb-0">
-                            <?php echo number_format($finalPrice, 2); ?> LEI
+                            <?php echo number_format($finalPrice, 2); ?> RON
                             <span class="h5 text-muted text-decoration-line-through ms-2">
-                                <?php echo number_format($product['price'], 2); ?> LEI
+                                <?php echo number_format($product['price'], 2); ?> RON
                             </span>
                         </h3>
                         <p class="text-success mb-0">
-                            <i class="bi bi-tag-fill me-1"></i>Economisești <?php echo number_format($product['price'] - $product['sale_price'], 2); ?> LEI
+                            <i class="bi bi-tag-fill me-1"></i>Economisești <?php echo number_format($product['price'] - $product['sale_price'], 2); ?> RON
                         </p>
                     <?php else: ?>
                         <h3 class="text-primary fw-bold mb-0">
-                            <?php echo number_format($finalPrice, 2); ?> LEI
+                            <?php echo number_format($finalPrice, 2); ?> RON
                         </h3>
                     <?php endif; ?>
                 </div>
@@ -328,9 +328,9 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                             <div class="d-flex justify-content-between align-items-center mt-2">
                                 <div>
                                     <?php if ($similar['sale_price']): ?>
-                                        <span class="fw-bold text-primary"><?php echo number_format($similar['sale_price'], 2); ?> LEI</span>
+                                        <span class="fw-bold text-primary"><?php echo number_format($similar['sale_price'], 2); ?> RON</span>
                                     <?php else: ?>
-                                        <span class="fw-bold text-primary"><?php echo number_format($similar['price'], 2); ?> LEI</span>
+                                        <span class="fw-bold text-primary"><?php echo number_format($similar['price'], 2); ?> RON</span>
                                     <?php endif; ?>
                                 </div>
                                 <a href="<?php echo SITE_URL; ?>/pages/produs.php?id=<?php echo $similar['id']; ?>" 

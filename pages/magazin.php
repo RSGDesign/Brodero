@@ -96,13 +96,19 @@ while ($row = $categoriesResult->fetch_assoc()) {
                 <div class="filter-section sticky-top" style="top: 100px;">
                     <h5 class="fw-bold mb-3">
                         <i class="bi bi-funnel me-2"></i>Filtrare
+                        <span id="filter-loader" class="spinner-border spinner-border-sm ms-2 d-none" role="status">
+                            <span class="visually-hidden">Se încarcă...</span>
+                        </span>
                     </h5>
                     
-                    <form method="GET" action="">
+                    <form id="filter-form" method="GET" action="">
                         <!-- Căutare -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Căutare</label>
-                            <input type="text" name="search" class="form-control" 
+                            <input type="text" 
+                                   id="filter-search" 
+                                   name="search" 
+                                   class="form-control auto-filter" 
                                    placeholder="Caută produse..." 
                                    value="<?php echo htmlspecialchars($search); ?>">
                         </div>
@@ -110,7 +116,9 @@ while ($row = $categoriesResult->fetch_assoc()) {
                         <!-- Categorii -->
                         <div class="mb-4">
                             <label class="form-label fw-bold">Categorii</label>
-                            <select name="category" class="form-select">
+                            <select id="filter-category" 
+                                    name="category" 
+                                    class="form-select auto-filter">
                                 <option value="0">Toate categoriile</option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?php echo $cat['id']; ?>" 
@@ -123,24 +131,31 @@ while ($row = $categoriesResult->fetch_assoc()) {
                         
                         <!-- Preț -->
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Preț (LEI)</label>
+                            <label class="form-label fw-bold">Preț (RON)</label>
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <input type="number" name="min_price" class="form-control" 
-                                           placeholder="Min" value="<?php echo $minPrice; ?>" min="0">
+                                    <input type="number" 
+                                           id="filter-min-price" 
+                                           name="min_price" 
+                                           class="form-control auto-filter-debounce" 
+                                           placeholder="Min" 
+                                           value="<?php echo $minPrice; ?>" 
+                                           min="0">
                                 </div>
                                 <div class="col-6">
-                                    <input type="number" name="max_price" class="form-control" 
-                                           placeholder="Max" value="<?php echo $maxPrice; ?>" min="0">
+                                    <input type="number" 
+                                           id="filter-max-price" 
+                                           name="max_price" 
+                                           class="form-control auto-filter-debounce" 
+                                           placeholder="Max" 
+                                           value="<?php echo $maxPrice; ?>" 
+                                           min="0">
                                 </div>
                             </div>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-search me-2"></i>Aplică Filtre
-                        </button>
-                        <a href="<?php echo SITE_URL; ?>/pages/magazin.php" class="btn btn-outline-secondary w-100 mt-2">
-                            Resetează
+                        <a href="<?php echo SITE_URL; ?>/pages/magazin.php" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Resetează Filtre
                         </a>
                     </form>
                 </div>
@@ -159,15 +174,10 @@ while ($row = $categoriesResult->fetch_assoc()) {
                     
                     <div class="d-flex gap-2 align-items-center flex-wrap">
                         <!-- Sortare -->
-                        <form method="GET" class="d-flex gap-2">
-                            <?php if ($category > 0): ?>
-                                <input type="hidden" name="category" value="<?php echo $category; ?>">
-                            <?php endif; ?>
-                            <?php if (!empty($search)): ?>
-                                <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
-                            <?php endif; ?>
-                            
-                            <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <div class="d-flex gap-2">
+                            <select id="filter-sort" 
+                                    name="sort" 
+                                    class="form-select form-select-sm auto-filter">
                                 <option value="newest" <?php echo $sortBy == 'newest' ? 'selected' : ''; ?>>Cele mai noi</option>
                                 <option value="popular" <?php echo $sortBy == 'popular' ? 'selected' : ''; ?>>Populare</option>
                                 <option value="price_asc" <?php echo $sortBy == 'price_asc' ? 'selected' : ''; ?>>Preț crescător</option>
@@ -175,16 +185,31 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                 <option value="name_asc" <?php echo $sortBy == 'name_asc' ? 'selected' : ''; ?>>Nume A-Z</option>
                             </select>
                             
-                            <select name="per_page" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <select id="filter-per-page" 
+                                    name="per_page" 
+                                    class="form-select form-select-sm auto-filter">
                                 <option value="12" <?php echo $perPage == 12 ? 'selected' : ''; ?>>12 produse</option>
                                 <option value="24" <?php echo $perPage == 24 ? 'selected' : ''; ?>>24 produse</option>
                                 <option value="48" <?php echo $perPage == 48 ? 'selected' : ''; ?>>48 produse</option>
                             </select>
-                        </form>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Products -->
+                <div id="products-container" class="position-relative">
+                    <!-- Overlay loader -->
+                    <div id="products-loader" class="position-absolute top-0 start-0 w-100 h-100 d-none" style="background: rgba(255,255,255,0.8); z-index: 10; min-height: 400px;">
+                        <div class="d-flex justify-content-center align-items-center h-100">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Se încarcă...</span>
+                                </div>
+                                <p class="mt-3 text-muted fw-bold">Se actualizează produsele...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
                 <?php if (!empty($products)): ?>
                     <div class="row g-4">
                         <?php foreach ($products as $product): ?>
@@ -214,24 +239,24 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                             <?php echo htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?>
                                         </p>
                                         
-                                        <div class="d-flex justify-content-between align-items-center mt-3">
-                                            <div>
+                                        <div class="product-card-footer">
+                                            <div class="product-price-container">
                                                 <?php if ($product['sale_price']): ?>
-                                                    <span class="product-price"><?php echo number_format($product['sale_price'], 2); ?> LEI</span>
-                                                    <span class="product-price-old"><?php echo number_format($product['price'], 2); ?> LEI</span>
+                                                    <span class="product-price"><?php echo number_format($product['sale_price'], 2); ?> RON</span>
+                                                    <span class="product-price-old"><?php echo number_format($product['price'], 2); ?> RON</span>
                                                 <?php else: ?>
-                                                    <span class="product-price"><?php echo number_format($product['price'], 2); ?> LEI</span>
+                                                    <span class="product-price"><?php echo number_format($product['price'], 2); ?> RON</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="btn-group" role="group">
+                                            <div class="product-actions">
+                                                <a href="<?php echo SITE_URL; ?>/pages/produs.php?id=<?php echo $product['id']; ?>" 
+                                                   class="btn btn-outline-primary btn-sm product-details-btn">
+                                                    <i class="bi bi-eye me-1"></i>Detalii
+                                                </a>
                                                 <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" 
                                                         data-product-id="<?php echo $product['id']; ?>">
-                                                    <i class="bi bi-cart-plus"></i>
+                                                    <i class="bi bi-cart-plus me-1"></i>Coș
                                                 </button>
-                                                <a href="<?php echo SITE_URL; ?>/pages/produs.php?id=<?php echo $product['id']; ?>" 
-                                                   class="btn btn-outline-primary btn-sm">
-                                                    Detalii
-                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -280,12 +305,155 @@ while ($row = $categoriesResult->fetch_assoc()) {
                         </a>
                     </div>
                 <?php endif; ?>
+                </div><!-- #products-container -->
             </div>
         </div>
     </div>
 </section>
 
 <script>
+/**
+ * ===================================
+ * FILTRARE AUTOMATĂ INSTANT
+ * ===================================
+ * Aplică filtrele automat la schimbarea oricărui element
+ * fără necesitatea apăsării unui buton.
+ */
+
+(function() {
+    'use strict';
+    
+    // Debounce pentru input-uri (300ms)
+    let debounceTimer;
+    function debounce(callback, delay) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(callback, delay);
+    }
+    
+    /**
+     * Construiește URL-ul cu parametrii actuali din filtre
+     * Elimină parametrii goali sau cu valori default
+     */
+    function buildFilterURL() {
+        const params = new URLSearchParams();
+        
+        // Căutare
+        const search = document.getElementById('filter-search')?.value.trim();
+        if (search) {
+            params.set('search', search);
+        }
+        
+        // Categorie
+        const category = document.getElementById('filter-category')?.value;
+        if (category && category !== '0') {
+            params.set('category', category);
+        }
+        
+        // Preț minim
+        const minPrice = document.getElementById('filter-min-price')?.value;
+        if (minPrice && minPrice !== '0') {
+            params.set('min_price', minPrice);
+        }
+        
+        // Preț maxim
+        const maxPrice = document.getElementById('filter-max-price')?.value;
+        if (maxPrice && maxPrice !== '1000') {
+            params.set('max_price', maxPrice);
+        }
+        
+        // Sortare
+        const sort = document.getElementById('filter-sort')?.value;
+        if (sort && sort !== 'newest') {
+            params.set('sort', sort);
+        }
+        
+        // Produse per pagină
+        const perPage = document.getElementById('filter-per-page')?.value;
+        if (perPage && perPage !== '12') {
+            params.set('per_page', perPage);
+        }
+        
+        // Resetează pagina la 1 când se schimbă filtrele
+        // (păstrează pagina curentă doar dacă nu s-a schimbat nimic)
+        const currentParams = new URLSearchParams(window.location.search);
+        const currentPage = currentParams.get('page');
+        if (currentPage && currentPage !== '1') {
+            // Verifică dacă s-a schimbat vreun filtru
+            const hasFilterChange = 
+                params.toString() !== currentParams.toString().replace(/&?page=\d+/, '');
+            
+            if (!hasFilterChange) {
+                params.set('page', currentPage);
+            }
+        }
+        
+        return params.toString() ? '?' + params.toString() : window.location.pathname;
+    }
+    
+    /**
+     * Aplică filtrele și reîncarcă pagina
+     */
+    function applyFilters() {
+        const url = buildFilterURL();
+        
+        // Afișează loader
+        const productsLoader = document.getElementById('products-loader');
+        const filterLoader = document.getElementById('filter-loader');
+        
+        if (productsLoader) {
+            productsLoader.classList.remove('d-none');
+        }
+        if (filterLoader) {
+            filterLoader.classList.remove('d-none');
+        }
+        
+        // Redirecționează la URL-ul nou
+        window.location.href = url;
+    }
+    
+    /**
+     * Inițializare evenimente pentru filtrare automată
+     */
+    function initAutoFilters() {
+        // Filtre instant (select, checkbox, radio)
+        document.querySelectorAll('.auto-filter').forEach(element => {
+            element.addEventListener('change', function() {
+                console.log('Filter changed:', this.name, '=', this.value);
+                applyFilters();
+            });
+        });
+        
+        // Filtre cu debounce (input text, number, range)
+        document.querySelectorAll('.auto-filter-debounce').forEach(element => {
+            // Detectează Enter pentru aplicare instant
+            element.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyFilters();
+                }
+            });
+            
+            // Aplicare cu debounce la scriere
+            element.addEventListener('input', function() {
+                console.log('Debounced filter changed:', this.name, '=', this.value);
+                debounce(() => {
+                    applyFilters();
+                }, 300);
+            });
+        });
+        
+        console.log('✓ Filtrare automată inițializată cu succes');
+    }
+    
+    // Inițializare când DOM-ul este gata
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAutoFilters);
+    } else {
+        initAutoFilters();
+    }
+    
+})();
+
 // Add to cart functionality pentru magazin
 document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
     btn.addEventListener('click', function() {

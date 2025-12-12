@@ -224,7 +224,7 @@ if ($userId) {
                                     <?php
                                     $price = $item['sale_price'] > 0 ? $item['sale_price'] : $item['price'];
                                     echo number_format($price, 2);
-                                    ?> LEI
+                                    ?> RON
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -233,19 +233,19 @@ if ($userId) {
                         <div class="mt-4 pt-4 border-top">
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Subtotal:</span>
-                                <strong><?php echo number_format($subtotal, 2); ?> LEI</strong>
+                                <strong><?php echo number_format($subtotal, 2); ?> RON</strong>
                             </div>
 
                             <?php if ($discount > 0): ?>
                             <div class="d-flex justify-content-between mb-2 text-success">
                                 <span>Reducere:</span>
-                                <strong>-<?php echo number_format($discount, 2); ?> LEI</strong>
+                                <strong>-<?php echo number_format($discount, 2); ?> RON</strong>
                             </div>
                             <?php endif; ?>
 
                             <div class="d-flex justify-content-between mt-3 pt-3 border-top">
                                 <h5 class="fw-bold mb-0">Total:</h5>
-                                <h5 class="fw-bold mb-0 text-primary"><?php echo number_format($total, 2); ?> LEI</h5>
+                                <h5 class="fw-bold mb-0 text-primary"><?php echo number_format($total, 2); ?> RON</h5>
                             </div>
                         </div>
                     </div>
@@ -328,7 +328,7 @@ document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
             }
             
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> LEI';
+            submitBtn.innerHTML = '<i class="bi bi-lock me-2"></i>Plătește <?php echo number_format($total, 2); ?> RON';
         } else {
             stripeSection.style.display = 'none';
             submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Finalizează Comanda';

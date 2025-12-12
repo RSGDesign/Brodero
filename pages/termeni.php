@@ -42,7 +42,7 @@ require_once __DIR__ . '/../includes/header.php';
                 
                 <div class="mb-5">
                     <h4 class="fw-bold mb-3">4. Plăți și Facturare</h4>
-                    <p>Toate prețurile sunt afișate în LEI și includ TVA. Plata se procesează imediat la finalizarea comenzii. Acceptăm carduri bancare, transfer bancar și PayPal.</p>
+                    <p>Toate prețurile sunt afișate în RON (lei românești) și includ TVA. Plata se procesează imediat la finalizarea comenzii. Acceptăm carduri bancare, transfer bancar și PayPal.</p>
                 </div>
                 
                 <div class="mb-5">

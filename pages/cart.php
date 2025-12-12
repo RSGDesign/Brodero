@@ -112,14 +112,14 @@ $total = $subtotal - $discount;
                             </div>
                             <div class="col-7 col-md-5">
                                 <h6 class="mb-1"><?php echo htmlspecialchars($item['name']); ?></h6>
-                                <small class="text-muted d-block"><?php echo number_format($price, 2); ?> LEI</small>
+                                <small class="text-muted d-block"><?php echo number_format($price, 2); ?> RON</small>
                             </div>
                             <div class="col-12 col-md-5 d-flex align-items-center justify-content-between">
                                 <div class="me-3">
                                     <span class="badge bg-secondary">x1</span>
                                 </div>
                                 <div class="text-end flex-grow-1">
-                                    <strong><?php echo number_format($price, 2); ?> LEI</strong>
+                                    <strong><?php echo number_format($price, 2); ?> RON</strong>
                                 </div>
                                 <div class="ms-3 text-end">
                                     <button class="btn btn-sm btn-outline-danger remove-item" title="Șterge">
@@ -157,18 +157,18 @@ $total = $subtotal - $discount;
                         <h5 class="fw-bold mb-3">Rezumat Comandă</h5>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal:</span>
-                            <strong><?php echo number_format($subtotal, 2); ?> LEI</strong>
+                            <strong><?php echo number_format($subtotal, 2); ?> RON</strong>
                         </div>
                         <?php if ($discount > 0): ?>
                         <div class="d-flex justify-content-between mb-2 text-success">
                             <span>Reducere:</span>
-                            <strong>-<?php echo number_format($discount, 2); ?> LEI</strong>
+                            <strong>-<?php echo number_format($discount, 2); ?> RON</strong>
                         </div>
                         <?php endif; ?>
                         <hr>
                         <div class="d-flex justify-content-between mb-3">
                             <span class="h5 mb-0">Total:</span>
-                            <strong class="h5 mb-0 text-primary"><?php echo number_format($total, 2); ?> LEI</strong>
+                            <strong class="h5 mb-0 text-primary"><?php echo number_format($total, 2); ?> RON</strong>
                         </div>
                         <a href="<?php echo SITE_URL; ?>/pages/checkout.php" class="btn btn-primary w-100">
                             <i class="bi bi-credit-card me-2"></i>Finalizează Comanda

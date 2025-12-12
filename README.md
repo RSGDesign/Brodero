@@ -23,11 +23,20 @@
 
 **Brodero** este o platformă e-commerce completă specializată în design-uri digitale de broderie, construită cu:
 - **Backend:** PHP 7.4+ (OOP, prepared statements, sessions)
-- **Frontend:** Bootstrap 5.3, JavaScript ES6
+- **Frontend:** Bootstrap 5.3, JavaScript ES6 (filtrare automată instant)
 - **Bază de date:** MySQL (structură relațională optimizată)
 - **Email:** PHPMailer cu SMTP (suport atașamente MIME)
 - **Plăți:** Stripe Checkout + Transfer Bancar
 - **Admin Panel:** Dashboard complet pentru gestionare produse, comenzi, utilizatori
+
+### 🆕 Features Recente (Dec 2025)
+
+✨ **Filtrare Automată Instant** - Pagina magazin aplică filtrele automat la schimbare, fără buton "Aplică Filtre"
+- ⚡ Filtrare instant pentru select-uri (categorie, sortare)
+- ⏱️ Debounce 300ms pentru input-uri text/number (căutare, preț)
+- 🎨 Loader vizual pentru feedback
+- 📱 Optimizat pentru mobile (experiență fluidă)
+- 🔗 URL-uri curate (parametri goali eliminați automat)
 
 ---
 
@@ -1023,6 +1032,11 @@ chmod 755 uploads/contact/
 | `DOWNLOADABLE_FILES_INTEGRATION.md` | Upload fișiere în add_product.php |
 | `MANY_TO_MANY_IMPLEMENTATION.md` | Sistem categorii many-to-many |
 | `HEADER_ERROR_FIX.md` | Rezolvare "headers already sent" |
+| **`AUTO_FILTER_IMPLEMENTATION.md`** | **🆕 Filtrare automată instant magazin (Dec 2025)** |
+| **`AUTO_FILTER_SUMMARY.md`** | **🆕 Rezumat modificări filtrare automată** |
+| **`QUICK_TEST_AUTO_FILTER.md`** | **🆕 Ghid testare rapidă filtrare (5 min)** |
+| **`AUTO_FILTER_VISUAL_GUIDE.md`** | **🆕 Comparație vizuală înainte/după** |
+| `FILE_AUDIT_COMPLETE.md` | Audit complet fișiere proiect + comenzi curățare |
 
 ---
 
