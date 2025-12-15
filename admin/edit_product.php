@@ -186,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Tipuri: s=string, d=double, i=integer
         // Parameters order: name(s), slug(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i), productId(i)
         // Total: 11 parameters for 11 placeholders
-        $stmt->bind_param("sssddssiii", 
+        $stmt->bind_param("sssddsssiii", 
             $name,
             $slug,
             $description, 
