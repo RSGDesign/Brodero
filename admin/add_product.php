@@ -91,6 +91,16 @@ function ensureProductDownloadFolder($productId) {
 
 // Procesare formular ÎNAINTE de header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // PROTECTION: Prevent double submission with session token
+    if (!isset($_POST['form_token']) || !isset($_SESSION['form_token']) || $_POST['form_token'] !== $_SESSION['form_token']) {
+        // Token invalid, poate fi double submit
+        if (isset($_SESSION['last_product_added']) && (time() - $_SESSION['last_product_added']) < 3) {
+            // Submitted în ultimele 3 secunde - ignore duplicate
+            setMessage("Produsul a fost deja adăugat.", "info");
+            redirect('/admin/admin_products.php');
+        }
+    }
+    
     // Validare câmpuri
     $name = cleanInput($_POST['name']);
     $price = floatval($_POST['price']);
@@ -180,6 +190,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($stmt->execute()) {
             $product_id = $db->insert_id;
+            
+            // DEBUG: Log product creation
+            error_log("PRODUCT CREATED: ID=$product_id, Name=$name, Time=" . date('Y-m-d H:i:s'));
+            $_SESSION['last_product_added'] = time();
             
             // Atribuie categoriile la produs
             if (assignCategoriesToProduct($product_id, $category_ids)) {
@@ -360,6 +374,12 @@ require_once __DIR__ . '/../includes/header.php';
         <?php endif; ?>
 
         <form method="POST" enctype="multipart/form-data">
+            <?php
+            // Generate and store form token to prevent double submission
+            $_SESSION['form_token'] = bin2hex(random_bytes(32));
+            ?>
+            <input type="hidden" name="form_token" value="<?php echo $_SESSION['form_token']; ?>">
+            
             <div class="row">
                 <!-- Informații Principale -->
                 <div class="col-lg-8">
@@ -515,7 +535,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <!-- Butoane Acțiuni -->
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <button type="submit" class="btn btn-primary w-100 mb-2">
+                            <button type="submit" class="btn btn-primary w-100 mb-2" id="submitBtn">
                                 <i class="bi bi-check-circle me-2"></i>Adaugă Produs
                             </button>
                             <a href="<?php echo SITE_URL; ?>/admin/admin_products.php" class="btn btn-outline-secondary w-100">
@@ -531,6 +551,30 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- JavaScript pentru Preview Imagini și Fișiere -->
 <script>
+// PREVENT DOUBLE SUBMISSION
+let formSubmitted = false;
+const form = document.querySelector('form');
+const submitBtn = document.getElementById('submitBtn');
+
+form.addEventListener('submit', function(e) {
+    if (formSubmitted) {
+        e.preventDefault();
+        console.log('Form already submitted, preventing duplicate submission');
+        return false;
+    }
+    
+    formSubmitted = true;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Se procesează...';
+    
+    // Re-enable after 5 seconds as a safety measure
+    setTimeout(function() {
+        formSubmitted = false;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Adaugă Produs';
+    }, 5000);
+});
+
 // Preview imagine principală
 document.getElementById('main_image').addEventListener('change', function(e) {
     const preview = document.getElementById('main_image_preview');
