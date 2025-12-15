@@ -147,7 +147,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Adăugare imagini noi în galerie
     if (isset($_FILES['gallery_images']) && !empty($_FILES['gallery_images']['name'][0])) {
-        foreach ($_FILES['gallery_images']['name'] as $key => $name) {
+        // CRITICAL FIX: Use $galleryFileName instead of $name (which is product name!)
+        foreach ($_FILES['gallery_images']['name'] as $key => $galleryFileName) {
             if ($_FILES['gallery_images']['error'][$key] === UPLOAD_ERR_OK) {
                 $file = [
                     'name' => $_FILES['gallery_images']['name'][$key],
