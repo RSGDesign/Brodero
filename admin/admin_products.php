@@ -90,6 +90,8 @@ foreach ($products as &$product) {
         return $cat['name'];
     }, $categories);
 }
+// CRITICAL FIX: Unset reference to avoid issues in subsequent foreach loops
+unset($product);
 
 // Obține categorii pentru filtru
 $categories = $db->query("SELECT * FROM categories ORDER BY name")->fetch_all(MYSQLI_ASSOC);

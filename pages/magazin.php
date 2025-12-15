@@ -60,6 +60,8 @@ foreach ($products as &$product) {
         return $cat['name'];
     }, $product['categories']);
 }
+// CRITICAL FIX: Unset reference to avoid issues in subsequent foreach loops
+unset($product);
 
 // Obține categorii pentru filtre
 $categoriesQuery = "SELECT * FROM categories WHERE is_active = 1 ORDER BY display_order, name";
