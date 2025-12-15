@@ -39,8 +39,11 @@ $product['category_names'] = array_map(function($cat) {
     return $cat['name'];
 }, $productCategories);
 
-// Incrementare vizualizări
-$db->query("UPDATE products SET views = views + 1 WHERE id = $productId");
+// Incrementare vizualizări (prepared statement for security)
+$viewStmt = $db->prepare("UPDATE products SET views = views + 1 WHERE id = ?");
+$viewStmt->bind_param("i", $productId);
+$viewStmt->execute();
+$viewStmt->close();
 
 // Obține produse similare (din aceleași categorii)
 $similarProducts = [];

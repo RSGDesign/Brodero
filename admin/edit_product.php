@@ -179,11 +179,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Actualizare produs (cu slug)
-        $stmt = $db->prepare("UPDATE products SET name = ?, slug = ?, description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, stock_status = ?, is_active = ?, is_featured = ?, updated_at = NOW() WHERE id = ?");
+        // CRITICAL FIX: Correct bind_param type string - must match exactly 11 placeholders
+        $stmt = $db->prepare("UPDATE products SET name = ?, slug = ?, description = ?, price = ?, sale_price = ?, image = ?, gallery = ?, stock_status = ?, is_active = ?, is_featured = ? WHERE id = ?");
         
         // Tipuri: s=string, d=double, i=integer
-        // name(s), slug(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i), productId(i)
-        $stmt->bind_param("sssddsssiii", 
+        // Parameters order: name(s), slug(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i), productId(i)
+        // Total: 11 parameters for 11 placeholders
+        $stmt->bind_param("sssddssiii", 
             $name,
             $slug,
             $description, 
