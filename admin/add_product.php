@@ -91,203 +91,212 @@ function ensureProductDownloadFolder($productId) {
 
 // Procesare formular ÎNAINTE de header.php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // PROTECTION: Prevent double submission with session token
-    if (!isset($_POST['form_token']) || !isset($_SESSION['form_token']) || $_POST['form_token'] !== $_SESSION['form_token']) {
-        // Token invalid, poate fi double submit
-        if (isset($_SESSION['last_product_added']) && (time() - $_SESSION['last_product_added']) < 3) {
-            // Submitted în ultimele 3 secunde - ignore duplicate
-            setMessage("Produsul a fost deja adăugat.", "info");
-            redirect('/admin/admin_products.php');
-        }
-    }
-    
-    // Validare câmpuri
-    $name = cleanInput($_POST['name']);
-    $price = floatval($_POST['price']);
-    $sale_price = !empty($_POST['sale_price']) ? floatval($_POST['sale_price']) : null;
-    $description = cleanInput($_POST['description']);
-    $category_ids = isset($_POST['category_ids']) ? $_POST['category_ids'] : [];
-    $stock_status = $_POST['stock_status'];
-    $is_active = isset($_POST['is_active']) ? 1 : 0;
-    $is_featured = isset($_POST['is_featured']) ? 1 : 0;
-    
-    // Validări
-    if (empty($name)) {
-        $errors[] = "Denumirea produsului este obligatorie.";
-    }
-    if ($price <= 0) {
-        $errors[] = "Prețul trebuie să fie mai mare de 0.";
-    }
-    if ($sale_price && $sale_price >= $price) {
-        $errors[] = "Prețul redus trebuie să fie mai mic decât prețul normal.";
-    }
-    if (empty($description)) {
-        $errors[] = "Descrierea este obligatorie.";
-    }
-    if (empty($category_ids)) {
-        $errors[] = "Selectează cel puțin o categorie.";
-    }
-    
-    // Upload imagine principală
-    $mainImage = '';
-    if (isset($_FILES['main_image']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
-        $uploadResult = uploadImage($_FILES['main_image'], 'products');
-        if ($uploadResult['success']) {
-            $mainImage = $uploadResult['filename'];
-        } else {
-            $errors[] = $uploadResult['error'];
-        }
-    }
-    
-    // Upload galerie imagini
-    $galleryImages = [];
-    if (isset($_FILES['gallery_images']) && !empty($_FILES['gallery_images']['name'][0])) {
-        // CRITICAL FIX: Use $galleryFileName instead of $name (which is product name!)
-        foreach ($_FILES['gallery_images']['name'] as $key => $galleryFileName) {
-            if ($_FILES['gallery_images']['error'][$key] === UPLOAD_ERR_OK) {
-                $file = [
-                    'name' => $_FILES['gallery_images']['name'][$key],
-                    'type' => $_FILES['gallery_images']['type'][$key],
-                    'tmp_name' => $_FILES['gallery_images']['tmp_name'][$key],
-                    'error' => $_FILES['gallery_images']['error'][$key],
-                    'size' => $_FILES['gallery_images']['size'][$key]
-                ];
-                
-                $uploadResult = uploadImage($file, 'products/gallery');
-                if ($uploadResult['success']) {
-                    $galleryImages[] = $uploadResult['filename'];
-                } else {
-                    $errors[] = "Imagine galerie: " . $uploadResult['error'];
-                }
+    // CHECK: Verify POST data exists (upload size limits can empty $_POST)
+    if (empty($_POST) && $_SERVER['CONTENT_LENGTH'] > 0) {
+        $maxUpload = ini_get('upload_max_filesize');
+        $maxPost = ini_get('post_max_size');
+        $errors[] = "Fișierele încărcate depășesc limita serverului (upload_max_filesize: $maxUpload, post_max_size: $maxPost). Încercați cu fișiere mai mici.";
+    } elseif (empty($_POST['name']) && empty($_POST['price'])) {
+        $errors[] = "Datele formularului sunt incomplete. Verificați toate câmpurile obligatorii.";
+    } else {
+        // PROTECTION: Prevent double submission with session token
+        if (!isset($_POST['form_token']) || !isset($_SESSION['form_token']) || $_POST['form_token'] !== $_SESSION['form_token']) {
+            // Token invalid, poate fi double submit
+            if (isset($_SESSION['last_product_added']) && (time() - $_SESSION['last_product_added']) < 3) {
+                // Submitted în ultimele 3 secunde - ignore duplicate
+                setMessage("Produsul a fost deja adăugat.", "info");
+                redirect('/admin/admin_products.php');
             }
         }
-    }
+        
+        // Validare câmpuri cu verificare isset
+        $name = isset($_POST['name']) ? cleanInput($_POST['name']) : '';
+        $price = isset($_POST['price']) ? floatval($_POST['price']) : 0;
+        $sale_price = !empty($_POST['sale_price']) ? floatval($_POST['sale_price']) : null;
+        $description = isset($_POST['description']) ? cleanInput($_POST['description']) : '';
+        $category_ids = isset($_POST['category_ids']) ? $_POST['category_ids'] : [];
+        $stock_status = isset($_POST['stock_status']) ? $_POST['stock_status'] : 'in_stock';
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        $is_featured = isset($_POST['is_featured']) ? 1 : 0;
     
-    $galleryJson = !empty($galleryImages) ? json_encode($galleryImages) : null;
-    
-    // Salvare în baza de date
-    if (empty($errors)) {
-        // Generare slug unic din numele produsului
-        $slug = generateUniqueSlug($db, $name, 'products');
+        // Validări
+        if (empty($name)) {
+            $errors[] = "Denumirea produsului este obligatorie.";
+        }
+        if ($price <= 0) {
+            $errors[] = "Prețul trebuie să fie mai mare de 0.";
+        }
+        if ($sale_price && $sale_price >= $price) {
+            $errors[] = "Prețul redus trebuie să fie mai mic decât prețul normal.";
+        }
+        if (empty($description)) {
+            $errors[] = "Descrierea este obligatorie.";
+        }
+        if (empty($category_ids)) {
+            $errors[] = "Selectează cel puțin o categorie.";
+        }
         
-        // Inserare produs (cu slug unic)
-        $stmt = $db->prepare("INSERT INTO products (name, slug, description, price, sale_price, image, gallery, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        // Upload imagine principală
+        $mainImage = '';
+        if (isset($_FILES['main_image']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
+            $uploadResult = uploadImage($_FILES['main_image'], 'products');
+            if ($uploadResult['success']) {
+                $mainImage = $uploadResult['filename'];
+            } else {
+                $errors[] = $uploadResult['error'];
+            }
+        }
         
-        // Tipuri: s=string, d=double, i=integer
-        // name(s), slug(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i)
-        $stmt->bind_param("sssddsssii", 
-            $name,
-            $slug,
-            $description, 
-            $price, 
-            $sale_price, 
-            $mainImage, 
-            $galleryJson, 
-            $stock_status, 
-            $is_active, 
-            $is_featured
-        );
-        
-        if ($stmt->execute()) {
-            $product_id = $db->insert_id;
-            
-            // DEBUG: Log product creation
-            error_log("PRODUCT CREATED: ID=$product_id, Name=$name, Time=" . date('Y-m-d H:i:s'));
-            $_SESSION['last_product_added'] = time();
-            
-            // Atribuie categoriile la produs
-            if (assignCategoriesToProduct($product_id, $category_ids)) {
-                $success = true;
-                
-                // PROCESARE FIȘIERE DESCĂRCABILE
-                $fileErrors = [];
-                $fileSuccessCount = 0;
-                
-                if (isset($_FILES['downloadable_files']) && !empty($_FILES['downloadable_files']['name'][0])) {
-                    $totalFiles = count($_FILES['downloadable_files']['name']);
+        // Upload galerie imagini
+        $galleryImages = [];
+        if (isset($_FILES['gallery_images']) && !empty($_FILES['gallery_images']['name'][0])) {
+            // CRITICAL FIX: Use $galleryFileName instead of $name (which is product name!)
+            foreach ($_FILES['gallery_images']['name'] as $key => $galleryFileName) {
+                if ($_FILES['gallery_images']['error'][$key] === UPLOAD_ERR_OK) {
+                    $file = [
+                        'name' => $_FILES['gallery_images']['name'][$key],
+                        'type' => $_FILES['gallery_images']['type'][$key],
+                        'tmp_name' => $_FILES['gallery_images']['tmp_name'][$key],
+                        'error' => $_FILES['gallery_images']['error'][$key],
+                        'size' => $_FILES['gallery_images']['size'][$key]
+                    ];
                     
-                    for ($i = 0; $i < $totalFiles; $i++) {
-                        // Verifică dacă fișierul a fost încărcat corect
-                        if ($_FILES['downloadable_files']['error'][$i] !== UPLOAD_ERR_OK) {
-                            if ($_FILES['downloadable_files']['error'][$i] !== UPLOAD_ERR_NO_FILE) {
-                                $fileErrors[] = "Fișier {$_FILES['downloadable_files']['name'][$i]}: Eroare la încărcare.";
-                            }
-                            continue;
-                        }
-                        
-                        $fileName = $_FILES['downloadable_files']['name'][$i];
-                        $fileTmpName = $_FILES['downloadable_files']['tmp_name'][$i];
-                        $fileSize = $_FILES['downloadable_files']['size'][$i];
-                        
-                        // Validare dimensiune (max 200MB)
-                        if ($fileSize <= 0) {
-                            $fileErrors[] = "Fișier {$fileName}: Fișier gol.";
-                            continue;
-                        }
-                        if ($fileSize > 200 * 1024 * 1024) {
-                            $fileErrors[] = "Fișier {$fileName}: Prea mare (max 200MB).";
-                            continue;
-                        }
-                        
-                        // Validare extensie
-                        $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
-                        if (!allowedFileExtension($fileExt)) {
-                            $fileErrors[] = "Fișier {$fileName}: Extensie nepermisă.";
-                            continue;
-                        }
-                        
-                        // Sanitizare nume fișier
-                        $safeFileName = sanitizeFilename(pathinfo($fileName, PATHINFO_FILENAME)) . '.' . strtolower($fileExt);
-                        
-                        // Creare director pentru produs
-                        $downloadFolder = ensureProductDownloadFolder($product_id);
-                        $destinationPath = $downloadFolder . '/' . $safeFileName;
-                        
-                        // Mutare fișier încărcat
-                        if (move_uploaded_file($fileTmpName, $destinationPath)) {
-                            // Salvare în baza de date
-                            $relativePath = 'uploads/downloads/' . $product_id . '/' . $safeFileName;
-                            $actualFileSize = filesize($destinationPath);
-                            
-                            // Obține limitele și status pentru fiecare fișier
-                            $downloadLimit = isset($_POST['download_limits'][$i]) ? intval($_POST['download_limits'][$i]) : 0;
-                            $fileStatus = isset($_POST['file_statuses'][$i]) && $_POST['file_statuses'][$i] === 'active' ? 'active' : 'inactive';
-                            
-                            $fileStmt = $db->prepare("INSERT INTO product_files (product_id, file_name, file_path, file_size, status, download_limit, download_count, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, 0, NOW())");
-                            $fileStmt->bind_param('issisi', $product_id, $safeFileName, $relativePath, $actualFileSize, $fileStatus, $downloadLimit);
-                            
-                            if ($fileStmt->execute()) {
-                                $fileSuccessCount++;
-                            } else {
-                                $fileErrors[] = "Fișier {$fileName}: Eroare la salvare în DB.";
-                                // Șterge fișierul fizic dacă nu s-a salvat în DB
-                                @unlink($destinationPath);
-                            }
-                            $fileStmt->close();
-                        } else {
-                            $fileErrors[] = "Fișier {$fileName}: Nu s-a putut salva pe server.";
-                        }
+                    $uploadResult = uploadImage($file, 'products/gallery');
+                    if ($uploadResult['success']) {
+                        $galleryImages[] = $uploadResult['filename'];
+                    } else {
+                        $errors[] = "Imagine galerie: " . $uploadResult['error'];
                     }
                 }
-                
-                // Mesaj final de succes
-                $successMessage = "Produsul a fost adăugat cu succes!";
-                if ($fileSuccessCount > 0) {
-                    $successMessage .= " Au fost încărcate {$fileSuccessCount} fișier(e) descărcabil(e).";
-                }
-                if (!empty($fileErrors)) {
-                    $successMessage .= " Erori fișiere: " . implode("; ", $fileErrors);
-                }
-                
-                setMessage($successMessage, "success");
-                redirect('/admin/admin_products.php');
-            } else {
-                $errors[] = "Produsul a fost creat dar categoriile nu au putut fi atribuite.";
             }
-        } else {
-            $errors[] = "Eroare la salvarea în baza de date: " . $stmt->error;
         }
-        $stmt->close();
+        
+        $galleryJson = !empty($galleryImages) ? json_encode($galleryImages) : null;
+        
+        // Salvare în baza de date
+        if (empty($errors)) {
+            // Generare slug unic din numele produsului
+            $slug = generateUniqueSlug($db, $name, 'products');
+            
+            // Inserare produs (cu slug unic)
+            $stmt = $db->prepare("INSERT INTO products (name, slug, description, price, sale_price, image, gallery, stock_status, is_active, is_featured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            
+            // Tipuri: s=string, d=double, i=integer
+            // name(s), slug(s), description(s), price(d), sale_price(d), image(s), gallery(s), stock_status(s), is_active(i), is_featured(i)
+            $stmt->bind_param("sssddsssii", 
+                $name,
+                $slug,
+                $description, 
+                $price, 
+                $sale_price, 
+                $mainImage, 
+                $galleryJson, 
+                $stock_status, 
+                $is_active, 
+                $is_featured
+            );
+            
+            if ($stmt->execute()) {
+                $product_id = $db->insert_id;
+                
+                // DEBUG: Log product creation
+                error_log("PRODUCT CREATED: ID=$product_id, Name=$name, Time=" . date('Y-m-d H:i:s'));
+                $_SESSION['last_product_added'] = time();
+                
+                // Atribuie categoriile la produs
+                if (assignCategoriesToProduct($product_id, $category_ids)) {
+                    $success = true;
+                    
+                    // PROCESARE FIȘIERE DESCĂRCABILE
+                    $fileErrors = [];
+                    $fileSuccessCount = 0;
+                    
+                    if (isset($_FILES['downloadable_files']) && !empty($_FILES['downloadable_files']['name'][0])) {
+                        $totalFiles = count($_FILES['downloadable_files']['name']);
+                        
+                        for ($i = 0; $i < $totalFiles; $i++) {
+                            // Verifică dacă fișierul a fost încărcat corect
+                            if ($_FILES['downloadable_files']['error'][$i] !== UPLOAD_ERR_OK) {
+                                if ($_FILES['downloadable_files']['error'][$i] !== UPLOAD_ERR_NO_FILE) {
+                                    $fileErrors[] = "Fișier {$_FILES['downloadable_files']['name'][$i]}: Eroare la încărcare.";
+                                }
+                                continue;
+                            }
+                            
+                            $fileName = $_FILES['downloadable_files']['name'][$i];
+                            $fileTmpName = $_FILES['downloadable_files']['tmp_name'][$i];
+                            $fileSize = $_FILES['downloadable_files']['size'][$i];
+                            
+                            // Validare dimensiune (max 200MB)
+                            if ($fileSize <= 0) {
+                                $fileErrors[] = "Fișier {$fileName}: Fișier gol.";
+                                continue;
+                            }
+                            if ($fileSize > 200 * 1024 * 1024) {
+                                $fileErrors[] = "Fișier {$fileName}: Prea mare (max 200MB).";
+                                continue;
+                            }
+                            
+                            // Validare extensie
+                            $fileExt = pathinfo($fileName, PATHINFO_EXTENSION);
+                            if (!allowedFileExtension($fileExt)) {
+                                $fileErrors[] = "Fișier {$fileName}: Extensie nepermisă.";
+                                continue;
+                            }
+                            
+                            // Sanitizare nume fișier
+                            $safeFileName = sanitizeFilename(pathinfo($fileName, PATHINFO_FILENAME)) . '.' . strtolower($fileExt);
+                            
+                            // Creare director pentru produs
+                            $downloadFolder = ensureProductDownloadFolder($product_id);
+                            $destinationPath = $downloadFolder . '/' . $safeFileName;
+                            
+                            // Mutare fișier încărcat
+                            if (move_uploaded_file($fileTmpName, $destinationPath)) {
+                                // Salvare în baza de date
+                                $relativePath = 'uploads/downloads/' . $product_id . '/' . $safeFileName;
+                                $actualFileSize = filesize($destinationPath);
+                                
+                                // Obține limitele și status pentru fiecare fișier
+                                $downloadLimit = isset($_POST['download_limits'][$i]) ? intval($_POST['download_limits'][$i]) : 0;
+                                $fileStatus = isset($_POST['file_statuses'][$i]) && $_POST['file_statuses'][$i] === 'active' ? 'active' : 'inactive';
+                                
+                                $fileStmt = $db->prepare("INSERT INTO product_files (product_id, file_name, file_path, file_size, status, download_limit, download_count, uploaded_at) VALUES (?, ?, ?, ?, ?, ?, 0, NOW())");
+                                $fileStmt->bind_param('issisi', $product_id, $safeFileName, $relativePath, $actualFileSize, $fileStatus, $downloadLimit);
+                                
+                                if ($fileStmt->execute()) {
+                                    $fileSuccessCount++;
+                                } else {
+                                    $fileErrors[] = "Fișier {$fileName}: Eroare la salvare în DB.";
+                                    // Șterge fișierul fizic dacă nu s-a salvat în DB
+                                    @unlink($destinationPath);
+                                }
+                                $fileStmt->close();
+                            } else {
+                                $fileErrors[] = "Fișier {$fileName}: Nu s-a putut salva pe server.";
+                            }
+                        }
+                    }
+                    
+                    // Mesaj final de succes
+                    $successMessage = "Produsul a fost adăugat cu succes!";
+                    if ($fileSuccessCount > 0) {
+                        $successMessage .= " Au fost încărcate {$fileSuccessCount} fișier(e) descărcabil(e).";
+                    }
+                    if (!empty($fileErrors)) {
+                        $successMessage .= " Erori fișiere: " . implode("; ", $fileErrors);
+                    }
+                    
+                    setMessage($successMessage, "success");
+                    redirect('/admin/admin_products.php');
+                } else {
+                    $errors[] = "Produsul a fost creat dar categoriile nu au putut fi atribuite.";
+                }
+            } else {
+                $errors[] = "Eroare la salvarea în baza de date: " . $stmt->error;
+            }
+            $stmt->close();
+        }
     }
 }
 

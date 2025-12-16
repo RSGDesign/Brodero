@@ -109,6 +109,10 @@ function redirect($url) {
 
 // Sanitizare input
 function cleanInput($data) {
+    // PHP 8.1+ compatibility: handle null values
+    if ($data === null || $data === '') {
+        return '';
+    }
     $data = trim($data);
     $data = stripslashes($data);
     $data = htmlspecialchars($data);
