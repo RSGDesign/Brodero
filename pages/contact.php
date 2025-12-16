@@ -546,14 +546,7 @@ require_once __DIR__ . '/../includes/header.php';
                                class="btn btn-outline-primary flex-fill">
                                 <i class="bi bi-instagram"></i>
                             </a>
-                            <a href="<?php echo TWITTER_URL; ?>" target="_blank" 
-                               class="btn btn-outline-primary flex-fill">
-                                <i class="bi bi-twitter"></i>
-                            </a>
-                            <a href="<?php echo PINTEREST_URL; ?>" target="_blank" 
-                               class="btn btn-outline-primary flex-fill">
-                                <i class="bi bi-pinterest"></i>
-                            </a>
+                            
                         </div>
                         
                         <p class="text-muted mt-3 mb-0 small">

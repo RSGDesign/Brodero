@@ -20,12 +20,7 @@
                         <a href="<?php echo INSTAGRAM_URL; ?>" target="_blank" class="text-white-50 fs-5" title="Instagram">
                             <i class="bi bi-instagram"></i>
                         </a>
-                        <a href="<?php echo TWITTER_URL; ?>" target="_blank" class="text-white-50 fs-5" title="Twitter">
-                            <i class="bi bi-twitter"></i>
-                        </a>
-                        <a href="<?php echo PINTEREST_URL; ?>" target="_blank" class="text-white-50 fs-5" title="Pinterest">
-                            <i class="bi bi-pinterest"></i>
-                        </a>
+                        
                     </div>
                 </div>
                 

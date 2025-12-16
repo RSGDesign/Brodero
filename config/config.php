@@ -61,8 +61,8 @@ define('STRIPE_SECRET_KEY', 'de compșetat'); // Adaugă cheia ta Stripe aici c�
 define('STRIPE_PUBLISHABLE_KEY', 'de completat'); // Pentru frontend
 
 // Configurare social media
-define('FACEBOOK_URL', 'https://facebook.com/brodero');
-define('INSTAGRAM_URL', 'https://instagram.com/brodero');
+define('FACEBOOK_URL', 'https://www.facebook.com/Brodero2020/');
+define('INSTAGRAM_URL', 'https://instagram.com/brodero2020');
 define('TWITTER_URL', 'https://twitter.com/brodero');
 define('PINTEREST_URL', 'https://pinterest.com/brodero');
 
@@ -129,4 +129,87 @@ function cleanInput($data) {
 // Include funcții pentru categorii many-to-many
 if (file_exists(__DIR__ . '/../includes/category_functions.php')) {
     require_once __DIR__ . '/../includes/category_functions.php';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMING SOON PROTECTION - Protecție pagină "Coming Soon"
+// ═══════════════════════════════════════════════════════════════════════════
+// Activează/Dezactivează modul "Coming Soon"
+define('COMING_SOON_MODE', true); // Schimbă în false pentru a dezactiva protecția
+
+// Data lansării (după această dată, modul se dezactivează automat)
+define('LAUNCH_DATE', '2025-12-22 23:59:59');
+
+/**
+ * Verifică dacă utilizatorul curent poate accesa site-ul în modul "Coming Soon"
+ * 
+ * @return bool True dacă utilizatorul poate accesa, False dacă trebuie redirecționat
+ */
+function canAccessDuringComingSoon() {
+    // Dacă modul "Coming Soon" este dezactivat, toată lumea poate accesa
+    if (!COMING_SOON_MODE) {
+        return true;
+    }
+    
+    // Dacă am trecut de data lansării, toată lumea poate accesa
+    $now = new DateTime();
+    $launchDate = new DateTime(LAUNCH_DATE);
+    if ($now >= $launchDate) {
+        return true;
+    }
+    
+    // Doar adminii logați pot accesa în modul "Coming Soon"
+    return isAdmin();
+}
+
+/**
+ * Aplică protecția "Coming Soon" - Redirecționează utilizatorii non-admin către coming-soon.html
+ * Această funcție trebuie apelată la începutul fiecărei pagini
+ */
+function applyComingSoonProtection() {
+    // Obține calea curentă
+    $currentPath = $_SERVER['PHP_SELF'];
+    $currentFile = basename($currentPath);
+    
+    // Lista fișierelor excluse de la redirecționare
+    $excludedFiles = [
+        'coming-soon.html',
+        'login.php',
+        'logout.php',
+        'register.php'
+    ];
+    
+    // Nu redirecționa dacă suntem deja pe o pagină exclusă
+    if (in_array($currentFile, $excludedFiles)) {
+        return;
+    }
+    
+    // Nu redirecționa dacă e un request AJAX
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+        return;
+    }
+    
+    // Verifică dacă utilizatorul poate accesa site-ul
+    if (!canAccessDuringComingSoon()) {
+        // Salvează sesiunea
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        
+        // Curăță output buffer
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        
+        // Redirecționează către coming-soon.html
+        header("Location: " . SITE_URL . "/coming-soon.html");
+        exit();
+    }
+}
+
+// Aplică automat protecția "Coming Soon" pentru toate paginile
+// (Se execută doar dacă nu suntem în admin sau pe pagini excluse)
+if (!defined('SKIP_COMING_SOON_CHECK')) {
+    applyComingSoonProtection();
 }
