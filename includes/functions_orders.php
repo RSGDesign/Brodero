@@ -234,7 +234,13 @@ function getOrderEmailTemplate($order) {
     $customerName = htmlspecialchars($order['customer_name'] ?? 'Client');
     $totalAmount = number_format($order['total_amount'], 2);
     $paymentMethod = $order['payment_method'];
+    $paymentMethodName = getPaymentMethodName($paymentMethod);
     $orderUrl = SITE_URL . "/pages/comanda.php?id=" . $order['id'];
+    $currentYear = date('Y');
+    $siteEmail = SITE_EMAIL;
+    $siteName = SITE_NAME;
+    $sitePhone = SITE_PHONE;
+    $siteUrl = SITE_URL;
     
     $html = <<<HTML
 <!DOCTYPE html>
@@ -280,7 +286,7 @@ function getOrderEmailTemplate($order) {
             <div class="order-info">
                 <p><strong>Număr Comandă:</strong> #{$orderNumber}</p>
                 <p><strong>Total de plată:</strong> <span style="font-size: 20px; color: #dc3545;">{$totalAmount} RON</span></p>
-                <p><strong>Metodă de plată:</strong> {getPaymentMethodName($paymentMethod)}</p>
+                <p><strong>Metodă de plată:</strong> {$paymentMethodName}</p>
             </div>
 HTML;
 
@@ -296,7 +302,7 @@ HTML;
                     <table>
                         <tr>
                             <td>Beneficiar:</td>
-                            <td><strong>Brodero SRL</strong></td>
+                            <td><strong>Radu Sebastian Gabriel</strong></td>
                         </tr>
                         <tr>
                             <td>Banca:</td>
@@ -304,7 +310,7 @@ HTML;
                         </tr>
                         <tr>
                             <td>IBAN:</td>
-                            <td><span class="highlight">RO12 BTRL 0000 1234 5678 901</span></td>
+                            <td><span class="highlight">RO39BTRLRONCRT0490966201</span></td>
                         </tr>
                         <tr>
                             <td>Sumă:</td>
@@ -321,7 +327,7 @@ HTML;
                 <ol class="steps">
                     <li>Efectuează transferul bancar cu datele de mai sus</li>
                     <li>Menționează <strong>obligatoriu</strong> "Comanda #{$orderNumber}" în detaliile transferului</li>
-                    <li>Trimite-ne confirmarea la <a href="mailto:{SITE_EMAIL}">{SITE_EMAIL}</a></li>
+                    <li>Trimite-ne confirmarea la <a href="mailto:{$siteEmail}">{$siteEmail}</a></li>
                     <li>Vom verifica plata și activa descărcările în maxim 24 ore</li>
                 </ol>
                 
@@ -345,14 +351,14 @@ HTML;
                 <a href="{$orderUrl}" class="btn">Vezi Detalii Comandă</a>
             </div>
             
-            <p>Dacă ai întrebări, ne poți contacta oricând la <a href="mailto:{SITE_EMAIL}">{SITE_EMAIL}</a> sau la telefon {SITE_PHONE}.</p>
-            <p>Cu stimă,<br><strong>Echipa {SITE_NAME}</strong></p>
+            <p>Dacă ai întrebări, ne poți contacta oricând la <a href="mailto:{$siteEmail}">{$siteEmail}</a> sau la telefon {$sitePhone}.</p>
+            <p>Cu stimă,<br><strong>Echipa {$siteName}</strong></p>
         </div>
         
         <div class="footer">
             <p>Acest email a fost trimis automat. Te rugăm să nu răspunzi direct la acest mesaj.</p>
-            <p>&copy; {date('Y')} {SITE_NAME}. Toate drepturile rezervate.</p>
-            <p><a href="{SITE_URL}" style="color: #667eea;">Vizitează Website-ul</a></p>
+            <p>&copy; {$currentYear} {$siteName}. Toate drepturile rezervate.</p>
+            <p><a href="{$siteUrl}" style="color: #667eea;">Vizitează Website-ul</a></p>
         </div>
     </div>
 </body>

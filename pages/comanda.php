@@ -171,7 +171,7 @@ function getPaymentStatusBadge($status) {
                                         <td class="fw-bold text-muted" style="width: 180px;">
                                             <i class="bi bi-building me-2"></i>Beneficiar:
                                         </td>
-                                        <td class="fw-bold">Brodero SRL</td>
+                                        <td class="fw-bold">Radu Sebastian Gabriel</td>
                                     </tr>
                                     <tr>
                                         <td class="fw-bold text-muted">
@@ -185,7 +185,7 @@ function getPaymentStatusBadge($status) {
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <code id="iban-code" class="fs-6 me-2">RO12 BTRL 0000 1234 5678 901</code>
+                                                <code id="iban-code" class="fs-6 me-2">RO39BTRLRONCRT0490966201</code>
                                                 <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('iban-code', this)">
                                                     <i class="bi bi-clipboard"></i> Copiază
                                                 </button>

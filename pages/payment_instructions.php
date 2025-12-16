@@ -68,12 +68,12 @@ require_once __DIR__ . '/../includes/header.php';
                             <table class="table table-borderless mb-0">
                                 <tr>
                                     <td class="fw-bold" style="width: 150px;">Beneficiar:</td>
-                                    <td>Brodero SRL</td>
+                                    <td>Radu Sebastian Gabriel</td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold">IBAN:</td>
                                     <td class="text-primary">
-                                        <strong>RO12 BTRL 0000 1234 5678 901</strong>
+                                        <strong>RO39BTRLRONCRT0490966201</strong>
                                         <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyIBAN()">
                                             <i class="bi bi-clipboard"></i> Copiază
                                         </button>
@@ -149,7 +149,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <script>
 function copyIBAN() {
-    navigator.clipboard.writeText('RO12BTRL0000123456789901');
+    navigator.clipboard.writeText('RO39BTRLRONCRT0490966201');
     alert('IBAN copiat în clipboard!');
 }
 
