@@ -231,6 +231,17 @@ try {
         // Nu activăm automat aici
     }
 
+    // ✅ TRIMITE EMAIL DE CONFIRMARE
+    $orderData = [
+        'id' => $orderId,
+        'order_number' => $orderNumber,
+        'customer_email' => $customerEmail,
+        'customer_name' => $customerName,
+        'total_amount' => $totalAmount,
+        'payment_method' => $paymentMethod
+    ];
+    sendOrderConfirmationEmail($orderData);
+
     // Procesare în funcție de metoda de plată
     if ($paymentMethod === 'bank_transfer') {
         // Redirect către instrucțiuni plată

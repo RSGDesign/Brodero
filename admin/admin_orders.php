@@ -31,6 +31,9 @@ if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+// Include order functions pentru activare descărcări
+require_once __DIR__ . '/../includes/functions_orders.php';
+
 // Procesare actualizare status (form POST simplu)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
     // Validare CSRF
@@ -46,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
     
     $db = getDB();
     $updated = false;
+    $downloadsActivated = false;
     
     // Actualizare status comandă
     if (!empty($newStatus)) {
@@ -68,11 +72,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
             $stmt->execute();
             $stmt->close();
             $updated = true;
+            
+            // ✅ ACTIVARE AUTOMATĂ DESCĂRCĂRI când plata e marcată ca "paid"
+            if ($newPaymentStatus === 'paid') {
+                if (enableOrderDownloads($orderId)) {
+                    $downloadsActivated = true;
+                }
+            }
         }
     }
     
     if ($updated) {
-        setMessage("Status actualizat cu succes!", "success");
+        $message = "Status actualizat cu succes!";
+        if ($downloadsActivated) {
+            $message .= " Descărcările au fost activate automat pentru client.";
+        }
+        setMessage($message, "success");
     } else {
         setMessage("Nu s-a selectat nimic de actualizat.", "warning");
     }
@@ -374,6 +389,17 @@ function getPaymentStatusBadge($status) {
                                                    title="Vizualizare detalii">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
+                                                
+                                                <?php if ($order['payment_method'] === 'bank_transfer' && $order['payment_status'] === 'unpaid'): ?>
+                                                <button type="button" 
+                                                        class="btn btn-outline-success"
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#quickPayModal<?php echo $order['id']; ?>"
+                                                        title="✓ Marcare ca PLĂTITĂ">
+                                                    <i class="bi bi-check2-circle"></i>
+                                                </button>
+                                                <?php endif; ?>
+                                                
                                                 <button type="button" 
                                                         class="btn btn-outline-primary"
                                                         data-bs-toggle="modal" 
@@ -441,6 +467,60 @@ function getPaymentStatusBadge($status) {
 <!-- Modals Update Status (placed at end of body) -->
 <?php if (!empty($orders)): ?>
     <?php foreach ($orders as $order): ?>
+        <!-- Quick Pay Confirmation Modal (doar pentru bank_transfer + unpaid) -->
+        <?php if ($order['payment_method'] === 'bank_transfer' && $order['payment_status'] === 'unpaid'): ?>
+        <div class="modal fade" id="quickPayModal<?php echo $order['id']; ?>" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-check-circle-fill me-2"></i>Confirmare Plată Transfer Bancar
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST">
+                        <div class="modal-body">
+                            <div class="alert alert-warning mb-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Atenție!</strong> Confirmă doar după ce ai verificat transferul în contul bancar.
+                            </div>
+                            
+                            <div class="border-start border-success border-4 ps-3 mb-3">
+                                <p class="mb-1"><strong>Comandă:</strong> #<?php echo htmlspecialchars($order['order_number']); ?></p>
+                                <p class="mb-1"><strong>Client:</strong> <?php echo htmlspecialchars($order['email']); ?></p>
+                                <p class="mb-0"><strong>Sumă:</strong> <span class="text-success fs-5"><?php echo number_format($order['total_amount'], 2); ?> RON</span></p>
+                            </div>
+                            
+                            <p class="mb-0 small text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Această acțiune va:
+                            </p>
+                            <ul class="small text-muted mb-0">
+                                <li>Marca comanda ca <strong>PLĂTITĂ</strong></li>
+                                <li>Schimba statusul în <strong>FINALIZATĂ</strong></li>
+                                <li>Activa descărcările pentru client</li>
+                            </ul>
+                            
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                            <input type="hidden" name="payment_status" value="paid">
+                            <input type="hidden" name="status" value="completed">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-2"></i>Anulează
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check2-circle me-2"></i>Confirmă Plata
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Regular Status Update Modal -->
         <div class="modal fade" id="statusModal<?php echo $order['id']; ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">

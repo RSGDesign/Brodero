@@ -148,14 +148,110 @@ function getPaymentStatusBadge($status) {
                     </div>
                 </div>
 
+                <!-- Payment Instructions (if bank transfer and unpaid) -->
+                <?php if ($order['payment_method'] === 'bank_transfer' && $order['payment_status'] === 'unpaid'): ?>
+                <div class="card shadow-sm border-0 border-start border-warning border-4 mb-4">
+                    <div class="card-header bg-warning bg-opacity-10 border-0 p-4">
+                        <h5 class="fw-bold text-warning mb-0">
+                            <i class="bi bi-bank me-2"></i>Instrucțiuni de Plată - Transfer Bancar
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-info mb-4">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Comanda ta este în așteptarea plății.</strong> 
+                            După efectuarea transferului, te rugăm să ne trimiți confirmarea la 
+                            <a href="mailto:<?php echo SITE_EMAIL; ?>"><?php echo SITE_EMAIL; ?></a>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-borderless mb-4">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold text-muted" style="width: 180px;">
+                                            <i class="bi bi-building me-2"></i>Beneficiar:
+                                        </td>
+                                        <td class="fw-bold">Brodero SRL</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">
+                                            <i class="bi bi-bank me-2"></i>Banca:
+                                        </td>
+                                        <td>Banca Transilvania</td>
+                                    </tr>
+                                    <tr class="bg-light">
+                                        <td class="fw-bold text-muted">
+                                            <i class="bi bi-credit-card-2-back me-2"></i>IBAN:
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <code id="iban-code" class="fs-6 me-2">RO12 BTRL 0000 1234 5678 901</code>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('iban-code', this)">
+                                                    <i class="bi bi-clipboard"></i> Copiază
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">
+                                            <i class="bi bi-cash-coin me-2"></i>Sumă de plată:
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger fs-6">
+                                                <?php echo number_format($order['total_amount'], 2); ?> RON
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">
+                                            <i class="bi bi-currency-exchange me-2"></i>Moneda:
+                                        </td>
+                                        <td><strong>RON (Lei Românești)</strong></td>
+                                    </tr>
+                                    <tr class="bg-light">
+                                        <td class="fw-bold text-muted">
+                                            <i class="bi bi-tag me-2"></i>Referință/Detalii:
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <code id="ref-code" class="fs-6 me-2">Comanda #<?php echo htmlspecialchars($order['order_number']); ?></code>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="copyToClipboard('ref-code', this)">
+                                                    <i class="bi bi-clipboard"></i> Copiază
+                                                </button>
+                                            </div>
+                                            <small class="text-muted d-block mt-1">
+                                                ⚠️ Foarte important să incluzi acest număr în detalii transfer!
+                                            </small>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="border-top pt-3">
+                            <h6 class="fw-bold mb-2"><i class="bi bi-check2-circle me-2"></i>Pași următori:</h6>
+                            <ol class="mb-0 small">
+                                <li>Efectuează transferul bancar folosind datele de mai sus</li>
+                                <li>Menționează obligatoriu <strong>Comanda #<?php echo htmlspecialchars($order['order_number']); ?></strong> în detaliile transferului</li>
+                                <li>Trimite-ne confirmarea plății la <a href="mailto:<?php echo SITE_EMAIL; ?>"><?php echo SITE_EMAIL; ?></a></li>
+                                <li>Vom verifica plata și activa descărcările în maxim 24 ore</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Download Section (if paid) -->
                 <?php if ($order['payment_status'] === 'paid'): ?>
                 <div class="card shadow-sm border-0 border-start border-success border-4 mb-4">
                     <div class="card-body p-4">
                         <h5 class="fw-bold text-success mb-3">
-                            <i class="bi bi-download me-2"></i>Descarcă Fișierele
+                            <i class="bi bi-check-circle-fill me-2"></i>Plata Confirmată
                         </h5>
-                        <p class="mb-3">Comanda ta a fost plătită! Poți descărca fișierele din secțiunea dedicată.</p>
+                        <p class="mb-3">
+                            <i class="bi bi-download me-2"></i>
+                            Comanda ta a fost plătită! Poți descărca fișierele din secțiunea dedicată.
+                        </p>
                         <a href="<?php echo SITE_URL; ?>/pages/cont.php?tab=fisiere" class="btn btn-success">
                             <i class="bi bi-folder-fill me-2"></i>Vezi Fișiere Descărcabile
                         </a>
@@ -235,5 +331,42 @@ function getPaymentStatusBadge($status) {
         </div>
     </div>
 </section>
+
+<script>
+// Copy to clipboard function
+function copyToClipboard(elementId, button) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    
+    // Create temporary textarea
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
+        document.execCommand('copy');
+        
+        // Change button appearance
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-check2"></i> Copiat!';
+        button.classList.remove('btn-outline-primary');
+        button.classList.add('btn-success');
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-primary');
+        }, 2000);
+    } catch (err) {
+        alert('Nu s-a putut copia textul. Selectează manual și copiază.');
+    }
+    
+    document.body.removeChild(textarea);
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
