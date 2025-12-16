@@ -104,7 +104,7 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Ōasa</a></li>
+                <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Acasă</a></li>
                 <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>/pages/magazin.php">Magazin</a></li>
                 <?php if (!empty($productCategories)): ?>
                     <li class="breadcrumb-item">
@@ -120,33 +120,7 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
 </section>
 
 <!-- Digital product badge and files list -->
-<section class="py-0">
-    <div class="container">
-        <div class="alert alert-info d-flex align-items-center" role="alert">
-            <i class="bi bi-cloud-download me-2"></i>
-            <strong>Produs Digital – Descărcare Instant</strong>
-        </div>
-        <?php $files = getProductFiles($productId); $totalSize = 0; ?>
-        <?php if (!empty($files)): ?>
-            <div class="card mb-3">
-                <div class="card-header bg-light">
-                    <strong>Fișiere incluse</strong>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mb-0">
-                        <?php foreach ($files as $f): $totalSize += (int)$f['file_size']; ?>
-                            <li class="d-flex align-items-center mb-2">
-                                <i class="bi bi-file-earmark-zip me-2"></i>
-                                <span><?php echo htmlspecialchars($f['file_name']); ?></span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <small class="text-muted">Mărime totală: <?php echo number_format($totalSize/1024/1024, 2); ?> MB</small>
-                </div>
-            </div>
-        <?php endif; ?>
-    </div>
-</section>
+
 
 <!-- Product Details -->
 <section class="py-5">
@@ -253,7 +227,7 @@ $pageDescription = substr(strip_tags($product['description']), 0, 160);
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-check-circle-fill text-success me-2"></i>
-                            Formate multiple: DST, PES, JEF, VP3, EXP
+                            Format: EMB
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-check-circle-fill text-success me-2"></i>
