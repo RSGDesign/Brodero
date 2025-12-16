@@ -138,7 +138,7 @@ if (file_exists(__DIR__ . '/../includes/category_functions.php')) {
 define('COMING_SOON_MODE', true); // Schimbă în false pentru a dezactiva protecția
 
 // Data lansării (după această dată, modul se dezactivează automat)
-define('LAUNCH_DATE', '2025-12-22 23:59:59');
+define('LAUNCH_DATE', '2025-12-22 00:00:00');
 
 /**
  * Verifică dacă utilizatorul curent poate accesa site-ul în modul "Coming Soon"
