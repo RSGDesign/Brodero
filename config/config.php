@@ -57,8 +57,8 @@ define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'zip']);
 define('PRODUCTS_PER_PAGE', 12);
 
 // Configurare Stripe (opțional - dacă nu e instalat SDK-ul, plata cu card va fi dezactivată)
-define('STRIPE_SECRET_KEY', 'sk_test_51STRYeQ1U061mKnqqVKPkDaQ4HS5RsmkYB2sDgk9N6WnMM1ntWdz53VGVxSbQjJkWfxh2VGeCyyMVgy11ogE7hKO00fw6RZ3fc'); // Adaugă cheia ta Stripe aici când instalezi SDK
-define('STRIPE_PUBLISHABLE_KEY', 'pk_test_51STRYeQ1U061mKnqajqZzQqwyEvqeU6LNhges2LLexvW8axUPj6lANWlNLDwW0BMirmua52TTCZchocaGJTpgXNd00V2N9stuG'); // Pentru frontend
+define('STRIPE_SECRET_KEY', 'pk_live_51STRYQPzKyY1HXfkRa7AeQqZXW63RSOQbg8ZrtH7Jge9AZQxKc1WHczwZiExTXvBpKNMUOQ75ymCMLAe6aHEIaTj00hEbJCkUq'); // Adaugă cheia ta Stripe aici când instalezi SDK
+define('STRIPE_PUBLISHABLE_KEY', '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'); // Pentru frontend
 
 // Configurare social media
 define('FACEBOOK_URL', 'https://facebook.com/brodero');
