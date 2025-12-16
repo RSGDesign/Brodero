@@ -16,6 +16,10 @@ if (!function_exists('isAdmin')) {
     }
 }
 if (!isAdmin()) {
+    // CRITICAL: Save session before redirect
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
     header('Location: ' . SITE_URL . '/index.php');
     exit;
 }

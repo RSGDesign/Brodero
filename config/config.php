@@ -100,9 +100,16 @@ function isAdmin() {
 
 // Redirecționare
 function redirect($url) {
-    if (ob_get_level()) {
+    // CRITICAL: Save session before flushing output buffer
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    
+    // Clean output buffer if exists
+    while (ob_get_level()) {
         ob_end_clean();
     }
+    
     header("Location: " . SITE_URL . $url);
     exit();
 }

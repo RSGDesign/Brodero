@@ -25,6 +25,10 @@ $stripe = new \Stripe\StripeClient(STRIPE_SECRET_KEY);
 $sessionId = $_GET['session_id'] ?? null;
 
 if (!$sessionId) {
+    // CRITICAL: Save session before redirect
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
     header('Location: ' . SITE_URL . '/pages/checkout.php');
     exit;
 }

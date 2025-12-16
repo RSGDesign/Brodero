@@ -282,6 +282,11 @@ try {
             $stmt->bind_param("si", $session->id, $orderId);
             $stmt->execute();
             
+            // CRITICAL: Save session before redirect to Stripe
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_write_close();
+            }
+            
             // Redirect la Stripe Checkout
             header('Location: ' . $session->url);
             exit;
