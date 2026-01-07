@@ -448,77 +448,6 @@ require_once __DIR__ . '/../includes/header.php';
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Modal-uri pentru Procesare Retrageri (AFARĂ din tabel) -->
-                    <?php foreach ($allWithdrawals as $w): ?>
-                        <!-- Modal Aprobare -->
-                        <div class="modal fade" id="approveModal<?php echo $w['id']; ?>" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form method="POST">
-                                        <input type="hidden" name="request_id" value="<?php echo $w['id']; ?>">
-                                        <input type="hidden" name="action" value="approve">
-                                        <div class="modal-header bg-success text-white">
-                                            <h5 class="modal-title">Aprobă Retragere</h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p><strong>Confirmi aprobarea cererii de retragere?</strong></p>
-                                            <ul class="list-unstyled">
-                                                <li><strong>Utilizator:</strong> <?php echo htmlspecialchars($w['first_name'] . ' ' . $w['last_name']); ?></li>
-                                                <li><strong>Sumă:</strong> <?php echo number_format($w['amount'], 2); ?> RON</li>
-                                                <li><strong>IBAN:</strong> <code><?php echo htmlspecialchars($w['bank_account_iban']); ?></code></li>
-                                                <li><strong>Titular:</strong> <?php echo htmlspecialchars($w['bank_account_name']); ?></li>
-                                            </ul>
-                                            <div class="mb-3">
-                                                <label for="admin_note_approve" class="form-label">Notă (Opțional - ex: Nr. tranzacție)</label>
-                                                <input type="text" class="form-control" name="admin_note" placeholder="Ex: Transfer ID12345">
-                                            </div>
-                                            <div class="alert alert-warning">
-                                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                                După aprobare, <?php echo number_format($w['amount'], 2); ?> RON vor fi scăzuți din creditul utilizatorului.
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                            <button type="submit" class="btn btn-success">
-                                                <i class="bi bi-check-circle me-2"></i>Confirmă Aprobarea
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Modal Respingere -->
-                        <div class="modal fade" id="rejectModal<?php echo $w['id']; ?>" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <form method="POST">
-                                        <input type="hidden" name="request_id" value="<?php echo $w['id']; ?>">
-                                        <input type="hidden" name="action" value="reject">
-                                        <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title">Respinge Retragere</h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p><strong>Confirmi respingerea cererii?</strong></p>
-                                            <div class="mb-3">
-                                                <label for="admin_note_reject" class="form-label">Motiv Respingere *</label>
-                                                <textarea class="form-control" name="admin_note" rows="3" required placeholder="Ex: Date bancare incorecte"></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                            <button type="submit" class="btn btn-danger">
-                                                <i class="bi bi-x-circle me-2"></i>Confirmă Respingerea
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
                 <?php endif; ?>
             </div>
         </div>
@@ -652,5 +581,141 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
     
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL-URI PENTRU PROCESARE RETRAGERI (La sfârșitul paginii, în afara tab-urilor) -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<?php if (!empty($allWithdrawals)): ?>
+    <?php foreach ($allWithdrawals as $w): ?>
+        <!-- Modal Aprobare #<?php echo $w['id']; ?> -->
+        <div class="modal fade" id="approveModal<?php echo $w['id']; ?>" tabindex="-1" aria-labelledby="approveModalLabel<?php echo $w['id']; ?>" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="">
+                        <input type="hidden" name="request_id" value="<?php echo $w['id']; ?>">
+                        <input type="hidden" name="action" value="approve">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title" id="approveModalLabel<?php echo $w['id']; ?>">
+                                <i class="bi bi-check-circle me-2"></i>Aprobă Retragere
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-3"><strong>Confirmi aprobarea cererii de retragere?</strong></p>
+                            <div class="card bg-light border-0 mb-3">
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="bi bi-person text-primary me-2"></i>
+                                            <strong>Utilizator:</strong> <?php echo htmlspecialchars($w['first_name'] . ' ' . $w['last_name']); ?>
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-cash-coin text-success me-2"></i>
+                                            <strong>Sumă:</strong> <span class="badge bg-success"><?php echo number_format($w['amount'], 2); ?> RON</span>
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="bi bi-bank text-info me-2"></i>
+                                            <strong>IBAN:</strong> <code><?php echo htmlspecialchars($w['bank_account_iban']); ?></code>
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-person-badge text-secondary me-2"></i>
+                                            <strong>Titular:</strong> <?php echo htmlspecialchars($w['bank_account_name']); ?>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="admin_note_approve_<?php echo $w['id']; ?>" class="form-label">
+                                    <i class="bi bi-sticky me-1"></i>Notă Admin (Opțional)
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="admin_note_approve_<?php echo $w['id']; ?>"
+                                    name="admin_note" 
+                                    placeholder="Ex: Transfer efectuat prin banca X, ID: 12345"
+                                >
+                                <small class="text-muted">Ex: Număr tranzacție, referință bancară</small>
+                            </div>
+                            <div class="alert alert-warning mb-0">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Atenție:</strong> După aprobare, <strong><?php echo number_format($w['amount'], 2); ?> RON</strong> vor fi scăzuți din creditul utilizatorului.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg me-2"></i>Anulează
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Confirmă Aprobarea
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Respingere #<?php echo $w['id']; ?> -->
+        <div class="modal fade" id="rejectModal<?php echo $w['id']; ?>" tabindex="-1" aria-labelledby="rejectModalLabel<?php echo $w['id']; ?>" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="">
+                        <input type="hidden" name="request_id" value="<?php echo $w['id']; ?>">
+                        <input type="hidden" name="action" value="reject">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="rejectModalLabel<?php echo $w['id']; ?>">
+                                <i class="bi bi-x-circle me-2"></i>Respinge Retragere
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-3"><strong>Confirmi respingerea cererii?</strong></p>
+                            <div class="card bg-light border-0 mb-3">
+                                <div class="card-body">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="bi bi-person text-primary me-2"></i>
+                                            <strong>Utilizator:</strong> <?php echo htmlspecialchars($w['first_name'] . ' ' . $w['last_name']); ?>
+                                        </li>
+                                        <li>
+                                            <i class="bi bi-cash-coin text-danger me-2"></i>
+                                            <strong>Sumă:</strong> <span class="badge bg-danger"><?php echo number_format($w['amount'], 2); ?> RON</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="admin_note_reject_<?php echo $w['id']; ?>" class="form-label">
+                                    <i class="bi bi-exclamation-triangle text-danger me-1"></i>Motiv Respingere <span class="text-danger">*</span>
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="admin_note_reject_<?php echo $w['id']; ?>"
+                                    name="admin_note" 
+                                    rows="3" 
+                                    required 
+                                    placeholder="Explică motivul respingerii (obligatoriu)"
+                                ></textarea>
+                                <small class="text-muted">Utilizatorul va vedea acest mesaj</small>
+                            </div>
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                După respingere, creditul utilizatorului rămâne neschimbat.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg me-2"></i>Anulează
+                            </button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle me-2"></i>Confirmă Respingerea
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
