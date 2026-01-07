@@ -447,19 +447,6 @@ document.querySelectorAll('.delete-btn').forEach(btn => {
         deleteModal.show();
     });
 });
-
-// Handle form submissions
-document.getElementById('deleteForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    
-    fetch(window.location.href, {
-        method: 'POST',
-        body: formData
-    }).then(() => {
-        window.location.reload();
-    });
-});
 </script>
 
 <?php
