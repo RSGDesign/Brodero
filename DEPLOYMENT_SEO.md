@@ -108,9 +108,9 @@ Asigură-te că `SITE_URL` este corect în `config/config.php`:
 define('SITE_URL', 'http://localhost/brodero');
 
 // ✅ CORECT (producție)
-define('SITE_URL', 'https://brodero.ro');
+define('SITE_URL', 'https://brodero.online');
 // SAU
-define('SITE_URL', 'https://www.brodero.ro');
+define('SITE_URL', 'https://www.brodero.online');
 ```
 
 ### PASUL 4: Actualizează robots.txt
@@ -121,10 +121,10 @@ Deschide `robots.txt` și actualizează URL-ul sitemap-ului:
 User-agent: *
 Disallow:
 
-Sitemap: https://brodero.ro/sitemap.xml
+Sitemap: https://brodero.online/sitemap.xml
 ```
 
-**⚠️ IMPORTANT**: Înlocuiește `https://brodero.ro` cu domeniul tău real!
+**⚠️ IMPORTANT**: Înlocuiește `https://brodero.online` cu domeniul tău real!
 
 ---
 
@@ -132,7 +132,7 @@ Sitemap: https://brodero.ro/sitemap.xml
 
 ### 1. Verifică robots.txt
 ```
-https://brodero.ro/robots.txt
+https://brodero.online/robots.txt
 ```
 
 **Ce ar trebui să vezi:**
@@ -140,12 +140,12 @@ https://brodero.ro/robots.txt
 User-agent: *
 Disallow:
 
-Sitemap: https://brodero.ro/sitemap.xml
+Sitemap: https://brodero.online/sitemap.xml
 ```
 
 ### 2. Verifică sitemap.xml
 ```
-https://brodero.ro/sitemap.xml
+https://brodero.online/sitemap.xml
 ```
 
 **Ce ar trebui să vezi:**
@@ -166,7 +166,7 @@ Accesează homepage și View Source (Ctrl+U):
 
 ### 4. Testează o Pagină de Produs
 
-Accesează: `https://brodero.ro/pages/produs.php?slug=nume-produs`
+Accesează: `https://brodero.online/pages/produs.php?slug=nume-produs`
 
 **View Source și verifică:**
 - Product Schema (JSON-LD)
@@ -193,7 +193,7 @@ Testează o pagină de produs pentru Product Schema.
 
 1. Mergi la: https://search.google.com/search-console
 2. Apasă **Add Property**
-3. Alege **URL prefix**: `https://brodero.ro`
+3. Alege **URL prefix**: `https://brodero.online`
 
 ### PASUL 2: Verifică Proprietatea
 
@@ -211,7 +211,7 @@ Testează o pagină de produs pentru Product Schema.
 ### PASUL 3: Trimite Sitemap-ul
 
 1. În GSC, mergi la **Sitemaps** (meniu stânga)
-2. Introdu: `https://brodero.ro/sitemap.xml`
+2. Introdu: `https://brodero.online/sitemap.xml`
 3. Apasă **Submit**
 
 **Status ar trebui să fie:** ✅ Success
@@ -231,13 +231,13 @@ Testează o pagină de produs pentru Product Schema.
 ### robots.txt nu se încarcă
 - Verifică că fișierul este în root (`/robots.txt`)
 - Verifică permisiuni: `chmod 644 robots.txt`
-- Test: `curl https://brodero.ro/robots.txt`
+- Test: `curl https://brodero.online/robots.txt`
 
 ### sitemap.xml returnează 404
 - Verifică că `.htaccess` are regula de rewrite
 - Verifică că `sitemap.xml.php` există în root
 - Verifică că `mod_rewrite` este activat pe server
-- Test manual: `https://brodero.ro/sitemap.xml.php`
+- Test manual: `https://brodero.online/sitemap.xml.php`
 
 ### Meta tags nu apar
 - Curăță cache-ul browser-ului (Ctrl+Shift+R)

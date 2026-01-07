@@ -14,7 +14,7 @@
   - Include: homepage, pagini statice, categorii, produse
   - Format standard XML cu `<loc>`, `<lastmod>`, `<changefreq>`, `<priority>`
   - Accesibil la: `/sitemap.xml` (prin .htaccess redirect)
-  - Referit în robots.txt: `Sitemap: https://brodero.ro/sitemap.xml`
+  - Referit în robots.txt: `Sitemap: https://brodero.online/sitemap.xml`
 
 ### 3. **Meta Tags SEO**
 - ✅ **Title tag** unic pe fiecare pagină
@@ -96,8 +96,8 @@
    - [ ] Verifică Core Web Vitals
 
 2. **Teste SEO**
-   - [ ] Verifică robots.txt: `https://brodero.ro/robots.txt`
-   - [ ] Verifică sitemap.xml: `https://brodero.ro/sitemap.xml`
+   - [ ] Verifică robots.txt: `https://brodero.online/robots.txt`
+   - [ ] Verifică sitemap.xml: `https://brodero.online/sitemap.xml`
    - [ ] Test Mobile-Friendly: [Google Mobile-Friendly Test](https://search.google.com/test/mobile-friendly)
    - [ ] Test Rich Results: [Rich Results Test](https://search.google.com/test/rich-results)
    - [ ] PageSpeed Insights: [PageSpeed](https://pagespeed.web.dev/)
@@ -164,12 +164,12 @@
 
 ### 1. Verifică robots.txt
 ```bash
-curl https://brodero.ro/robots.txt
+curl https://brodero.online/robots.txt
 ```
 
 ### 2. Verifică sitemap.xml
 ```bash
-curl https://brodero.ro/sitemap.xml
+curl https://brodero.online/sitemap.xml
 ```
 
 ### 3. Testează Meta Tags
@@ -182,7 +182,7 @@ curl https://brodero.ro/sitemap.xml
 
 ### 5. Simulare Google Bot
 ```bash
-curl -A "Googlebot" https://brodero.ro
+curl -A "Googlebot" https://brodero.online
 ```
 
 ---
@@ -217,12 +217,12 @@ Site-ul este **SEO-ready** când:
 
 2. ✅ Verifică că URL-ul din `config.php` este corect:
    ```php
-   define('SITE_URL', 'https://brodero.ro');
+   define('SITE_URL', 'https://brodero.online');
    ```
 
 3. ✅ Testează în browser:
-   - https://brodero.ro/robots.txt
-   - https://brodero.ro/sitemap.xml
+   - https://brodero.online/robots.txt
+   - https://brodero.online/sitemap.xml
 
 4. ✅ Adaugă site-ul în Google Search Console
 

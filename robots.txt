@@ -5,4 +5,4 @@ User-agent: *
 Disallow:
 
 # Sitemap
-Sitemap: https://brodero.ro/sitemap.xml
+Sitemap: https://brodero.online/sitemap.xml
