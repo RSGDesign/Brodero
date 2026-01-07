@@ -7,6 +7,7 @@
 $pageTitle = "Autentificare";
 
 require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/functions_referral.php';
 
 // Redirect dacă deja autentificat
 if (isLoggedIn()) {
@@ -93,11 +94,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $username = strtolower($firstName . $lastName . rand(100, 999));
         
-        $stmt = $db->prepare("INSERT INTO users (username, email, password, first_name, last_name) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $username, $email, $hashedPassword, $firstName, $lastName);
+        // Generează cod referral unic pentru noul utilizator
+        $referralCode = generateReferralCode();
+        
+        $stmt = $db->prepare("INSERT INTO users (username, email, password, first_name, last_name, referral_code) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssss", $username, $email, $hashedPassword, $firstName, $lastName, $referralCode);
         
         if ($stmt->execute()) {
-            $_SESSION['user_id'] = $stmt->insert_id;
+            $newUserId = $stmt->insert_id;
+            
+            // ═══════════════════════════════════════════════════════════════════════════
+            // REFERRAL PROCESSING - Verifică dacă utilizatorul a venit prin link referral
+            // ═══════════════════════════════════════════════════════════════════════════
+            $referralCodeFromCookie = getReferralCodeFromCookie();
+            if ($referralCodeFromCookie) {
+                $referrerId = getUserIdFromReferralCode($referralCodeFromCookie);
+                if ($referrerId && $referrerId !== $newUserId) {
+                    // Creează referral record (status: pending)
+                    createReferral($referrerId, $newUserId);
+                }
+                // Șterge cookie-ul referral după procesare
+                clearReferralCodeCookie();
+            }
+            
+            $_SESSION['user_id'] = $newUserId;
             $_SESSION['user_email'] = $email;
             $_SESSION['user_name'] = $firstName . ' ' . $lastName;
             $_SESSION['user_role'] = 'user';

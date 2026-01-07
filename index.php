@@ -9,6 +9,19 @@ $pageDescription = "Brodero - Descoperă cele mai noi și creative design-uri de
 
 require_once __DIR__ . '/includes/header.php';
 
+// ═══════════════════════════════════════════════════════════════════════════
+// REFERRAL TRACKING - Salvează codul referral în cookie dacă există parametrul ?ref=
+// ═══════════════════════════════════════════════════════════════════════════
+require_once __DIR__ . '/includes/functions_referral.php';
+
+if (isset($_GET['ref']) && !empty($_GET['ref'])) {
+    $referralCode = cleanInput($_GET['ref']);
+    if (saveReferralCodeToCookie($referralCode)) {
+        // Cod salvat cu succes
+        error_log("REFERRAL TRACKING: Code $referralCode saved to cookie");
+    }
+}
+
 // Obține produse featured
 $db = getDB();
 $query = "SELECT * FROM products WHERE is_featured = 1 AND is_active = 1 ORDER BY created_at DESC LIMIT 6";

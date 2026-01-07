@@ -8,6 +8,7 @@ $pageTitle = "Plată Reușită";
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/functions_referral.php';
 
 $sessionId = $_GET['session_id'] ?? '';
 $orderNumber = $_GET['order'] ?? '';
@@ -52,6 +53,13 @@ if (!empty($sessionId)) {
                 $stmt->bind_param("s", $sessionId);
                 $stmt->execute();
                 $order = $stmt->get_result()->fetch_assoc();
+                
+                // ═══════════════════════════════════════════════════════════════════════════
+                // REFERRAL REWARD - Activează recompensa dacă e prima comandă plătită
+                // ═══════════════════════════════════════════════════════════════════════════
+                if ($order && $order['user_id']) {
+                    activateReferralReward($order['user_id']);
+                }
                 
             } catch (\Stripe\Exception\ApiErrorException $e) {
                 error_log("Stripe Error: " . $e->getMessage());
