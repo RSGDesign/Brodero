@@ -110,7 +110,12 @@ function redirect($url) {
         ob_end_clean();
     }
     
-    header("Location: " . SITE_URL . $url);
+    // Check if URL is already absolute (starts with http:// or https://)
+    if (preg_match('/^https?:\/\//', $url)) {
+        header("Location: " . $url);
+    } else {
+        header("Location: " . SITE_URL . $url);
+    }
     exit();
 }
 
