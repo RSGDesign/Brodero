@@ -235,7 +235,7 @@ function calculateAndAwardCommission($orderId) {
     
     // Obține detalii comandă
     $stmt = $conn->prepare("
-        SELECT user_id, total 
+        SELECT user_id, total_amount 
         FROM orders 
         WHERE id = ? AND payment_status = 'paid'
     ");
@@ -250,7 +250,7 @@ function calculateAndAwardCommission($orderId) {
     }
     
     $userId = $order['user_id'];
-    $orderTotal = floatval($order['total']);
+    $orderTotal = floatval($order['total_amount']);
     
     // Verifică dacă userul are referrer
     $stmt = $conn->prepare("
