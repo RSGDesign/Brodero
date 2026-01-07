@@ -106,10 +106,8 @@ if (isLoggedIn()) {
     require_once __DIR__ . '/analytics.php';
     renderGA4Code();
     ?>
-</head>
-<body>
     
-    <!-- Cookie Consent Banner -->
+    <!-- Cookie Consent Banner Styles -->
     <style>
     #cookieConsentBanner {
         display: none;
@@ -222,6 +220,21 @@ if (isLoggedIn()) {
     };
     document.addEventListener('DOMContentLoaded', function() { cookieConsent.init(); });
     </script>
+</head>
+<body>
+    
+    <!-- Cookie Consent Banner HTML -->
+    <div id="cookieConsentBanner">
+        <div class="cookie-consent-content">
+            <div class="cookie-consent-text">
+                <p>🍪 Folosim cookies pentru a îmbunătăți experiența ta pe site și pentru a analiza traficul. Datele sunt anonimizate și procesate conform GDPR.</p>
+            </div>
+            <div class="cookie-consent-buttons">
+                <button class="cookie-consent-btn deny" onclick="cookieConsent.deny()">Refuză</button>
+                <button class="cookie-consent-btn accept" onclick="cookieConsent.accept()">Accept</button>
+            </div>
+        </div>
+    </div>
     
     <!-- Header with Navigation -->
     <header>
