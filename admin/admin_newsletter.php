@@ -369,80 +369,80 @@ function getSubscriberStatusBadge($isActive) {
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Modals - Outside table but inside card-body -->
+                    <?php foreach ($subscribers as $subscriber): ?>
+                        <!-- Toggle Status Modal -->
+                        <div class="modal fade" id="toggleModal<?php echo $subscriber['id']; ?>" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">
+                                            <?php echo $subscriber['is_active'] ? 'Dezabonează' : 'Reactivează'; ?> Abonat
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Ești sigur că vrei să <?php echo $subscriber['is_active'] ? 'dezabonezi' : 'reactivezi'; ?> acest abonat?</p>
+                                        <div class="alert alert-info">
+                                            <strong><?php echo htmlspecialchars($subscriber['email']); ?></strong>
+                                        </div>
+                                        <?php if ($subscriber['is_active']): ?>
+                                        <p class="text-muted small">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Acest abonat nu va mai primi newslettere până la reactivare.
+                                        </p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="subscriber_id" value="<?php echo $subscriber['id']; ?>">
+                                            <button type="submit" name="toggle_status" class="btn btn-<?php echo $subscriber['is_active'] ? 'warning' : 'success'; ?>">
+                                                <i class="bi bi-<?php echo $subscriber['is_active'] ? 'toggle-off' : 'toggle-on'; ?> me-2"></i>
+                                                <?php echo $subscriber['is_active'] ? 'Dezabonează' : 'Reactivează'; ?>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <!-- Modals - MOVED OUTSIDE TABLE -->
-                        <?php foreach ($subscribers as $subscriber): ?>
-                            <!-- Toggle Status Modal -->
-                            <div class="modal fade" id="toggleModal<?php echo $subscriber['id']; ?>" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">
-                                                <?php echo $subscriber['is_active'] ? 'Dezabonează' : 'Reactivează'; ?> Abonat
-                                            </h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteModal<?php echo $subscriber['id']; ?>" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>Ștergere Abonat
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="fw-semibold">Ești sigur că vrei să ștergi complet acest abonat?</p>
+                                        <div class="alert alert-danger">
+                                            <strong><?php echo htmlspecialchars($subscriber['email']); ?></strong>
                                         </div>
-                                        <div class="modal-body">
-                                            <p>Ești sigur că vrei să <?php echo $subscriber['is_active'] ? 'dezabonezi' : 'reactivezi'; ?> acest abonat?</p>
-                                            <div class="alert alert-info">
-                                                <strong><?php echo htmlspecialchars($subscriber['email']); ?></strong>
-                                            </div>
-                                            <?php if ($subscriber['is_active']): ?>
-                                            <p class="text-muted small">
-                                                <i class="bi bi-info-circle me-1"></i>
-                                                Acest abonat nu va mai primi newslettere până la reactivare.
-                                            </p>
-                                            <?php endif; ?>
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            <strong>Atenție!</strong> Această acțiune va șterge permanent abonatul din baza de date.
+                                            <p class="mb-0 mt-2 fw-semibold">Această acțiune este IREVERSIBILĂ!</p>
                                         </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                            <form method="POST" class="d-inline">
-                                                <input type="hidden" name="subscriber_id" value="<?php echo $subscriber['id']; ?>">
-                                                <button type="submit" name="toggle_status" class="btn btn-<?php echo $subscriber['is_active'] ? 'warning' : 'success'; ?>">
-                                                    <i class="bi bi-<?php echo $subscriber['is_active'] ? 'toggle-off' : 'toggle-on'; ?> me-2"></i>
-                                                    <?php echo $subscriber['is_active'] ? 'Dezabonează' : 'Reactivează'; ?>
-                                                </button>
-                                            </form>
-                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="subscriber_id" value="<?php echo $subscriber['id']; ?>">
+                                            <button type="submit" name="delete_subscriber" class="btn btn-danger">
+                                                <i class="bi bi-trash me-2"></i>Șterge Definitiv
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Delete Modal -->
-                            <div class="modal fade" id="deleteModal<?php echo $subscriber['id']; ?>" tabindex="-1">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title">
-                                                <i class="bi bi-exclamation-triangle me-2"></i>Ștergere Abonat
-                                            </h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <p class="fw-semibold">Ești sigur că vrei să ștergi complet acest abonat?</p>
-                                            <div class="alert alert-danger">
-                                                <strong><?php echo htmlspecialchars($subscriber['email']); ?></strong>
-                                            </div>
-                                            <div class="alert alert-warning">
-                                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                                <strong>Atenție!</strong> Această acțiune va șterge permanent abonatul din baza de date.
-                                                <p class="mb-0 mt-2 fw-semibold">Această acțiune este IREVERSIBILĂ!</p>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                            <form method="POST" class="d-inline">
-                                                <input type="hidden" name="subscriber_id" value="<?php echo $subscriber['id']; ?>">
-                                                <button type="submit" name="delete_subscriber" class="btn btn-danger">
-                                                    <i class="bi bi-trash me-2"></i>Șterge Definitiv
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                        </table>
+                        </div>
+                    <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
