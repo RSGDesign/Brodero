@@ -44,6 +44,9 @@ if ($result->num_rows === 0) {
 $product = $result->fetch_assoc();
 $stmt->close();
 
+// MVP: Verificare dacă utilizatorul a cumpărat deja produsul
+$isPurchased = hasUserPurchasedProduct($product['id']);
+
 // Obține categoriile produsului
 $productCategories = getProductCategories($productId);
 $product['categories'] = $productCategories;
@@ -206,6 +209,18 @@ echo generateProductSchema($product);
                 <!-- Product Title -->
                 <h1 class="h2 fw-bold mb-3"><?php echo htmlspecialchars($product['name']); ?></h1>
                 
+                <!-- MVP: Badge "Deja cumpărat" -->
+                <?php if ($isPurchased): ?>
+                    <div class="alert alert-success border-0 shadow-sm mb-4" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
+                            <div>
+                                <h6 class="alert-heading mb-1 fw-bold">✅ Deja cumpărat</h6>
+                                <p class="mb-0 small">Ai deja acces la acest produs. Verifică secțiunea <a href="<?php echo SITE_URL; ?>/pages/cont.php" class="alert-link">Comenzile Mele</a> pentru a-l descărca.</p>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 
                 <!-- Price -->
                 <div class="mb-4">
@@ -263,12 +278,23 @@ echo generateProductSchema($product);
                 
                 <!-- Actions -->
                 <div class="d-grid gap-2">
-                    <button type="button" class="btn btn-primary btn-lg" onclick="addToCart(<?php echo $product['id']; ?>)">
-                        <i class="bi bi-cart-plus me-2"></i>Adaugă în Coș
-                    </button>
-                    <button type="button" class="btn btn-outline-primary btn-lg" onclick="addToFavorites(<?php echo $product['id']; ?>)">
-                        <i class="bi bi-heart me-2"></i>Adaugă la Favorite
-                    </button>
+                    <?php if ($isPurchased): ?>
+                        <!-- Produs deja cumpărat - buton modificat -->
+                        <a href="<?php echo SITE_URL; ?>/pages/cont.php" class="btn btn-success btn-lg">
+                            <i class="bi bi-download me-2"></i>Vezi în Comenzile Mele
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" disabled>
+                            <i class="bi bi-cart-x me-2"></i>Deja deținut
+                        </button>
+                    <?php else: ?>
+                        <!-- Produs necumpărat - butoane normale -->
+                        <button type="button" class="btn btn-primary btn-lg" onclick="addToCart(<?php echo $product['id']; ?>)">
+                            <i class="bi bi-cart-plus me-2"></i>Adaugă în Coș
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-lg" onclick="addToFavorites(<?php echo $product['id']; ?>)">
+                            <i class="bi bi-heart me-2"></i>Adaugă la Favorite
+                        </button>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- Additional Info -->

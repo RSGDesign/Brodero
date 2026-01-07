@@ -59,6 +59,9 @@ foreach ($products as &$product) {
     $product['category_names'] = array_map(function($cat) {
         return $cat['name'];
     }, $product['categories']);
+    
+    // MVP: Verificare dacă produsul a fost cumpărat
+    $product['is_purchased'] = hasUserPurchasedProduct($product['id']);
 }
 // CRITICAL FIX: Unset reference to avoid issues in subsequent foreach loops
 unset($product);
@@ -223,6 +226,13 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                         </span>
                                     <?php endif; ?>
                                     
+                                    <!-- MVP: Badge "Deja cumpărat" -->
+                                    <?php if ($product['is_purchased']): ?>
+                                        <span class="position-absolute top-0 start-0 m-2 badge bg-success" style="z-index: 10;">
+                                            <i class="bi bi-check-circle-fill me-1"></i>Deja cumpărat
+                                        </span>
+                                    <?php endif; ?>
+                                    
                                     <img src="<?php echo $product['image'] ? SITE_URL . '/uploads/' . $product['image'] : 'https://via.placeholder.com/400x300?text=' . urlencode($product['name']); ?>" 
                                          class="card-img-top" 
                                          alt="<?php echo htmlspecialchars($product['name']); ?>">
@@ -255,10 +265,18 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                                    class="btn btn-outline-primary btn-sm product-details-btn">
                                                     <i class="bi bi-eye me-1"></i>Detalii
                                                 </a>
-                                                <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" 
-                                                        data-product-id="<?php echo $product['id']; ?>">
-                                                    <i class="bi bi-cart-plus me-1"></i>Coș
-                                                </button>
+                                                <?php if ($product['is_purchased']): ?>
+                                                    <!-- Produs deja cumpărat - buton dezactivat -->
+                                                    <button type="button" class="btn btn-success btn-sm" disabled>
+                                                        <i class="bi bi-check-circle me-1"></i>Deținut
+                                                    </button>
+                                                <?php else: ?>
+                                                    <!-- Produs necumpărat - buton normal -->
+                                                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn" 
+                                                            data-product-id="<?php echo $product['id']; ?>">
+                                                        <i class="bi bi-cart-plus me-1"></i>Coș
+                                                    </button>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>

@@ -213,6 +213,40 @@ function applyComingSoonProtection() {
     }
 }
 
+/**
+ * Verifică dacă utilizatorul curent a cumpărat deja un produs
+ * MVP: bazat pe comenzi plătite cu status 'paid' sau 'completed'
+ * 
+ * @param int $productId ID-ul produsului de verificat
+ * @return bool True dacă produsul a fost cumpărat, false altfel
+ */
+function hasUserPurchasedProduct($productId) {
+    // Verificare utilizator autentificat
+    if (!isLoggedIn()) {
+        return false;
+    }
+    
+    $userId = $_SESSION['user_id'];
+    $db = getDB();
+    
+    // Query: verifică dacă există comenzi plătite care conțin produsul
+    $stmt = $db->prepare("
+        SELECT COUNT(*) as count 
+        FROM orders o
+        INNER JOIN order_items oi ON o.id = oi.order_id
+        WHERE o.user_id = ? 
+        AND oi.product_id = ?
+        AND o.status IN ('paid', 'completed')
+        AND o.payment_status = 'paid'
+    ");
+    
+    $stmt->bind_param("ii", $userId, $productId);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    
+    return $result['count'] > 0;
+}
+
 // Aplică automat protecția "Coming Soon" pentru toate paginile
 // (Se execută doar dacă nu suntem în admin sau pe pagini excluse)
 if (!defined('SKIP_COMING_SOON_CHECK')) {
