@@ -4,6 +4,9 @@
  * Dashboard complet pentru sistemul de referral
  */
 
+// Start output buffering pentru a permite redirects după header
+ob_start();
+
 $pageTitle = "Referral & Câștiguri";
 
 require_once __DIR__ . '/../includes/header.php';
