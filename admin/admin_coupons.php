@@ -417,35 +417,42 @@ function getStatusBadge($isActive, $expiresAt) {
 </div>
 
 <script>
-// Toggle status
-document.querySelectorAll('.toggle-status-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const couponId = this.dataset.id;
-        const currentStatus = this.dataset.status;
-        const newStatus = currentStatus === '1' ? '0' : '1';
-        
-        if (confirm('Sigur vrei să schimbi statusul acestui cupon?')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.innerHTML = `
-                <input type="hidden" name="action" value="toggle_status">
-                <input type="hidden" name="coupon_id" value="${couponId}">
-                <input type="hidden" name="new_status" value="${newStatus}">
-            `;
-            document.body.appendChild(form);
-            form.submit();
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle status
+    document.querySelectorAll('.toggle-status-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const couponId = this.dataset.id;
+            const currentStatus = this.dataset.status;
+            const newStatus = currentStatus === '1' ? '0' : '1';
+            
+            if (confirm('Sigur vrei să schimbi statusul acestui cupon?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.innerHTML = `
+                    <input type="hidden" name="action" value="toggle_status">
+                    <input type="hidden" name="coupon_id" value="${couponId}">
+                    <input type="hidden" name="new_status" value="${newStatus}">
+                `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
     });
-});
 
-// Delete modal
-const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        document.getElementById('deleteCouponId').value = this.dataset.id;
-        document.getElementById('deleteCouponCode').textContent = this.dataset.code;
-        deleteModal.show();
-    });
+    // Delete modal
+    const deleteModalElement = document.getElementById('deleteModal');
+    if (deleteModalElement) {
+        const deleteModal = new bootstrap.Modal(deleteModalElement);
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                console.log('Delete button clicked', this.dataset.id); // Debug
+                document.getElementById('deleteCouponId').value = this.dataset.id;
+                document.getElementById('deleteCouponCode').textContent = this.dataset.code;
+                deleteModal.show();
+            });
+        });
+    }
 });
 </script>
 
