@@ -6,11 +6,14 @@ ErrorDocument 404 /404.php
 # Activare Rewrite Engine
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /brodero/
+    RewriteBase /
+    
+    # Sitemap XML - Rewrite către fișierul PHP
+    RewriteRule ^sitemap\.xml$ sitemap.xml.php [L]
     
     # Redirect de la www la non-www (opțional)
     # RewriteCond %{HTTP_HOST} ^www\.brodero\.online [NC]
-    # RewriteRule ^(.*)$ http://brodero.online/$1 [L,R=301]
+    # RewriteRule ^(.*)$ https://brodero.online/$1 [L,R=301]
     
     # Protejare directoare sensibile
     RewriteRule ^config/ - [F,L]
