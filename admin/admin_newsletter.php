@@ -4,9 +4,8 @@
  * Gestionare abonați newsletter - vizualizare, filtrare, dezabonare, ștergere
  */
 
-$pageTitle = "Gestionare Newsletter";
-
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Verificare acces admin
 if (!isAdmin()) {
@@ -16,7 +15,7 @@ if (!isAdmin()) {
 
 $db = getDB();
 
-// Procesare acțiuni POST
+// Procesare acțiuni POST (ÎNAINTE de header.php pentru a permite redirect)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Toggle status abonat
@@ -68,6 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/admin/admin_newsletter.php');
     }
 }
+
+// Include header DUPĂ procesarea POST
+$pageTitle = "Gestionare Newsletter";
+require_once __DIR__ . '/../includes/header.php';
 
 // Filtre
 $search = $_GET['search'] ?? '';
