@@ -48,7 +48,7 @@ foreach ($staticPages as $page => $meta) {
 // 3. CATEGORII
 // ============================================================================
 $stmt = $db->prepare("
-    SELECT id, name, slug, updated_at 
+    SELECT id, name, slug 
     FROM categories 
     WHERE is_active = 1 
     ORDER BY name ASC
@@ -60,8 +60,7 @@ $stmt->close();
 foreach ($categories as $category) {
     echo '  <url>' . "\n";
     echo '    <loc>' . htmlspecialchars($baseUrl . '/pages/magazin.php?category=' . $category['id']) . '</loc>' . "\n";
-    $lastmod = $category['updated_at'] ? date('Y-m-d', strtotime($category['updated_at'])) : date('Y-m-d');
-    echo '    <lastmod>' . $lastmod . '</lastmod>' . "\n";
+    echo '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
     echo '    <changefreq>weekly</changefreq>' . "\n";
     echo '    <priority>0.8</priority>' . "\n";
     echo '  </url>' . "\n";
@@ -71,10 +70,10 @@ foreach ($categories as $category) {
 // 4. PRODUSE
 // ============================================================================
 $stmt = $db->prepare("
-    SELECT id, name, slug, updated_at 
+    SELECT id, name, slug 
     FROM products 
     WHERE is_active = 1 
-    ORDER BY updated_at DESC
+    ORDER BY name ASC
 ");
 $stmt->execute();
 $products = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -85,8 +84,7 @@ foreach ($products as $product) {
     
     echo '  <url>' . "\n";
     echo '    <loc>' . htmlspecialchars($productUrl) . '</loc>' . "\n";
-    $lastmod = $product['updated_at'] ? date('Y-m-d', strtotime($product['updated_at'])) : date('Y-m-d');
-    echo '    <lastmod>' . $lastmod . '</lastmod>' . "\n";
+    echo '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
     echo '    <changefreq>weekly</changefreq>' . "\n";
     echo '    <priority>0.7</priority>' . "\n";
     echo '  </url>' . "\n";
