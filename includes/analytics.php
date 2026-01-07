@@ -6,8 +6,8 @@
  * GDPR Compliant - Only loads if cookie consent is granted
  */
 
-// Configuration - CHANGE THIS!
-define('GA4_MEASUREMENT_ID', 'G-XXXXXXXXXX'); // Replace with your actual GA4 Measurement ID
+// GA4 Measurement ID is now defined in config.php from config.local.php
+// No hardcoded secrets here!
 
 /**
  * Check if user has given consent for analytics cookies

@@ -5,6 +5,8 @@
 # Configurare sensibilă
 config/smtp_config.php
 config/database.php
+includes/config.local.php
+.env
 
 # Fișiere temporare și logs
 logs/

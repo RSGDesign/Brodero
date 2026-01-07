@@ -21,11 +21,49 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ÎNCĂRCARE CONFIGURARE SECURIZATĂ
+// ═══════════════════════════════════════════════════════════════════════════
+$configLocalPath = __DIR__ . '/../includes/config.local.php';
+
+// Declarăm $localConfig ca global pentru a fi accesibil din funcții
+global $localConfig;
+
+if (file_exists($configLocalPath)) {
+    // Încarcă configurarea locală (nu este în Git)
+    $localConfig = require $configLocalPath;
+} else {
+    // Fallback pentru debugging - afișează eroare doar dacă debug e activ
+    if (defined('DEBUG_MODE') && DEBUG_MODE) {
+        die('ERROR: config.local.php missing. Copy config.example.php to config.local.php and configure it.');
+    }
+    // Configurare fallback pentru a preveni crash-ul aplicației
+    $localConfig = [
+        'database' => [
+            'host' => 'localhost',
+            'user' => '',
+            'password' => '',
+            'name' => '',
+        ],
+        'stripe' => [
+            'secret_key' => '',
+            'publishable_key' => '',
+        ],
+        'analytics' => [
+            'ga4_measurement_id' => '',
+        ],
+        'environment' => [
+            'debug_mode' => false,
+            'display_errors' => false,
+        ],
+    ];
+}
+
 // Configurare bază de date
-define('DB_HOST', 'localhost');
-define('DB_USER', 'u107933880_brodero');
-define('DB_PASS', 'Grasul1500!');
-define('DB_NAME', 'u107933880_brodero');
+define('DB_HOST', $localConfig['database']['host']);
+define('DB_USER', $localConfig['database']['user']);
+define('DB_PASS', $localConfig['database']['password']);
+define('DB_NAME', $localConfig['database']['name']);
 
 // Configurare site
 define('SITE_NAME', 'Brodero');
@@ -56,9 +94,15 @@ define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'zip']);
 // Configurare pagination
 define('PRODUCTS_PER_PAGE', 12);
 
-// Configurare Stripe (opțional - dacă nu e instalat SDK-ul, plata cu card va fi dezactivată)
-define('STRIPE_SECRET_KEY', 'de compșetat'); // Adaugă cheia ta Stripe aici când instalezi SDK
-define('STRIPE_PUBLISHABLE_KEY', 'de completat'); // Pentru frontend
+// Configurare Stripe
+define('STRIPE_SECRET_KEY', $localConfig['stripe']['secret_key'] ?? '');
+define('STRIPE_PUBLISHABLE_KEY', $localConfig['stripe']['publishable_key'] ?? '');
+
+// Configurare Google Analytics
+define('GA4_MEASUREMENT_ID', $localConfig['analytics']['ga4_measurement_id'] ?? '');
+
+// Configurare environment
+define('DEBUG_MODE', $localConfig['environment']['debug_mode'] ?? false);
 
 // Configurare social media
 define('FACEBOOK_URL', 'https://www.facebook.com/Brodero2020/');
@@ -66,9 +110,9 @@ define('INSTAGRAM_URL', 'https://instagram.com/brodero2020');
 define('TWITTER_URL', 'https://twitter.com/brodero');
 define('PINTEREST_URL', 'https://pinterest.com/brodero');
 
-// Setări PHP
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Setări PHP - folosește valorile din config
+error_reporting($localConfig['environment']['debug_mode'] ? E_ALL : E_ALL & ~E_NOTICE);
+ini_set('display_errors', $localConfig['environment']['display_errors'] ? '1' : '0');
 date_default_timezone_set('Europe/Bucharest');
 
 // Funcție pentru afișare mesaje
@@ -245,6 +289,26 @@ function hasUserPurchasedProduct($productId) {
     $result = $stmt->get_result()->fetch_assoc();
     
     return $result['count'] > 0;
+}
+
+/**
+ * Verifică dacă o cheie secretă este configurată
+ * 
+ * @param string $key Numele constantei (ex: 'STRIPE_SECRET_KEY')
+ * @return bool
+ */
+function hasSecretKey($key) {
+    return defined($key) && !empty(constant($key)) && constant($key) !== 'de completat';
+}
+
+/**
+ * Obține configurația locală (pentru funcții care au nevoie de mai multe valori)
+ * 
+ * @return array
+ */
+function getLocalConfig() {
+    global $localConfig;
+    return $localConfig ?? [];
 }
 
 // Aplică automat protecția "Coming Soon" pentru toate paginile
