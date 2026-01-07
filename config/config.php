@@ -89,7 +89,7 @@ if (!is_dir(UPLOAD_PATH . 'products/gallery/')) {
 
 // Configurare upload
 define('MAX_FILE_SIZE', 5242880); // 5MB
-define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'zip']);
+define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'zip', 'emb']);
 
 // Configurare pagination
 define('PRODUCTS_PER_PAGE', 12);
