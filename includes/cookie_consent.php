@@ -223,5 +223,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <?php
-} // End renderCookieConsent()
-?>
+}
