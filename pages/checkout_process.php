@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_orders.php';
+require_once __DIR__ . '/../includes/functions_referral.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('/pages/cart.php');
@@ -127,7 +128,17 @@ if ($appliedCoupon) {
     }
 }
 
-$totalAmount = $subtotal - $discount;
+// Aplicare credit din referrals (dacă există)
+$creditUsed = 0;
+if ($userId && isset($_SESSION['credit_to_use']) && $_SESSION['credit_to_use'] > 0) {
+    $availableCredit = getUserCreditBalance($userId);
+    $requestedCredit = floatval($_SESSION['credit_to_use']);
+    
+    // Validează că utilizatorul chiar are creditul solicitat
+    $creditUsed = min($requestedCredit, $availableCredit, ($subtotal - $discount));
+}
+
+$totalAmount = $subtotal - $discount - $creditUsed;
 
 // Generare order number unic
 $orderNumber = 'BRD' . date('Ymd') . strtoupper(substr(uniqid(), -6));
@@ -217,6 +228,20 @@ try {
     
     // Elimină cuponul aplicat din sesiune
     unset($_SESSION['applied_coupon']);
+    
+    // ✅ APLICARE CREDIT DIN REFERRALS (dacă a fost folosit)
+    if ($userId && $creditUsed > 0) {
+        $result = applyCreditToOrder($userId, $orderId, $creditUsed);
+        
+        if ($result['success']) {
+            error_log("Credit aplicat cu succes: {$creditUsed} RON pentru comanda #{$orderId}");
+        } else {
+            error_log("Eroare la aplicarea creditului: " . $result['message']);
+        }
+        
+        // Curățare credit din sesiune
+        unset($_SESSION['credit_to_use']);
+    }
     
     // Commit tranzacție
     $db->commit();

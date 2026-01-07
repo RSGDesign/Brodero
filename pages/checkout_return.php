@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_orders.php';
+require_once __DIR__ . '/../includes/functions_referral.php';
 
 // Încarcă Stripe SDK
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
@@ -106,6 +107,21 @@ try {
 
         // ✅ ACTIVARE DESCĂRCĂRI - Plată Stripe confirmată
         enableOrderDownloads($orderId);
+        
+        // ✅ APLICARE CREDIT DIN REFERRALS (dacă a fost folosit)
+        if ($userId && isset($_SESSION['credit_to_use']) && $_SESSION['credit_to_use'] > 0) {
+            $creditUsed = floatval($_SESSION['credit_to_use']);
+            $result = applyCreditToOrder($userId, $orderId, $creditUsed);
+            
+            if ($result['success']) {
+                error_log("Credit aplicat cu succes: {$creditUsed} RON pentru comanda #{$orderId}");
+            } else {
+                error_log("Eroare la aplicarea creditului: " . $result['message']);
+            }
+            
+            // Curățare credit din sesiune
+            unset($_SESSION['credit_to_use']);
+        }
 
         // Curățare coș
         if ($userId) {

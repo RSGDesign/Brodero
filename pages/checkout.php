@@ -6,6 +6,7 @@
 
 $pageTitle = "Finalizare Comandă";
 require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/functions_referral.php';
 
 if (!isset($_SESSION['session_id'])) {
     $_SESSION['session_id'] = session_id();
@@ -51,6 +52,23 @@ foreach ($cartItems as $item) {
     $subtotal += $price;
 }
 
+// Obține credit disponibil dacă e logat
+$availableCredit = 0;
+$creditToUse = 0;
+
+if ($userId) {
+    $availableCredit = getUserCreditBalance($userId);
+    
+    // Verifică dacă utilizatorul vrea să folosească creditul
+    if (isset($_POST['use_credit']) && $_POST['use_credit'] === '1') {
+        $requestedCredit = floatval($_POST['credit_amount'] ?? 0);
+        $creditToUse = min($requestedCredit, $availableCredit);
+        $_SESSION['credit_to_use'] = $creditToUse;
+    } elseif (isset($_SESSION['credit_to_use'])) {
+        $creditToUse = min($_SESSION['credit_to_use'], $availableCredit);
+    }
+}
+
 // Verificare cupon aplicat
 $discount = 0;
 $appliedCoupon = $_SESSION['applied_coupon'] ?? null;
@@ -63,7 +81,10 @@ if ($appliedCoupon) {
     }
 }
 
-$total = $subtotal - $discount;
+// Calculare total cu credit
+$totalAfterDiscount = $subtotal - $discount;
+$creditToUse = min($creditToUse, $totalAfterDiscount); // Creditul nu poate fi mai mare decât totalul
+$total = $totalAfterDiscount - $creditToUse;
 
 // Preia date utilizator dacă e logat
 $userData = [];
@@ -238,16 +259,88 @@ if ($userId) {
 
                             <?php if ($discount > 0): ?>
                             <div class="d-flex justify-content-between mb-2 text-success">
-                                <span>Reducere:</span>
+                                <span><i class="bi bi-tag me-1"></i>Reducere Cupon:</span>
                                 <strong>-<?php echo number_format($discount, 2); ?> RON</strong>
                             </div>
                             <?php endif; ?>
+                            
+                            <?php if ($userId && $availableCredit > 0): ?>
+                            <div class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">
+                                        <i class="bi bi-wallet2 me-1"></i>Credit Disponibil:
+                                    </span>
+                                    <strong class="text-info"><?php echo number_format($availableCredit, 2); ?> RON</strong>
+                                </div>
+                                
+                                <form method="POST" id="creditForm" class="mt-3">
+                                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                                    
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="useCreditCheckbox" 
+                                               name="use_credit" value="1" 
+                                               <?php echo ($creditToUse > 0) ? 'checked' : ''; ?>
+                                               onchange="toggleCreditInput()">
+                                        <label class="form-check-label" for="useCreditCheckbox">
+                                            <small>Folosește creditul acumulat din referrals</small>
+                                        </label>
+                                    </div>
+                                    
+                                    <div id="creditAmountSection" style="<?php echo ($creditToUse > 0) ? '' : 'display:none;'; ?>">
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" 
+                                                   class="form-control form-control-sm" 
+                                                   id="creditAmount" 
+                                                   name="credit_amount" 
+                                                   min="0" 
+                                                   max="<?php echo min($availableCredit, $totalAfterDiscount); ?>" 
+                                                   step="0.01" 
+                                                   value="<?php echo $creditToUse > 0 ? number_format($creditToUse, 2, '.', '') : ''; ?>"
+                                                   placeholder="Sumă credit">
+                                            <span class="input-group-text">RON</span>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary" name="apply_credit">
+                                                <i class="bi bi-check2"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Maxim: <?php echo number_format(min($availableCredit, $totalAfterDiscount), 2); ?> RON</small>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <?php if ($creditToUse > 0): ?>
+                            <div class="d-flex justify-content-between mb-2 text-info">
+                                <span><i class="bi bi-wallet2 me-1"></i>Credit Folosit:</span>
+                                <strong>-<?php echo number_format($creditToUse, 2); ?> RON</strong>
+                            </div>
+                            <?php endif; ?>
+                            <?php endif; ?>
 
                             <div class="d-flex justify-content-between mt-3 pt-3 border-top">
-                                <h5 class="fw-bold mb-0">Total:</h5>
+                                <h5 class="fw-bold mb-0">Total de Plată:</h5>
                                 <h5 class="fw-bold mb-0 text-primary"><?php echo number_format($total, 2); ?> RON</h5>
                             </div>
                         </div>
+                        
+                        <script>
+                        function toggleCreditInput() {
+                            const checkbox = document.getElementById('useCreditCheckbox');
+                            const section = document.getElementById('creditAmountSection');
+                            const amountInput = document.getElementById('creditAmount');
+                            
+                            if (checkbox.checked) {
+                                section.style.display = 'block';
+                                // Setează automat maximul disponibil
+                                if (!amountInput.value) {
+                                    amountInput.value = amountInput.max;
+                                }
+                            } else {
+                                section.style.display = 'none';
+                                amountInput.value = '';
+                                // Trimite formular pentru a reseta creditul
+                                document.getElementById('creditForm').submit();
+                            }
+                        }
+                        </script>
                     </div>
                 </div>
             </div>
