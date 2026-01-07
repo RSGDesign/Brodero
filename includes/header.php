@@ -111,6 +111,7 @@ if (isLoggedIn()) {
     <?php
     // Cookie Consent Banner
     require_once __DIR__ . '/cookie_consent.php';
+    renderCookieConsent();
     ?>
     
     <!-- Header with Navigation -->

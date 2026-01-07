@@ -1,3 +1,11 @@
+<?php
+/**
+ * Cookie Consent Banner - MVP Minimal
+ * GDPR Compliant cookie consent UI
+ */
+
+function renderCookieConsent() {
+?>
 <!-- Cookie Consent Banner - MVP Minimal -->
 <style>
 #cookieConsentBanner {
@@ -214,3 +222,6 @@ document.addEventListener('DOMContentLoaded', function() {
     cookieConsent.init();
 });
 </script>
+<?php
+} // End renderCookieConsent()
+?>
