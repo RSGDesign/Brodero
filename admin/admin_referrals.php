@@ -20,7 +20,6 @@ if (!isAdmin()) {
 }
 
 $db = getDB();
-$pageTitle = "Gestiune Referrals";
 
 // Procesare aprobare/respingere retragere
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -108,7 +107,8 @@ $stmt->execute();
 $withdrawalStats = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-require_once __DIR__ . '/../includes/admin_header.php';
+$pageTitle = "Gestiune Referrals";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
@@ -469,4 +469,4 @@ require_once __DIR__ . '/../includes/admin_header.php';
     
 </div>
 
-<?php require_once __DIR__ . '/../includes/admin_footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
