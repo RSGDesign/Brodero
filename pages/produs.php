@@ -4,16 +4,19 @@
  * Afișare informații produs, galerie imagini, opțiuni achiziție
  */
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_downloads.php';
 require_once __DIR__ . '/../includes/functions_seo.php';
+
+// Obține DB connection
+$db = getDB();
 
 // Verificare slug produs
 if (!isset($_GET['slug']) || empty($_GET['slug'])) {
     // Fallback pentru compatibilitate cu ID
     if (isset($_GET['id']) && !empty($_GET['id'])) {
         $productId = (int)$_GET['id'];
-        $db = getDB();
         $stmt = $db->prepare("SELECT slug FROM products WHERE id = ?");
         $stmt->bind_param("i", $productId);
         $stmt->execute();
@@ -30,7 +33,6 @@ if (!isset($_GET['slug']) || empty($_GET['slug'])) {
 $productSlug = cleanInput($_GET['slug']);
 
 // Obține detalii produs prin slug
-$db = getDB();
 $stmt = $db->prepare("SELECT p.* FROM products p WHERE p.slug = ? AND p.is_active = 1");
 $stmt->bind_param("s", $productSlug);
 $stmt->execute();
@@ -115,6 +117,9 @@ $pageTitle = $product['name'];
 $pageDescription = sanitizeMetaDescription($product['description'], 160);
 $pageKeywords = $product['name'] . ', broderie, design broderie, pattern';
 $pageImage = !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : '';
+
+// Include header DUPĂ toate verificările și redirect-urile
+require_once __DIR__ . '/../includes/header.php';
 
 // Generează Product Schema pentru SEO
 echo generateProductSchema($product);
