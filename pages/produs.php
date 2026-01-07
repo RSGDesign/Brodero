@@ -4,23 +4,35 @@
  * Afișare informații produs, galerie imagini, opțiuni achiziție
  */
 
-$pageTitle = "Produs";
-
 require_once __DIR__ . '/../includes/header.php';
 require_once __DIR__ . '/../includes/functions_downloads.php';
+require_once __DIR__ . '/../includes/functions_seo.php';
 
-// Verificare ID produs
-if (!isset($_GET['id']) || empty($_GET['id'])) {
+// Verificare slug produs
+if (!isset($_GET['slug']) || empty($_GET['slug'])) {
+    // Fallback pentru compatibilitate cu ID
+    if (isset($_GET['id']) && !empty($_GET['id'])) {
+        $productId = (int)$_GET['id'];
+        $db = getDB();
+        $stmt = $db->prepare("SELECT slug FROM products WHERE id = ?");
+        $stmt->bind_param("i", $productId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            redirect('/pages/produs.php?slug=' . $row['slug']);
+        }
+    }
     setMessage("Produsul nu a fost găsit.", "danger");
     redirect('/pages/magazin.php');
 }
 
-$productId = (int)$_GET['id'];
+$productSlug = cleanInput($_GET['slug']);
 
-// Obține detalii produs (fără JOIN pe categories - folosim many-to-many)
+// Obține detalii produs prin slug
 $db = getDB();
-$stmt = $db->prepare("SELECT p.* FROM products p WHERE p.id = ? AND p.is_active = 1");
-$stmt->bind_param("i", $productId);
+$stmt = $db->prepare("SELECT p.* FROM products p WHERE p.slug = ? AND p.is_active = 1");
+$stmt->bind_param("s", $productSlug);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -96,7 +108,12 @@ if ($product['sale_price']) {
 }
 
 $pageTitle = $product['name'];
-$pageDescription = substr(strip_tags($product['description']), 0, 160);
+$pageDescription = sanitizeMetaDescription($product['description'], 160);
+$pageKeywords = $product['name'] . ', broderie, design broderie, pattern';
+$pageImage = !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : '';
+
+// Generează Product Schema pentru SEO
+echo generateProductSchema($product);
 ?>
 
 <!-- Breadcrumb -->

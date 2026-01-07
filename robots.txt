@@ -1,0 +1,8 @@
+# robots.txt pentru Brodero
+# Permite crawling complet pentru toate motoarele de căutare
+
+User-agent: *
+Disallow:
+
+# Sitemap
+Sitemap: https://brodero.ro/sitemap.xml

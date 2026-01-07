@@ -38,8 +38,40 @@ if (isLoggedIn()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?><?php echo SITE_NAME; ?> - Design de Broderie</title>
-    <meta name="description" content="<?php echo isset($pageDescription) ? $pageDescription : 'Brodero - Magazine online de design-uri de broderie premium. Descoperă modele unice și creative.'; ?>">
+    
+    <!-- SEO Meta Tags -->
+    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo SITE_NAME; ?> - Design de Broderie Premium</title>
+    <meta name="description" content="<?php echo isset($pageDescription) ? htmlspecialchars($pageDescription) : 'Brodero - Magazine online de design-uri de broderie premium. Descoperă modele unice și creative pentru proiectele tale.'; ?>">
+    <meta name="keywords" content="broderie, design broderie, modele broderie, broderie digitală, pattern broderie, <?php echo isset($pageKeywords) ? htmlspecialchars($pageKeywords) : ''; ?>">
+    <meta name="author" content="Brodero">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="<?php 
+        $currentUrl = SITE_URL . $_SERVER['REQUEST_URI'];
+        // Curăță parametrii de tracking
+        $currentUrl = strtok($currentUrl, '?');
+        echo htmlspecialchars($currentUrl);
+    ?>">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo htmlspecialchars($currentUrl); ?>">
+    <meta property="og:title" content="<?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo SITE_NAME; ?>">
+    <meta property="og:description" content="<?php echo isset($pageDescription) ? htmlspecialchars($pageDescription) : 'Brodero - Design-uri de broderie premium'; ?>">
+    <meta property="og:image" content="<?php echo isset($pageImage) ? htmlspecialchars($pageImage) : SITE_URL . '/assets/images/og-default.jpg'; ?>">
+    <meta property="og:site_name" content="<?php echo SITE_NAME; ?>">
+    <meta property="og:locale" content="ro_RO">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="<?php echo htmlspecialchars($currentUrl); ?>">
+    <meta name="twitter:title" content="<?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo SITE_NAME; ?>">
+    <meta name="twitter:description" content="<?php echo isset($pageDescription) ? htmlspecialchars($pageDescription) : 'Brodero - Design-uri de broderie premium'; ?>">
+    <meta name="twitter:image" content="<?php echo isset($pageImage) ? htmlspecialchars($pageImage) : SITE_URL . '/assets/images/og-default.jpg'; ?>">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="<?php echo SITE_URL; ?>/favicon.ico">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -52,11 +84,28 @@ if (isLoggedIn()) {
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "<?php echo SITE_NAME; ?>",
+      "url": "<?php echo SITE_URL; ?>",
+      "logo": "<?php echo SITE_URL; ?>/assets/images/logo.png",
+      "description": "Magazine online de design-uri de broderie premium",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "RO"
+      }
+    }
+    </script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
-        <div class="container">
+    <!-- Header with Navigation -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm" role="navigation" aria-label="Main navigation">
+            <div class="container">
             <!-- Logo -->
             <a class="navbar-brand fw-bold" href="<?php echo SITE_URL; ?>">
                 <i class="bi bi-flower3 text-primary"></i>
@@ -123,8 +172,8 @@ if (isLoggedIn()) {
                     <?php endif; ?>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
     
     <!-- Mesaje de notificare -->
     <?php
@@ -134,10 +183,10 @@ if (isLoggedIn()) {
     <div class="container mt-3">
         <div class="alert alert-<?php echo $message['type'] === 'success' ? 'success' : 'danger'; ?> alert-dismissible fade show" role="alert">
             <?php echo $message['message']; ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     </div>
     <?php endif; ?>
     
     <!-- Main Content -->
-    <main>
+    <main id="main-content" role="main">
