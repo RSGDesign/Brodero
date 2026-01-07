@@ -4,9 +4,8 @@
  * Formular și procesare pentru editarea unei categorii
  */
 
-$pageTitle = "Editare Categorie";
-
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Verificare acces admin
 if (!isAdmin()) {
@@ -130,6 +129,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 }
+
+// Include header DUPĂ procesarea POST
+$pageTitle = "Editare Categorie";
+require_once __DIR__ . '/../includes/header.php';
 
 /**
  * Funcție pentru upload imagine categorie

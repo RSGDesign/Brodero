@@ -4,9 +4,8 @@
  * Formular pentru trimitere newsletter către abonați
  */
 
-$pageTitle = "Trimite Newsletter";
-
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Verificare acces admin
 if (!isAdmin()) {
@@ -15,6 +14,10 @@ if (!isAdmin()) {
 }
 
 $db = getDB();
+
+// Include header DUPĂ verificare admin
+$pageTitle = "Trimite Newsletter";
+require_once __DIR__ . '/../includes/header.php';
 
 // Statistici destinatari
 $activeSubscribers = $db->query("SELECT COUNT(*) as total FROM newsletter WHERE is_active = 1")->fetch_all(MYSQLI_ASSOC)[0]['total'];

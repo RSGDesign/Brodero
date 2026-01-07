@@ -4,9 +4,8 @@
  * Editare detalii utilizator - nume, email, parolă, rol, status
  */
 
-$pageTitle = "Editare Utilizator";
-
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Verificare acces admin
 if (!isAdmin()) {
@@ -140,6 +139,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Include header DUPĂ procesarea POST
+$pageTitle = "Editare Utilizator";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->

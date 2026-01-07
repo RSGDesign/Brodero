@@ -13,14 +13,6 @@ if (!isAdmin()) {
     exit();
 }
 
-$pageTitle = "Editare Cupon";
-// Fallback la header standard dacă admin_header lipsește
-if (file_exists(__DIR__ . '/../includes/admin_header.php')) {
-    require_once __DIR__ . '/../includes/admin_header.php';
-} else {
-    require_once __DIR__ . '/../includes/header.php';
-}
-
 $db = getDB();
 $couponId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -53,7 +45,7 @@ $stmt->bind_param("s", $coupon['code']);
 $stmt->execute();
 $recentOrders = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Handle POST
+// Handle POST (ÎNAINTE de header.php)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $discountType = $_POST['discount_type'] ?? 'percent';
     $discountValue = (float)($_POST['discount_value'] ?? 0);
@@ -106,6 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = "Eroare la actualizare în baza de date.";
         }
     }
+}
+
+// Include header DUPĂ procesarea POST și verificări
+$pageTitle = "Editare Cupon";
+if (file_exists(__DIR__ . '/../includes/admin_header.php')) {
+    require_once __DIR__ . '/../includes/admin_header.php';
+} else {
+    require_once __DIR__ . '/../includes/header.php';
 }
 ?>
 
