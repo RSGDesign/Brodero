@@ -31,6 +31,7 @@ echo '  </url>' . "\n";
 // ============================================================================
 $staticPages = [
     '/pages/magazin.php' => ['changefreq' => 'daily', 'priority' => '0.9'],
+    '/pages/program-referral.php' => ['changefreq' => 'weekly', 'priority' => '0.8'],
     '/pages/cart.php' => ['changefreq' => 'weekly', 'priority' => '0.5'],
     '/pages/contact.php' => ['changefreq' => 'monthly', 'priority' => '0.6'],
 ];
