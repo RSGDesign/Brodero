@@ -21,7 +21,7 @@ require_once __DIR__ . '/../config/database.php';
  * @return string Cod referral unic
  */
 function generateReferralCode() {
-    global $conn;
+    $conn = getDB();
     
     do {
         // Generează cod unic: REF + hash MD5 (primele 10 caractere)
@@ -47,7 +47,7 @@ function generateReferralCode() {
  * @return string|null Codul referral sau null
  */
 function getUserReferralCode($userId) {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("SELECT referral_code FROM users WHERE id = ?");
     $stmt->bind_param("i", $userId);
@@ -65,7 +65,7 @@ function getUserReferralCode($userId) {
  * @return int|null ID utilizator sau null
  */
 function getUserIdFromReferralCode($referralCode) {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("SELECT id FROM users WHERE referral_code = ?");
     $stmt->bind_param("s", $referralCode);
@@ -152,7 +152,7 @@ function clearReferralCodeCookie() {
  * @return bool Succes
  */
 function createReferral($referrerId, $referredId, $commissionPercentage = null) {
-    global $conn;
+    $conn = getDB();
     
     // Validări anti-abuz
     if ($referrerId === $referredId) {
@@ -200,7 +200,7 @@ function createReferral($referrerId, $referredId, $commissionPercentage = null) 
  * @return array|null Datele referral-ului sau null
  */
 function getUserReferralInfo($userId) {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("
         SELECT 
@@ -231,7 +231,7 @@ function getUserReferralInfo($userId) {
  * @return bool Succes
  */
 function calculateAndAwardCommission($orderId) {
-    global $conn;
+    $conn = getDB();
     
     // Obține detalii comandă
     $stmt = $conn->prepare("
@@ -329,7 +329,7 @@ function calculateAndAwardCommission($orderId) {
  * @return float Procent comision (default: 10%)
  */
 function getCommissionPercentage() {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("SELECT setting_value FROM referral_settings WHERE setting_key = 'commission_percentage'");
     $stmt->execute();
@@ -350,7 +350,7 @@ function getCommissionPercentage() {
  * @return float Sold credit
  */
 function getUserCreditBalance($userId) {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("SELECT credit_balance FROM users WHERE id = ?");
     $stmt->bind_param("i", $userId);
@@ -369,7 +369,7 @@ function getUserCreditBalance($userId) {
  * @return bool Succes
  */
 function applyCreditToOrder($userId, $amount) {
-    global $conn;
+    $conn = getDB();
     
     // Validare
     $currentBalance = getUserCreditBalance($userId);
@@ -406,7 +406,7 @@ function applyCreditToOrder($userId, $amount) {
  * @return array Statistici
  */
 function getUserReferralStats($userId) {
-    global $conn;
+    $conn = getDB();
     
     // Statistici referrals
     $stmt = $conn->prepare("
@@ -465,7 +465,7 @@ function getUserReferralStats($userId) {
  * @return array Lista referrals
  */
 function getUserReferralsList($userId) {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("
         SELECT 
@@ -504,7 +504,7 @@ function getUserReferralsList($userId) {
  * @return array Lista earnings
  */
 function getUserReferralEarnings($userId) {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("
         SELECT 
@@ -549,7 +549,7 @@ function getUserReferralEarnings($userId) {
  * @return array ['success' => bool, 'message' => string, 'request_id' => int|null]
  */
 function createWithdrawalRequest($userId, $amount, $iban, $accountName) {
-    global $conn;
+    $conn = getDB();
     
     // Validări
     $currentBalance = getUserCreditBalance($userId);
@@ -603,7 +603,7 @@ function createWithdrawalRequest($userId, $amount, $iban, $accountName) {
  * @return float Suma minimă (default: 100 lei)
  */
 function getMinWithdrawalAmount() {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("SELECT setting_value FROM referral_settings WHERE setting_key = 'min_withdrawal_amount'");
     $stmt->execute();
@@ -620,7 +620,7 @@ function getMinWithdrawalAmount() {
  * @return array Lista cereri
  */
 function getUserWithdrawalRequests($userId) {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("
         SELECT * FROM withdrawal_requests 
@@ -651,7 +651,7 @@ function getUserWithdrawalRequests($userId) {
  * @return array ['success' => bool, 'message' => string]
  */
 function approveWithdrawalRequest($requestId, $adminId, $adminNote = '') {
-    global $conn;
+    $conn = getDB();
     
     // Obține cererea
     $stmt = $conn->prepare("
@@ -722,7 +722,7 @@ function approveWithdrawalRequest($requestId, $adminId, $adminNote = '') {
  * @return array ['success' => bool, 'message' => string]
  */
 function rejectWithdrawalRequest($requestId, $adminId, $adminNote = '') {
-    global $conn;
+    $conn = getDB();
     
     $stmt = $conn->prepare("
         UPDATE withdrawal_requests 

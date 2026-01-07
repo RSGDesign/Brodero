@@ -21,6 +21,34 @@ if (!isAdmin()) {
 
 $db = getDB();
 
+// Procesare actualizare setări
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_settings'])) {
+    $commissionPercentage = floatval($_POST['commission_percentage'] ?? 10);
+    $minWithdrawal = floatval($_POST['min_withdrawal_amount'] ?? 100);
+    
+    // Validări
+    if ($commissionPercentage < 0 || $commissionPercentage > 100) {
+        setMessage("Procentul comision trebuie să fie între 0 și 100%", "danger");
+    } elseif ($minWithdrawal < 0) {
+        setMessage("Suma minimă retragere trebuie să fie pozitivă", "danger");
+    } else {
+        // Actualizare setări
+        $stmt = $db->prepare("UPDATE referral_settings SET setting_value = ? WHERE setting_key = 'commission_percentage'");
+        $stmt->bind_param("s", $commissionPercentage);
+        $stmt->execute();
+        $stmt->close();
+        
+        $stmt = $db->prepare("UPDATE referral_settings SET setting_value = ? WHERE setting_key = 'min_withdrawal_amount'");
+        $stmt->bind_param("s", $minWithdrawal);
+        $stmt->execute();
+        $stmt->close();
+        
+        setMessage("Setările au fost actualizate cu succes!", "success");
+    }
+    
+    redirect('/admin/admin_referrals.php?tab=settings');
+}
+
 // Procesare aprobare/respingere retragere
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $requestId = intval($_POST['request_id'] ?? 0);
@@ -515,37 +543,107 @@ require_once __DIR__ . '/../includes/header.php';
                 }
                 ?>
                 
+                <!-- Formular Editare Setări -->
+                <form method="POST" action="" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="commission_percentage" class="form-label">
+                                <i class="bi bi-percent text-primary me-2"></i>Comision Procentual
+                            </label>
+                            <div class="input-group">
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    id="commission_percentage" 
+                                    name="commission_percentage" 
+                                    value="<?php echo number_format($settings['commission_percentage'] ?? 10, 2, '.', ''); ?>" 
+                                    min="0" 
+                                    max="100" 
+                                    step="0.01" 
+                                    required
+                                >
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <small class="text-muted">Procent acordat din fiecare comandă plătită (0-100%)</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="min_withdrawal_amount" class="form-label">
+                                <i class="bi bi-cash-stack text-success me-2"></i>Sumă Minimă Retragere
+                            </label>
+                            <div class="input-group">
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    id="min_withdrawal_amount" 
+                                    name="min_withdrawal_amount" 
+                                    value="<?php echo number_format($settings['min_withdrawal_amount'] ?? 100, 2, '.', ''); ?>" 
+                                    min="0" 
+                                    step="0.01" 
+                                    required
+                                >
+                                <span class="input-group-text">RON</span>
+                            </div>
+                            <small class="text-muted">Suma minimă pentru cerere de retragere bancară</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" name="update_settings" class="btn btn-primary">
+                            <i class="bi bi-save me-2"></i>Salvează Modificări
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Resetează
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <!-- Info Card -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="bi bi-info-circle me-2"></i>Informații Importante
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Comisionul procentual</strong> se aplică la toate comenzile noi. Utilizatorii existenți păstrează procentul setat la momentul creării referral-ului.</li>
+                        <li><strong>Suma minimă de retragere</strong> afectează toate cererile noi de retragere.</li>
+                        <li>Modificările sunt aplicate imediat după salvare.</li>
+                    </ul>
+                </div>
+                
+                <!-- Statistici Sistem -->
+                <h6 class="mt-4 mb-3">Statistici Sistem</h6>
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table table-sm table-bordered">
                         <tbody>
                             <tr>
-                                <td><strong>Comision Procentual</strong></td>
-                                <td><?php echo number_format($settings['commission_percentage'] ?? 10, 0); ?>%</td>
-                                <td><small class="text-muted">Procent din fiecare comandă plătită</small></td>
+                                <td width="30%"><strong>Comision Actual</strong></td>
+                                <td width="20%">
+                                    <span class="badge bg-primary"><?php echo number_format($settings['commission_percentage'] ?? 10, 2); ?>%</span>
+                                </td>
+                                <td><small class="text-muted">Procent aplicat pentru referral-uri noi</small></td>
                             </tr>
                             <tr>
-                                <td><strong>Sumă Minimă Retragere</strong></td>
-                                <td><?php echo number_format($settings['min_withdrawal_amount'] ?? 100, 2); ?> RON</td>
-                                <td><small class="text-muted">Minim pentru cerere retragere bancară</small></td>
+                                <td><strong>Minim Retragere</strong></td>
+                                <td>
+                                    <span class="badge bg-success"><?php echo number_format($settings['min_withdrawal_amount'] ?? 100, 2); ?> RON</span>
+                                </td>
+                                <td><small class="text-muted">Suma minimă pentru retragere</small></td>
                             </tr>
                             <tr>
                                 <td><strong>Sistem Activ</strong></td>
                                 <td>
                                     <?php if (($settings['referral_enabled'] ?? '1') === '1'): ?>
-                                        <span class="badge bg-success">DA</span>
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>ACTIV</span>
                                     <?php else: ?>
-                                        <span class="badge bg-danger">NU</span>
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>INACTIV</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><small class="text-muted">Utilizatorii pot câștiga din referrals</small></td>
+                                <td><small class="text-muted">Status general sistem referral</small></td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
-                
-                <div class="alert alert-info mt-3">
-                    <i class="bi bi-info-circle me-2"></i>
-                    Pentru a modifica aceste setări, editează valorile în tabelul <code>referral_settings</code> din baza de date.
                 </div>
             </div>
         </div>
