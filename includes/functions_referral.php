@@ -144,13 +144,14 @@ function clearReferralCodeCookie() {
 
 /**
  * Creează un referral nou (la înregistrare user)
- * Status: pending (până la prima comandă plătită)
+ * Relația este permanentă (fără status)
  * 
  * @param int $referrerId ID user care a trimis invitația
  * @param int $referredId ID user nou înregistrat
+ * @param float|null $commissionPercentage Procent comision (default din setări)
  * @return bool Succes
  */
-function createReferral($referrerId, $referredId) {
+function createReferral($referrerId, $referredId, $commissionPercentage = null) {
     global $conn;
     
     // Validări anti-abuz
@@ -171,17 +172,22 @@ function createReferral($referrerId, $referredId) {
         return false; // User poate fi referit o singură dată
     }
     
-    // Creează referral cu status pending
+    // Obține procent comision din setări dacă nu e specificat
+    if ($commissionPercentage === null) {
+        $commissionPercentage = getCommissionPercentage();
+    }
+    
+    // Creează referral permanent (fără status)
     $stmt = $conn->prepare("
-        INSERT INTO referrals (referrer_user_id, referred_user_id, status) 
-        VALUES (?, ?, 'pending')
+        INSERT INTO referrals (referrer_user_id, referred_user_id, commission_percentage) 
+        VALUES (?, ?, ?)
     ");
-    $stmt->bind_param("ii", $referrerId, $referredId);
+    $stmt->bind_param("iid", $referrerId, $referredId, $commissionPercentage);
     $success = $stmt->execute();
     $stmt->close();
     
     if ($success) {
-        error_log("REFERRAL SUCCESS: User $referrerId referred user $referredId");
+        error_log("REFERRAL SUCCESS: User $referrerId referred user $referredId (commission: {$commissionPercentage}%)");
     }
     
     return $success;
@@ -214,95 +220,123 @@ function getUserReferralInfo($userId) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// 4. ACTIVARE REFERRAL & RECOMPENSĂ (La prima plată)
+// 4. CALCUL & ACORDARE COMISION (La fiecare comandă plătită)
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Activează referral-ul după prima comandă plătită
- * Schimbă status: pending → completed
- * Acordă recompensă în credit_balance al referrer-ului
+ * Calculează și acordă comision pentru o comandă plătită
+ * Apelat automat când o comandă primește status 'paid'
  * 
- * @param int $referredUserId ID utilizator care a făcut prima plată
+ * @param int $orderId ID comandă
  * @return bool Succes
  */
-function activateReferralReward($referredUserId) {
+function calculateAndAwardCommission($orderId) {
     global $conn;
     
-    // Verifică dacă există un referral pending pentru acest user
+    // Obține detalii comandă
     $stmt = $conn->prepare("
-        SELECT id, referrer_user_id 
-        FROM referrals 
-        WHERE referred_user_id = ? AND status = 'pending'
+        SELECT user_id, total 
+        FROM orders 
+        WHERE id = ? AND payment_status = 'paid'
     ");
-    $stmt->bind_param("i", $referredUserId);
+    $stmt->bind_param("i", $orderId);
+    $stmt->execute();
+    $order = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    
+    if (!$order) {
+        error_log("COMMISSION ERROR: Order $orderId not found or not paid");
+        return false; // Comanda nu există sau nu e plătită
+    }
+    
+    $userId = $order['user_id'];
+    $orderTotal = floatval($order['total']);
+    
+    // Verifică dacă userul are referrer
+    $stmt = $conn->prepare("
+        SELECT id, referrer_user_id, commission_percentage 
+        FROM referrals 
+        WHERE referred_user_id = ?
+    ");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $referral = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    
+    if (!$referral) {
+        return false; // User nu a fost referit
+    }
+    
+    $referralId = $referral['id'];
+    $referrerId = $referral['referrer_user_id'];
+    $commissionPercentage = floatval($referral['commission_percentage']);
+    
+    // Verifică dacă comisionul a fost deja acordat pentru această comandă
+    $stmt = $conn->prepare("SELECT COUNT(*) as count FROM referral_earnings WHERE order_id = ?");
+    $stmt->bind_param("i", $orderId);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     
-    if (!$result) {
-        return false; // Nu există referral pending
+    if ($result['count'] > 0) {
+        error_log("COMMISSION WARNING: Commission already awarded for order $orderId");
+        return false; // Comision deja acordat
     }
     
-    $referralId = $result['id'];
-    $referrerId = $result['referrer_user_id'];
-    
-    // Obține suma recompensei din setări
-    $rewardAmount = getReferralRewardAmount();
+    // Calculează comision
+    $commissionAmount = ($orderTotal * $commissionPercentage) / 100;
     
     // Începe tranzacție
     $conn->begin_transaction();
     
     try {
-        // 1. Actualizează status referral → completed
+        // 1. Creează record în referral_earnings
         $stmt = $conn->prepare("
-            UPDATE referrals 
-            SET status = 'completed', 
-                reward_amount = ?, 
-                completed_at = NOW() 
-            WHERE id = ?
+            INSERT INTO referral_earnings (referral_id, order_id, order_total, commission_amount) 
+            VALUES (?, ?, ?, ?)
         ");
-        $stmt->bind_param("di", $rewardAmount, $referralId);
+        $stmt->bind_param("iidd", $referralId, $orderId, $orderTotal, $commissionAmount);
         $stmt->execute();
         $stmt->close();
         
-        // 2. Adaugă recompensa în credit_balance al referrer-ului
+        // 2. Adaugă comision în credit_balance al referrer-ului
         $stmt = $conn->prepare("
             UPDATE users 
             SET credit_balance = credit_balance + ? 
             WHERE id = ?
         ");
-        $stmt->bind_param("di", $rewardAmount, $referrerId);
+        $stmt->bind_param("di", $commissionAmount, $referrerId);
         $stmt->execute();
         $stmt->close();
         
         // Commit tranzacție
         $conn->commit();
         
-        error_log("REFERRAL REWARD: User $referrerId earned $rewardAmount lei from user $referredUserId");
+        error_log("COMMISSION SUCCESS: User $referrerId earned {$commissionAmount} lei ({$commissionPercentage}%) from order $orderId (total: {$orderTotal} lei)");
         
         return true;
         
     } catch (Exception $e) {
         $conn->rollback();
-        error_log("REFERRAL ERROR: Failed to activate reward - " . $e->getMessage());
+        error_log("COMMISSION ERROR: Failed to award commission - " . $e->getMessage());
         return false;
     }
 }
 
 /**
- * Obține suma recompensei din setări
+ * Obține procentul comision din setări
  * 
- * @return float Suma recompensă (default: 50 lei)
+ * @return float Procent comision (default: 10%)
  */
-function getReferralRewardAmount() {
+function getCommissionPercentage() {
     global $conn;
     
-    $stmt = $conn->prepare("SELECT setting_value FROM referral_settings WHERE setting_key = 'reward_amount'");
+    $stmt = $conn->prepare("SELECT setting_value FROM referral_settings WHERE setting_key = 'commission_percentage'");
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     
-    return isset($result['setting_value']) ? floatval($result['setting_value']) : 50.00;
+    return isset($result['setting_value']) ? floatval($result['setting_value']) : 10.00;
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -374,25 +408,52 @@ function applyCreditToOrder($userId, $amount) {
 function getUserReferralStats($userId) {
     global $conn;
     
+    // Statistici referrals
     $stmt = $conn->prepare("
         SELECT 
             COUNT(*) as total_referrals,
-            SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_referrals,
-            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_referrals,
-            COALESCE(SUM(CASE WHEN status = 'completed' THEN reward_amount ELSE 0 END), 0) as total_earned
+            commission_percentage
         FROM referrals 
         WHERE referrer_user_id = ?
+        LIMIT 1
     ");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result()->fetch_assoc();
     $stmt->close();
     
+    $totalReferrals = intval($result['total_referrals'] ?? 0);
+    $commissionPercentage = floatval($result['commission_percentage'] ?? getCommissionPercentage());
+    
+    // Total câștigat din comisioane
+    $stmt = $conn->prepare("
+        SELECT COALESCE(SUM(re.commission_amount), 0) as total_earned
+        FROM referral_earnings re
+        JOIN referrals r ON re.referral_id = r.id
+        WHERE r.referrer_user_id = ?
+    ");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $earningsResult = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    
+    // Număr comenzi care au generat comision
+    $stmt = $conn->prepare("
+        SELECT COUNT(DISTINCT re.order_id) as orders_with_commission
+        FROM referral_earnings re
+        JOIN referrals r ON re.referral_id = r.id
+        WHERE r.referrer_user_id = ?
+    ");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $ordersResult = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    
     return [
-        'total_referrals' => intval($result['total_referrals']),
-        'completed_referrals' => intval($result['completed_referrals']),
-        'pending_referrals' => intval($result['pending_referrals']),
-        'total_earned' => floatval($result['total_earned']),
+        'total_referrals' => $totalReferrals,
+        'commission_percentage' => $commissionPercentage,
+        'total_earned' => floatval($earningsResult['total_earned']),
+        'orders_with_commission' => intval($ordersResult['orders_with_commission']),
         'current_balance' => getUserCreditBalance($userId)
     ];
 }
@@ -409,12 +470,17 @@ function getUserReferralsList($userId) {
     $stmt = $conn->prepare("
         SELECT 
             r.*,
-            u.name as referred_name,
+            u.first_name as referred_first_name,
+            u.last_name as referred_last_name,
             u.email as referred_email,
-            u.created_at as referred_joined_at
+            u.created_at as referred_joined_at,
+            COUNT(DISTINCT re.order_id) as orders_count,
+            COALESCE(SUM(re.commission_amount), 0) as total_commission
         FROM referrals r
         JOIN users u ON r.referred_user_id = u.id
+        LEFT JOIN referral_earnings re ON re.referral_id = r.id
         WHERE r.referrer_user_id = ?
+        GROUP BY r.id
         ORDER BY r.created_at DESC
     ");
     $stmt->bind_param("i", $userId);
@@ -429,6 +495,44 @@ function getUserReferralsList($userId) {
     $stmt->close();
     
     return $referrals;
+}
+
+/**
+ * Obține lista de earnings (comisioane) pentru un utilizator
+ * 
+ * @param int $userId ID utilizator referrer
+ * @return array Lista earnings
+ */
+function getUserReferralEarnings($userId) {
+    global $conn;
+    
+    $stmt = $conn->prepare("
+        SELECT 
+            re.*,
+            o.order_number,
+            o.created_at as order_date,
+            u.first_name as referred_first_name,
+            u.last_name as referred_last_name,
+            u.email as referred_email
+        FROM referral_earnings re
+        JOIN referrals r ON re.referral_id = r.id
+        JOIN orders o ON re.order_id = o.id
+        JOIN users u ON r.referred_user_id = u.id
+        WHERE r.referrer_user_id = ?
+        ORDER BY re.created_at DESC
+    ");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $earnings = [];
+    while ($row = $result->fetch_assoc()) {
+        $earnings[] = $row;
+    }
+    
+    $stmt->close();
+    
+    return $earnings;
 }
 
 // ───────────────────────────────────────────────────────────────────────────

@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     redirect('/admin/admin_referrals.php');
 }
 
-// Obține toate referrals
+// Obține toate referrals cu earnings
 $stmt = $db->prepare("
     SELECT 
         r.*,
@@ -47,14 +47,39 @@ $stmt = $db->prepare("
         referrer.email as referrer_email,
         referred.first_name as referred_first_name,
         referred.last_name as referred_last_name,
-        referred.email as referred_email
+        referred.email as referred_email,
+        COUNT(DISTINCT re.order_id) as orders_count,
+        COALESCE(SUM(re.commission_amount), 0) as total_commission
     FROM referrals r
     JOIN users referrer ON r.referrer_user_id = referrer.id
     JOIN users referred ON r.referred_user_id = referred.id
+    LEFT JOIN referral_earnings re ON re.referral_id = r.id
+    GROUP BY r.id
     ORDER BY r.created_at DESC
 ");
 $stmt->execute();
 $allReferrals = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+
+// Obține toate earnings
+$stmt = $db->prepare("
+    SELECT 
+        re.*,
+        o.order_number,
+        referrer.first_name as referrer_first_name,
+        referrer.last_name as referrer_last_name,
+        referred.first_name as referred_first_name,
+        referred.last_name as referred_last_name
+    FROM referral_earnings re
+    JOIN referrals r ON re.referral_id = r.id
+    JOIN orders o ON re.order_id = o.id
+    JOIN users referrer ON r.referrer_user_id = referrer.id
+    JOIN users referred ON r.referred_user_id = referred.id
+    ORDER BY re.created_at DESC
+    LIMIT 100
+");
+$stmt->execute();
+$allEarnings = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 
 // Obține toate cererile de retragere
@@ -85,9 +110,7 @@ $stmt->close();
 $stmt = $db->prepare("
     SELECT 
         COUNT(*) as total_referrals,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_referrals,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_referrals,
-        COALESCE(SUM(CASE WHEN status = 'completed' THEN reward_amount ELSE 0 END), 0) as total_rewards_paid
+        AVG(commission_percentage) as avg_commission_percentage
     FROM referrals
 ");
 $stmt->execute();
@@ -96,10 +119,21 @@ $stmt->close();
 
 $stmt = $db->prepare("
     SELECT 
+        COUNT(*) as total_earnings,
+        COALESCE(SUM(commission_amount), 0) as total_commission_paid,
+        COUNT(DISTINCT order_id) as orders_with_commission
+    FROM referral_earnings
+");
+$stmt->execute();
+$earningsStats = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+$stmt = $db->prepare("
+    SELECT 
         COUNT(*) as total_requests,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_requests,
-        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_requests,
-        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_requests,
+        COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as pending_requests,
+        COALESCE(SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END), 0) as approved_requests,
+        COALESCE(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0) as rejected_requests,
         COALESCE(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), 0) as total_withdrawn
     FROM withdrawal_requests
 ");
@@ -123,11 +157,11 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0">
-                        <i class="bi bi-check-circle text-success" style="font-size: 2.5rem;"></i>
+                        <i class="bi bi-people text-primary" style="font-size: 2.5rem;"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <h6 class="text-muted small mb-1">Referrals Completate</h6>
-                        <h4 class="mb-0"><?php echo number_format($referralStats['completed_referrals']); ?></h4>
+                        <h6 class="text-muted small mb-1">Total Referrals</h6>
+                        <h4 class="mb-0"><?php echo number_format($referralStats['total_referrals']); ?></h4>
                     </div>
                 </div>
             </div>
@@ -139,11 +173,11 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0">
-                        <i class="bi bi-hourglass-split text-warning" style="font-size: 2.5rem;"></i>
+                        <i class="bi bi-cart-check text-info" style="font-size: 2.5rem;"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <h6 class="text-muted small mb-1">Referrals Pending</h6>
-                        <h4 class="mb-0"><?php echo number_format($referralStats['pending_referrals']); ?></h4>
+                        <h6 class="text-muted small mb-1">Comenzi cu Comision</h6>
+                        <h4 class="mb-0"><?php echo number_format($earningsStats['orders_with_commission']); ?></h4>
                     </div>
                 </div>
             </div>
@@ -155,11 +189,11 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0">
-                        <i class="bi bi-wallet2 text-primary" style="font-size: 2.5rem;"></i>
+                        <i class="bi bi-cash-coin text-success" style="font-size: 2.5rem;"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <h6 class="text-muted small mb-1">Total Recompense</h6>
-                        <h4 class="mb-0"><?php echo number_format($referralStats['total_rewards_paid'], 2); ?> RON</h4>
+                        <h6 class="text-muted small mb-1">Total Comisioane Plătite</h6>
+                        <h4 class="mb-0"><?php echo number_format($earningsStats['total_commission_paid'], 2); ?> RON</h4>
                     </div>
                 </div>
             </div>
@@ -171,7 +205,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-shrink-0">
-                        <i class="bi bi-cash-stack text-danger" style="font-size: 2.5rem;"></i>
+                        <i class="bi bi-bank text-danger" style="font-size: 2.5rem;"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="text-muted small mb-1">Total Retras</h6>
@@ -188,6 +222,11 @@ require_once __DIR__ . '/../includes/header.php';
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="referrals-tab" data-bs-toggle="tab" data-bs-target="#referrals" type="button" role="tab">
             <i class="bi bi-people me-2"></i>Toate Referrals (<?php echo count($allReferrals); ?>)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="earnings-tab" data-bs-toggle="tab" data-bs-target="#earnings" type="button" role="tab">
+            <i class="bi bi-cash-stack me-2"></i>Comisioane (<?php echo count($allEarnings); ?>)
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -225,9 +264,9 @@ require_once __DIR__ . '/../includes/header.php';
                                     <th>Referrer (Cel care invită)</th>
                                     <th>Referred (Cel invitat)</th>
                                     <th>Data Creare</th>
-                                    <th>Status</th>
-                                    <th>Recompensă</th>
-                                    <th>Data Completare</th>
+                                    <th>Comision %</th>
+                                    <th>Comenzi</th>
+                                    <th>Total Comision</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -244,17 +283,13 @@ require_once __DIR__ . '/../includes/header.php';
                                         </td>
                                         <td><?php echo date('d.m.Y H:i', strtotime($ref['created_at'])); ?></td>
                                         <td>
-                                            <?php if ($ref['status'] === 'completed'): ?>
-                                                <span class="badge bg-success">Completat</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-warning text-dark">Pending</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="fw-bold text-success">
-                                            <?php echo $ref['reward_amount'] > 0 ? number_format($ref['reward_amount'], 2) . ' RON' : '—'; ?>
+                                            <span class="badge bg-info"><?php echo number_format($ref['commission_percentage'], 0); ?>%</span>
                                         </td>
                                         <td>
-                                            <?php echo $ref['completed_at'] ? date('d.m.Y H:i', strtotime($ref['completed_at'])) : '—'; ?>
+                                            <span class="badge bg-secondary"><?php echo $ref['orders_count']; ?> comenzi</span>
+                                        </td>
+                                        <td class="fw-bold text-success">
+                                            <?php echo $ref['total_commission'] > 0 ? number_format($ref['total_commission'], 2) . ' RON' : '—'; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -267,7 +302,56 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
     
     <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-    <!-- TAB 2: CERERI RETRAGERE -->
+    <!-- TAB 2: COMISIOANE (EARNINGS) -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="tab-pane fade" id="earnings" role="tabpanel">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <?php if (empty($allEarnings)): ?>
+                    <div class="text-center py-5">
+                        <i class="bi bi-receipt text-muted" style="font-size: 4rem;"></i>
+                        <p class="text-muted mt-3">Nu există comisioane acordate încă.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Data</th>
+                                    <th>Comandă</th>
+                                    <th>Referrer</th>
+                                    <th>Referred</th>
+                                    <th>Valoare Comandă</th>
+                                    <th>Comision Acordat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($allEarnings as $earning): ?>
+                                    <tr>
+                                        <td><code>#<?php echo $earning['id']; ?></code></td>
+                                        <td><?php echo date('d.m.Y H:i', strtotime($earning['created_at'])); ?></td>
+                                        <td><code>#<?php echo htmlspecialchars($earning['order_number']); ?></code></td>
+                                        <td>
+                                            <strong><?php echo htmlspecialchars($earning['referrer_first_name'] . ' ' . $earning['referrer_last_name']); ?></strong>
+                                        </td>
+                                        <td>
+                                            <?php echo htmlspecialchars($earning['referred_first_name'] . ' ' . $earning['referred_last_name']); ?>
+                                        </td>
+                                        <td><?php echo number_format($earning['order_total'], 2); ?> RON</td>
+                                        <td class="fw-bold text-success">+<?php echo number_format($earning['commission_amount'], 2); ?> RON</td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 3: CERERI RETRAGERE -->
     <!-- ═══════════════════════════════════════════════════════════════════════════ -->
     <div class="tab-pane fade" id="withdrawals" role="tabpanel">
         <div class="card border-0 shadow-sm">
@@ -435,9 +519,9 @@ require_once __DIR__ . '/../includes/header.php';
                     <table class="table">
                         <tbody>
                             <tr>
-                                <td><strong>Recompensă per Referral Reușit</strong></td>
-                                <td><?php echo number_format($settings['reward_amount'] ?? 50, 2); ?> RON</td>
-                                <td><small class="text-muted">Suma acordată utilizatorului care invită</small></td>
+                                <td><strong>Comision Procentual</strong></td>
+                                <td><?php echo number_format($settings['commission_percentage'] ?? 10, 0); ?>%</td>
+                                <td><small class="text-muted">Procent din fiecare comandă plătită</small></td>
                             </tr>
                             <tr>
                                 <td><strong>Sumă Minimă Retragere</strong></td>

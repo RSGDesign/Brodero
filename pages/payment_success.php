@@ -49,16 +49,16 @@ if (!empty($sessionId)) {
                 $stmt->execute();
                 
                 // Preia comanda
-                $stmt = $db->prepare("SELECT * FROM orders WHERE stripe_session_id = ?");
+                $stmt = $db->prepare("SELECT id FROM orders WHERE stripe_session_id = ?");
                 $stmt->bind_param("s", $sessionId);
                 $stmt->execute();
                 $order = $stmt->get_result()->fetch_assoc();
                 
                 // ═══════════════════════════════════════════════════════════════════════════
-                // REFERRAL REWARD - Activează recompensa dacă e prima comandă plătită
+                // REFERRAL COMMISSION - Acordă comision pentru comandă plătită
                 // ═══════════════════════════════════════════════════════════════════════════
-                if ($order && $order['user_id']) {
-                    activateReferralReward($order['user_id']);
+                if ($order && $order['id']) {
+                    calculateAndAwardCommission($order['id']);
                 }
                 
             } catch (\Stripe\Exception\ApiErrorException $e) {

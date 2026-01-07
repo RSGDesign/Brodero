@@ -81,35 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['order_id'])) {
                 }
                 
                 // ═══════════════════════════════════════════════════════════════════════════
-                // REFERRAL REWARD - Activează recompensa dacă e prima comandă plătită
+                // REFERRAL COMMISSION - Acordă comision pentru fiecare comandă plătită
                 // ═══════════════════════════════════════════════════════════════════════════
-                // Obține user_id al comenzii
-                $stmt = $db->prepare("SELECT user_id FROM orders WHERE id = ?");
-                $stmt->bind_param("i", $orderId);
-                $stmt->execute();
-                $result = $stmt->get_result()->fetch_assoc();
-                $stmt->close();
-                
-                if ($result && $result['user_id']) {
-                    $orderUserId = $result['user_id'];
-                    
-                    // Verifică dacă e prima comandă plătită a utilizatorului
-                    $stmt = $db->prepare("
-                        SELECT COUNT(*) as paid_orders_count 
-                        FROM orders 
-                        WHERE user_id = ? AND payment_status = 'paid'
-                    ");
-                    $stmt->bind_param("i", $orderUserId);
-                    $stmt->execute();
-                    $countResult = $stmt->get_result()->fetch_assoc();
-                    $stmt->close();
-                    
-                    // Dacă e prima comandă plătită, activează referral reward
-                    if ($countResult['paid_orders_count'] == 1) {
-                        activateReferralReward($orderUserId);
-                        error_log("REFERRAL: Checking first paid order for user $orderUserId");
-                    }
-                }
+                calculateAndAwardCommission($orderId);
+                error_log("REFERRAL: Processing commission for order $orderId");
             }
         }
     }

@@ -34,7 +34,8 @@ $referralCode = getUserReferralCode($userId);
 $stats = getUserReferralStats($userId);
 $referralsList = getUserReferralsList($userId);
 $withdrawalRequests = getUserWithdrawalRequests($userId);
-$rewardAmount = getReferralRewardAmount();
+$earningsList = getUserReferralEarnings($userId);
+$commissionPercentage = $stats['commission_percentage'];
 $minWithdrawal = getMinWithdrawalAmount();
 
 // Link complet referral
@@ -49,7 +50,7 @@ $referralLink = SITE_URL . '/?ref=' . $referralCode;
                 <h1 class="display-5 fw-bold mb-3">
                     <i class="bi bi-people-fill me-2"></i>Referral & Câștiguri
                 </h1>
-                <p class="lead">Câștigă <?php echo number_format($rewardAmount, 2); ?> RON pentru fiecare prieten invitat care face o comandă</p>
+                <p class="lead">Câștigă <?php echo number_format($commissionPercentage, 0); ?>% comision din fiecare comandă a prietenilor invitați</p>
             </div>
         </div>
     </div>
@@ -92,10 +93,10 @@ $referralLink = SITE_URL . '/?ref=' . $referralCode;
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
                     <div class="mb-3">
-                        <i class="bi bi-check-circle text-primary" style="font-size: 3rem;"></i>
+                        <i class="bi bi-people text-primary" style="font-size: 3rem;"></i>
                     </div>
-                    <h6 class="text-muted text-uppercase small mb-2">Referrals Reușite</h6>
-                    <h2 class="fw-bold mb-0 text-primary"><?php echo $stats['completed_referrals']; ?></h2>
+                    <h6 class="text-muted text-uppercase small mb-2">Utilizatori Referați</h6>
+                    <h2 class="fw-bold mb-0 text-primary"><?php echo $stats['total_referrals']; ?></h2>
                 </div>
             </div>
         </div>
@@ -105,10 +106,10 @@ $referralLink = SITE_URL . '/?ref=' . $referralCode;
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
                     <div class="mb-3">
-                        <i class="bi bi-hourglass-split text-info" style="font-size: 3rem;"></i>
+                        <i class="bi bi-cart-check text-info" style="font-size: 3rem;"></i>
                     </div>
-                    <h6 class="text-muted text-uppercase small mb-2">În Așteptare</h6>
-                    <h2 class="fw-bold mb-0 text-info"><?php echo $stats['pending_referrals']; ?></h2>
+                    <h6 class="text-muted text-uppercase small mb-2">Comenzi cu Comision</h6>
+                    <h2 class="fw-bold mb-0 text-info"><?php echo $stats['orders_with_commission']; ?></h2>
                 </div>
             </div>
         </div>
@@ -124,7 +125,7 @@ $referralLink = SITE_URL . '/?ref=' . $referralCode;
                     <h4 class="card-title mb-4">
                         <i class="bi bi-link-45deg text-primary me-2"></i>Link-ul Tău de Referral
                     </h4>
-                    <p class="text-muted mb-4">Distribuie acest link prietenilor tăi. Când se înscriu și fac o comandă, primești <?php echo number_format($rewardAmount, 2); ?> RON în contul tău!</p>
+                    <p class="text-muted mb-4">Distribuie acest link prietenilor tăi. Câștigi <strong><?php echo number_format($commissionPercentage, 0); ?>%</strong> comision din fiecare comandă plătită!</p>
                     
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" id="referralLink" value="<?php echo htmlspecialchars($referralLink); ?>" readonly>
@@ -203,26 +204,64 @@ $referralLink = SITE_URL . '/?ref=' . $referralCode;
                                 <th>Nume</th>
                                 <th>Email</th>
                                 <th>Înregistrat La</th>
-                                <th>Status</th>
-                                <th>Recompensă</th>
+                                <th>Comenzi</th>
+                                <th>Total Comision</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($referralsList as $referral): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($referral['referred_name'] ?: 'Utilizator'); ?></td>
+                                    <td><?php echo htmlspecialchars($referral['referred_first_name'] . ' ' . $referral['referred_last_name']); ?></td>
                                     <td><?php echo htmlspecialchars(substr($referral['referred_email'], 0, 3) . '***'); ?></td>
                                     <td><?php echo date('d.m.Y', strtotime($referral['created_at'])); ?></td>
                                     <td>
-                                        <?php if ($referral['status'] === 'completed'): ?>
-                                            <span class="badge bg-success">Completat</span>
-                                        <?php else: ?>
-                                            <span class="badge bg-warning text-dark">În Așteptare</span>
-                                        <?php endif; ?>
+                                        <span class="badge bg-info"><?php echo $referral['orders_count']; ?> comenzi</span>
                                     </td>
-                                    <td class="fw-bold <?php echo $referral['status'] === 'completed' ? 'text-success' : 'text-muted'; ?>">
-                                        <?php echo $referral['status'] === 'completed' ? number_format($referral['reward_amount'], 2) . ' RON' : '—'; ?>
+                                    <td class="fw-bold <?php echo $referral['total_commission'] > 0 ? 'text-success' : 'text-muted'; ?>">
+                                        <?php echo $referral['total_commission'] > 0 ? number_format($referral['total_commission'], 2) . ' RON' : '—'; ?>
                                     </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <!-- LISTA COMISIOANE (EARNINGS) -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+    <div class="card border-0 shadow mb-5">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="bi bi-cash-stack text-success me-2"></i>Istoric Comisioane</h5>
+        </div>
+        <div class="card-body p-0">
+            <?php if (empty($earningsList)): ?>
+                <div class="text-center py-5">
+                    <i class="bi bi-receipt text-muted" style="font-size: 4rem;"></i>
+                    <p class="text-muted mt-3">Nu ai câștigat încă comisioane. Invită prieteni pentru a începe!</p>
+                </div>
+            <?php else: ?>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Data</th>
+                                <th>Comandă</th>
+                                <th>De la</th>
+                                <th>Valoare Comandă</th>
+                                <th>Comision (<?php echo number_format($commissionPercentage, 0); ?>%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($earningsList as $earning): ?>
+                                <tr>
+                                    <td><?php echo date('d.m.Y H:i', strtotime($earning['created_at'])); ?></td>
+                                    <td><code>#<?php echo htmlspecialchars($earning['order_number']); ?></code></td>
+                                    <td><?php echo htmlspecialchars($earning['referred_first_name'] . ' ' . $earning['referred_last_name']); ?></td>
+                                    <td><?php echo number_format($earning['order_total'], 2); ?> RON</td>
+                                    <td class="fw-bold text-success">+<?php echo number_format($earning['commission_amount'], 2); ?> RON</td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
