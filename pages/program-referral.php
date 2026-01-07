@@ -38,7 +38,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <i class="bi bi-link-45deg me-2"></i>Vezi linkul tău de referral
                         </a>
                     <?php else: ?>
-                        <a href="<?php echo SITE_URL; ?>/pages/register.php" class="btn btn-light btn-lg px-5">
+                        <a href="<?php echo SITE_URL; ?>/pages/login.php" class="btn btn-light btn-lg px-5">
                             <i class="bi bi-person-plus me-2"></i>Creează cont și începe să câștigi
                         </a>
                         <a href="<?php echo SITE_URL; ?>/pages/login.php" class="btn btn-outline-light btn-lg px-5">
