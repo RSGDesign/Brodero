@@ -94,6 +94,12 @@ require_once __DIR__ . '/../includes/header.php';
                                class="list-group-item list-group-item-action <?php echo $activeTab === 'profil' ? 'active' : ''; ?>">
                                 <i class="bi bi-person me-2"></i>Profilul Meu
                             </a>
+
+                            <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/referral.php">
+                            <i class="bi bi-people-fill me-1"></i>Referral
+                            </a>
+
+
                             <?php if (isAdmin()): ?>
                             <a href="<?php echo SITE_URL; ?>/admin/dashboard.php" 
                                class="list-group-item list-group-item-action">
