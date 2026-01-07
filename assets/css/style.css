@@ -38,6 +38,12 @@ body {
     background-color: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    z-index: 1030; /* Asigură că navbar-ul rămâne deasupra tuturor elementelor */
+}
+
+/* Fix pentru navbar sticky pe mobile */
+.navbar.sticky-top {
+    z-index: 1030;
 }
 
 .navbar-brand {
@@ -586,6 +592,24 @@ footer {
 
 footer a {
     color: var(--text-muted);
+}
+
+/* Fix pentru elemente sticky în pagini (ex: imagini produs) */
+/* Asigură că navbar-ul rămâne deasupra elementelor sticky din conținut */
+.sticky-top:not(.navbar) {
+    z-index: 1020; /* Mai mic decât navbar (1030) */
+}
+
+/* Media queries pentru mobile - asigură z-index corect */
+@media (max-width: 991.98px) {
+    .navbar.sticky-top {
+        z-index: 1030 !important;
+    }
+    
+    /* Pe mobile, elementele sticky din conținut au z-index și mai mic */
+    .sticky-top:not(.navbar) {
+        z-index: 1010;
+    }
 }
 
 footer a:hover {
