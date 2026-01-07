@@ -444,79 +444,81 @@ require_once __DIR__ . '/../includes/header.php';
                                             <?php endif; ?>
                                         </td>
                                     </tr>
-                                    
-                                    <!-- Modal Aprobare -->
-                                    <div class="modal fade" id="approveModal<?php echo $w['id']; ?>" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <form method="POST">
-                                                    <input type="hidden" name="request_id" value="<?php echo $w['id']; ?>">
-                                                    <input type="hidden" name="action" value="approve">
-                                                    <div class="modal-header bg-success text-white">
-                                                        <h5 class="modal-title">Aprobă Retragere</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <p><strong>Confirmi aprobarea cererii de retragere?</strong></p>
-                                                        <ul class="list-unstyled">
-                                                            <li><strong>Utilizator:</strong> <?php echo htmlspecialchars($w['first_name'] . ' ' . $w['last_name']); ?></li>
-                                                            <li><strong>Sumă:</strong> <?php echo number_format($w['amount'], 2); ?> RON</li>
-                                                            <li><strong>IBAN:</strong> <code><?php echo htmlspecialchars($w['bank_account_iban']); ?></code></li>
-                                                            <li><strong>Titular:</strong> <?php echo htmlspecialchars($w['bank_account_name']); ?></li>
-                                                        </ul>
-                                                        <div class="mb-3">
-                                                            <label for="admin_note_approve" class="form-label">Notă (Opțional - ex: Nr. tranzacție)</label>
-                                                            <input type="text" class="form-control" name="admin_note" placeholder="Ex: Transfer ID12345">
-                                                        </div>
-                                                        <div class="alert alert-warning">
-                                                            <i class="bi bi-exclamation-triangle me-2"></i>
-                                                            După aprobare, <?php echo number_format($w['amount'], 2); ?> RON vor fi scăzuți din creditul utilizatorului.
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                                        <button type="submit" class="btn btn-success">
-                                                            <i class="bi bi-check-circle me-2"></i>Confirmă Aprobarea
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Modal Respingere -->
-                                    <div class="modal fade" id="rejectModal<?php echo $w['id']; ?>" tabindex="-1">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <form method="POST">
-                                                    <input type="hidden" name="request_id" value="<?php echo $w['id']; ?>">
-                                                    <input type="hidden" name="action" value="reject">
-                                                    <div class="modal-header bg-danger text-white">
-                                                        <h5 class="modal-title">Respinge Retragere</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <p><strong>Confirmi respingerea cererii?</strong></p>
-                                                        <div class="mb-3">
-                                                            <label for="admin_note_reject" class="form-label">Motiv Respingere *</label>
-                                                            <textarea class="form-control" name="admin_note" rows="3" required placeholder="Ex: Date bancare incorecte"></textarea>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
-                                                        <button type="submit" class="btn btn-danger">
-                                                            <i class="bi bi-x-circle me-2"></i>Confirmă Respingerea
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Modal-uri pentru Procesare Retrageri (AFARĂ din tabel) -->
+                    <?php foreach ($allWithdrawals as $w): ?>
+                        <!-- Modal Aprobare -->
+                        <div class="modal fade" id="approveModal<?php echo $w['id']; ?>" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form method="POST">
+                                        <input type="hidden" name="request_id" value="<?php echo $w['id']; ?>">
+                                        <input type="hidden" name="action" value="approve">
+                                        <div class="modal-header bg-success text-white">
+                                            <h5 class="modal-title">Aprobă Retragere</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>Confirmi aprobarea cererii de retragere?</strong></p>
+                                            <ul class="list-unstyled">
+                                                <li><strong>Utilizator:</strong> <?php echo htmlspecialchars($w['first_name'] . ' ' . $w['last_name']); ?></li>
+                                                <li><strong>Sumă:</strong> <?php echo number_format($w['amount'], 2); ?> RON</li>
+                                                <li><strong>IBAN:</strong> <code><?php echo htmlspecialchars($w['bank_account_iban']); ?></code></li>
+                                                <li><strong>Titular:</strong> <?php echo htmlspecialchars($w['bank_account_name']); ?></li>
+                                            </ul>
+                                            <div class="mb-3">
+                                                <label for="admin_note_approve" class="form-label">Notă (Opțional - ex: Nr. tranzacție)</label>
+                                                <input type="text" class="form-control" name="admin_note" placeholder="Ex: Transfer ID12345">
+                                            </div>
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                                După aprobare, <?php echo number_format($w['amount'], 2); ?> RON vor fi scăzuți din creditul utilizatorului.
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="bi bi-check-circle me-2"></i>Confirmă Aprobarea
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Respingere -->
+                        <div class="modal fade" id="rejectModal<?php echo $w['id']; ?>" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form method="POST">
+                                        <input type="hidden" name="request_id" value="<?php echo $w['id']; ?>">
+                                        <input type="hidden" name="action" value="reject">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">Respinge Retragere</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>Confirmi respingerea cererii?</strong></p>
+                                            <div class="mb-3">
+                                                <label for="admin_note_reject" class="form-label">Motiv Respingere *</label>
+                                                <textarea class="form-control" name="admin_note" rows="3" required placeholder="Ex: Date bancare incorecte"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bi bi-x-circle me-2"></i>Confirmă Respingerea
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 <?php endif; ?>
             </div>
         </div>
