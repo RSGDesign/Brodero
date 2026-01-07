@@ -110,8 +110,12 @@ if (isLoggedIn()) {
 <body>
     <?php
     // Cookie Consent Banner
-    require_once __DIR__ . '/cookie_consent.php';
-    renderCookieConsent();
+    if (file_exists(__DIR__ . '/cookie_consent.php')) {
+        require_once __DIR__ . '/cookie_consent.php';
+        if (function_exists('renderCookieConsent')) {
+            renderCookieConsent();
+        }
+    }
     ?>
     
     <!-- Header with Navigation -->
