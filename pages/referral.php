@@ -129,7 +129,7 @@ $referralLink = SITE_URL . '/?ref=' . $referralCode;
                     
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" id="referralLink" value="<?php echo htmlspecialchars($referralLink); ?>" readonly>
-                        <button class="btn btn-primary" type="button" onclick="copyReferralLink()">
+                        <button class="btn btn-primary" type="button" onclick="copyReferralLink(event)">
                             <i class="bi bi-clipboard me-1"></i>Copiază Link
                         </button>
                     </div>
@@ -377,7 +377,7 @@ $referralLink = SITE_URL . '/?ref=' . $referralCode;
 
 <script>
 // Copiază link referral
-function copyReferralLink() {
+function copyReferralLink(event) {
     const input = document.getElementById('referralLink');
     input.select();
     input.setSelectionRange(0, 99999); // Pentru mobile
