@@ -132,6 +132,10 @@ try {
 
         // Curățare cupon aplicat
         unset($_SESSION['applied_coupon']);
+        
+        // Track purchase event for Stripe payment (GA4)
+        require_once __DIR__ . '/../includes/analytics.php';
+        trackPurchase($totalAmount, 'RON', $orderNumber);
         ?>
 
         <!-- Confirmare Succes -->

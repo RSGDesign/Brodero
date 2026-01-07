@@ -269,6 +269,10 @@ try {
 
     // Procesare în funcție de metoda de plată
     if ($paymentMethod === 'bank_transfer') {
+        // Track purchase event for bank transfer (GA4)
+        require_once __DIR__ . '/../includes/analytics.php';
+        trackPurchase($totalAmount, 'RON', $orderNumber);
+        
         // Redirect către instrucțiuni plată
         redirect('/pages/payment_instructions.php?order=' . $orderNumber);
         

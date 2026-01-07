@@ -100,8 +100,19 @@ if (isLoggedIn()) {
       }
     }
     </script>
+    
+    <?php
+    // Google Analytics 4 Integration (GDPR Compliant)
+    require_once __DIR__ . '/analytics.php';
+    renderGA4Code();
+    ?>
 </head>
 <body>
+    <?php
+    // Cookie Consent Banner
+    require_once __DIR__ . '/cookie_consent.php';
+    ?>
+    
     <!-- Header with Navigation -->
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm" role="navigation" aria-label="Main navigation">

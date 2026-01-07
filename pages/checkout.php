@@ -109,6 +109,12 @@ if ($userId) {
 }
 ?>
 
+<?php
+// Track begin_checkout event (GA4)
+require_once __DIR__ . '/../includes/analytics.php';
+trackBeginCheckout($total);
+?>
+
 <!-- Page Header -->
 <section class="bg-light py-4 border-bottom">
     <div class="container">
