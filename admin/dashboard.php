@@ -97,6 +97,12 @@ $activeSection = $_GET['section'] ?? 'dashboard';
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-people me-2"></i>Utilizatori
                             </a>
+
+                            <a href="<?php echo SITE_URL; ?>/admin/admin_referrals.php" 
+                               class="list-group-item list-group-item-action">
+                                <i class="bi bi-people-fill me-1"></i>Referrals
+                            </a>
+
                             <a href="<?php echo SITE_URL; ?>/admin/admin_newsletter.php" 
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-envelope-paper me-2"></i>Newsletter
