@@ -7,9 +7,8 @@
 // Start output buffering pentru a permite redirects după header
 ob_start();
 
-$pageTitle = "Referral & Câștiguri";
-
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_referral.php';
 
 // Verificare autentificare
@@ -21,7 +20,7 @@ if (!isLoggedIn()) {
 $userId = $_SESSION['user_id'];
 $db = getDB();
 
-// Procesare cerere retragere
+// Procesare cerere retragere (ÎNAINTE de header.php)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_withdrawal'])) {
     $amount = floatval($_POST['amount'] ?? 0);
     $iban = cleanInput($_POST['iban'] ?? '');
@@ -31,6 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_withdrawal']))
     setMessage($result['message'], $result['success'] ? 'success' : 'danger');
     redirect('/pages/referral.php');
 }
+
+// Include header DUPĂ procesarea POST
+$pageTitle = "Referral & Câștiguri";
+require_once __DIR__ . '/../includes/header.php';
 
 // Obține date
 $referralCode = getUserReferralCode($userId);

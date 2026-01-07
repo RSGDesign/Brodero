@@ -42,10 +42,11 @@ if ($result->num_rows === 0) {
 }
 
 $product = $result->fetch_assoc();
+$productId = $product['id']; // Definim productId pentru utilizare ulterioară
 $stmt->close();
 
 // MVP: Verificare dacă utilizatorul a cumpărat deja produsul
-$isPurchased = hasUserPurchasedProduct($product['id']);
+$isPurchased = hasUserPurchasedProduct($productId);
 
 // Obține categoriile produsului
 $productCategories = getProductCategories($productId);
