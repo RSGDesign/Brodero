@@ -63,7 +63,7 @@ foreach ($seoPages as $seoPage) {
     $priority = '0.5';
     $changefreq = 'monthly';
     
-    if ($slug === 'home') {
+    if ($slug === 'home' || $slug === 'acasa') {
         $priority = '1.0';
         $changefreq = 'daily';
     } elseif ($slug === 'magazin') {
