@@ -100,7 +100,7 @@ require_once __DIR__ . '/../includes/header.php';
             <!-- Main Content -->
             <div class="col-lg-10">
                 <!-- Success/Error Messages -->
-                <?php if (hasMessage()): ?>
+                <?php if (function_exists('hasMessage') && hasMessage()): ?>
                     <div class="alert alert-<?php echo getMessageType(); ?> alert-dismissible fade show" role="alert">
                         <?php echo getMessage(); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
