@@ -249,7 +249,10 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                     
                                     <img src="<?php echo $product['image'] ? SITE_URL . '/uploads/' . $product['image'] : 'https://via.placeholder.com/400x300?text=' . urlencode($product['name']); ?>" 
                                          class="card-img-top" 
-                                         alt="<?php echo htmlspecialchars($product['name']); ?>">
+                                         alt="<?php echo htmlspecialchars($product['name']); ?>"
+                                         loading="lazy"
+                                         width="400"
+                                         height="300">
                                     
                                     <div class="card-body d-flex flex-column">
                                         <?php if (!empty($product['category_names'])): ?>

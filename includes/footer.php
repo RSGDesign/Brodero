@@ -126,6 +126,9 @@
     <!-- Bootstrap JS Bundle (async pentru performanță) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
     
+    <!-- Lazy Loading Script (critical for performance) -->
+    <script src="<?php echo SITE_URL; ?>/assets/js/lazy-load.js" defer></script>
+    
     <!-- Custom JS (async) -->
     <script src="<?php echo SITE_URL; ?>/assets/js/main.js" defer></script>
 </body>
