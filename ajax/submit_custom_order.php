@@ -5,7 +5,7 @@
  */
 
 require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json');
 
@@ -169,7 +169,7 @@ if (isset($_FILES['file']) && $_FILES['file']['error'] !== UPLOAD_ERR_NO_FILE) {
 // ============================================================================
 
 try {
-    $db = getDB();
+    $db = getPDO();
     
     // IP address pentru tracking
     $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
