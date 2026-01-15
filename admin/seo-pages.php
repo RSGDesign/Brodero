@@ -20,6 +20,14 @@ $db = getPDO();
 // Obține toate paginile SEO
 $seoPages = getAllSeoPages($db);
 
+// DEBUG - Verifică ce returnează
+if (empty($seoPages)) {
+    error_log("SEO Pages: Array is empty!");
+    // Verifică dacă tabelul are date
+    $count = $db->query("SELECT COUNT(*) as total FROM seo_pages")->fetch();
+    error_log("Total rows in seo_pages: " . $count['total']);
+}
+
 // Include header.php DUPĂ procesarea datelor
 $pageTitle = "SEO Pages - Admin";
 require_once __DIR__ . '/../includes/header.php';
@@ -116,6 +124,10 @@ require_once __DIR__ . '/../includes/header.php';
                                     <i class="bi bi-list-ul me-2"></i>Toate Paginile SEO
                                     <span class="badge bg-primary ms-2"><?php echo count($seoPages); ?></span>
                                 </h5>
+                                <!-- DEBUG -->
+                                <?php if (count($seoPages) === 0): ?>
+                                    <small class="text-danger">⚠️ Array gol - verifică baza de date</small>
+                                <?php endif; ?>
                             </div>
                             <div class="col-md-6 text-end">
                                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSeoModal">
