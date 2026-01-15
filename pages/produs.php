@@ -185,12 +185,14 @@ echo generateProductSchema($product);
                     <!-- Main Image -->
                     <div class="card border-0 shadow-sm mb-3 position-relative">
                         <img src="<?php echo !empty($allImages) ? SITE_URL . '/uploads/' . $allImages[0] : 'https://via.placeholder.com/600x450?text=' . urlencode($product['name']); ?>" 
-                             class="card-img-top rounded" 
+                             class="card-img-top rounded product-image-main" 
                              alt="<?php echo htmlspecialchars($product['name']); ?>"
                              id="mainProductImage"
                              style="height: 450px; object-fit: contain; cursor: zoom-in; background-color: #f8f9fa;"
                              onclick="openLightbox(0)"
-                             title="">
+                             title=""
+                             width="600"
+                             height="450">
                         
                         <?php if ($discount > 0): ?>
                             <span class="position-absolute top-0 end-0 m-3 badge bg-danger" style="font-size: 1rem; padding: 0.5rem 1rem;">
@@ -216,6 +218,9 @@ echo generateProductSchema($product);
                                          style="cursor: pointer; height: 100px; width: 100px; object-fit: cover; border: 3px solid transparent;"
                                          onclick="changeMainImage('<?php echo SITE_URL . '/uploads/' . $img; ?>', this, <?php echo $index; ?>)"
                                          data-index="<?php echo $index; ?>"
+                                         loading="lazy"
+                                         width="100"
+                                         height="100"
                                          alt=""
                                          title="">
                                 </div>
@@ -370,7 +375,10 @@ echo generateProductSchema($product);
                         
                         <img src="<?php echo $similar['image'] ? SITE_URL . '/uploads/' . $similar['image'] : 'https://via.placeholder.com/400x300?text=' . urlencode($similar['name']); ?>" 
                              class="card-img-top" 
-                             alt="<?php echo htmlspecialchars($similar['name']); ?>">
+                             alt="<?php echo htmlspecialchars($similar['name']); ?>"
+                             loading="lazy"
+                             width="400"
+                             height="300">
                         
                         <div class="card-body d-flex flex-column">
                             <h6 class="card-title"><?php echo htmlspecialchars($similar['name']); ?></h6>

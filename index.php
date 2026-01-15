@@ -74,7 +74,10 @@ if ($result && $result->num_rows > 0) {
                 <div class="hero-image-wrapper">
                     <img src="<?php echo SITE_URL; ?>/assets/images/about/poza2.jpg" 
                          alt="Broderie - Design creativ" 
-                         class="img-fluid rounded-custom shadow-custom hero-image">
+                         class="img-fluid rounded-custom shadow-custom hero-image"
+                         width="600"
+                         height="450"
+                         fetchpriority="high">
                 </div>
             </div>
         </div>
@@ -134,8 +137,11 @@ if ($result && $result->num_rows > 0) {
                     <?php endif; ?>
                     
                     <img src="<?php echo $product['image'] ? SITE_URL . '/uploads/' . $product['image'] : 'https://via.placeholder.com/400x300?text=' . urlencode($product['name']); ?>" 
-                         class="card-img-top" 
-                         alt="<?php echo htmlspecialchars($product['name']); ?>">
+                         class="card-img-top featured-product" 
+                         alt="<?php echo htmlspecialchars($product['name']); ?>"
+                         loading="lazy"
+                         width="400"
+                         height="300">
                     
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
