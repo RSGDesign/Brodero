@@ -78,18 +78,18 @@ if (isLoggedIn()) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     
-    <!-- Bootstrap CSS (critic) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Critical CSS inline pentru fastest rendering -->
+    <style><?php include(__DIR__ . '/../assets/css/critical.css'); ?></style>
     
-    <!-- Custom CSS (critic) -->
-    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
+    <!-- Bootstrap CSS (defer - elimină 900ms render blocking!) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"></noscript>
     
-    <!-- Performance CSS (inline critical) -->
-    <style>
-    img[loading="lazy"]{opacity:0;transition:opacity .3s}
-    img[loading="lazy"].loaded{opacity:1}
-    .hero-image,.product-image-main,.featured-product img{content-visibility:auto}
-    </style>
+    <!-- Custom CSS (defer - elimină 160ms render blocking!) -->
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css"></noscript>
+    
+    <!-- Performance CSS (defer) -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/performance.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/performance.css"></noscript>
     
