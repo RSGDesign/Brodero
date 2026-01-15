@@ -2,9 +2,17 @@
 /**
  * Pagina 404 - Not Found
  * Afișată când o pagină nu este găsită
+ * 
+ * IMPORTANT: Returnează HTTP 404 status (fără redirect)
  */
 
+// Setează HTTP status code 404 ÎNAINTE de orice output
+http_response_code(404);
+
 $pageTitle = "Pagină Negăsită - 404";
+
+// SEO: Previne indexarea paginii 404
+$seoNoIndex = true;
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -29,16 +37,16 @@ require_once __DIR__ . '/includes/header.php';
                     <p class="text-muted mb-4">
                         Ne pare rău, dar pagina pe care o cauți nu există sau a fost mutată.
                         <br>
-                        Vei fi redirecționat automat în <span id="countdown" class="fw-bold text-primary">5</span> secunde.
+                        Te rugăm să folosești meniul de navigare sau butonul de mai jos pentru a continua.
                     </p>
                     
                     <!-- Action Buttons -->
                     <div class="d-flex gap-3 justify-content-center flex-wrap">
-                        <button onclick="goBack()" class="btn btn-primary btn-lg">
-                            <i class="bi bi-arrow-left me-2"></i>Înapoi la Pagina Anterioară
-                        </button>
-                        <a href="<?php echo SITE_URL; ?>" class="btn btn-outline-primary btn-lg">
+                        <a href="<?php echo SITE_URL; ?>" class="btn btn-primary btn-lg">
                             <i class="bi bi-house-door me-2"></i>Mergi la Pagina Principală
+                        </a>
+                        <a href="<?php echo SITE_URL; ?>/pages/magazin.php" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-shop me-2"></i>Explorează Magazinul
                         </a>
                     </div>
                     
@@ -123,43 +131,16 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- JavaScript pentru redirect automat -->
+<!-- JavaScript eliminat - NU mai facem redirect automat -->
 <script>
-// Funcție pentru a merge înapoi
-function goBack() {
-    // Verifică dacă există istoric
-    if (window.history.length > 1) {
-        window.history.back();
-    } else {
-        // Dacă nu există istoric, mergi la pagina principală
-        window.location.href = '<?php echo SITE_URL; ?>';
-    }
+// Tracking opțional pentru pagini 404 (Google Analytics)
+if (typeof gtag !== 'undefined') {
+    gtag('event', 'page_view', {
+        'page_title': '404 Not Found',
+        'page_location': window.location.href,
+        'send_to': 'G-79KM6LDM6X'
+    });
 }
-
-// Countdown și redirect automat
-let seconds = 5;
-const countdownElement = document.getElementById('countdown');
-
-const countdownInterval = setInterval(() => {
-    seconds--;
-    countdownElement.textContent = seconds;
-    
-    if (seconds <= 0) {
-        clearInterval(countdownInterval);
-        goBack();
-    }
-}, 1000);
-
-// Oprește countdown dacă utilizatorul interacționează cu pagina
-document.addEventListener('click', () => {
-    clearInterval(countdownInterval);
-    countdownElement.textContent = 'oprit';
-});
-
-document.addEventListener('keydown', () => {
-    clearInterval(countdownInterval);
-    countdownElement.textContent = 'oprit';
-});
 </script>
 
 <style>

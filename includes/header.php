@@ -44,7 +44,7 @@ if (isLoggedIn()) {
     <meta name="description" content="<?php echo isset($pageDescription) ? htmlspecialchars($pageDescription) : 'Brodero - Magazine online de design-uri de broderie premium. Descoperă modele unice și creative pentru proiectele tale.'; ?>">
     <meta name="keywords" content="broderie, design broderie, modele broderie, broderie digitală, pattern broderie, <?php echo isset($pageKeywords) ? htmlspecialchars($pageKeywords) : ''; ?>">
     <meta name="author" content="Brodero">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="<?php echo isset($seoNoIndex) && $seoNoIndex ? 'noindex, follow' : 'index, follow'; ?>">
     
     <!-- Canonical URL -->
     <link rel="canonical" href="<?php 
@@ -321,7 +321,11 @@ if (isLoggedIn()) {
                             <i class="bi bi-gift me-1"></i>Program Referral
                         </a>
                     </li>
-
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/modele-la-comanda.php">
+                            <i class="bi bi-palette me-1"></i>Modele la Comandă
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/contact.php">Contact</a>
                     </li>

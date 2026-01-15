@@ -1,8 +1,40 @@
 # robots.txt pentru Brodero
-# Permite crawling complet pentru toate motoarele de căutare
+# Permite indexarea paginilor publice, blochează zone private
 
 User-agent: *
-Disallow:
+
+# Permite indexarea paginilor principale
+Allow: /
+Allow: /pages/magazin.php
+Allow: /pages/produs.php
+Allow: /pages/contact.php
+Allow: /pages/program-referral.php
+
+# Blochează zone private și admin
+Disallow: /admin/
+Disallow: /ajax/
+Disallow: /config/
+Disallow: /includes/
+Disallow: /vendor/
+Disallow: /logs/
+
+# Blochează procese de checkout și cont
+Disallow: /pages/checkout.php
+Disallow: /pages/cont.php
+Disallow: /pages/cart.php
+Disallow: /pages/comanda-finalizata.php
+
+# Blochează fișiere sensibile
+Disallow: /*.sql$
+Disallow: /*.md$
+Disallow: /*.log$
+Disallow: /composer.json
+Disallow: /composer.lock
+
+# Permite crawling imagini și assets
+Allow: /assets/
+Allow: /uploads/
 
 # Sitemap
 Sitemap: https://brodero.online/sitemap.xml
+Sitemap: https://brodero.online/sitemap.xml.php

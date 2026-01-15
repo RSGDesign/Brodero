@@ -1,0 +1,22 @@
+# Protecție director custom-orders
+# Previne listarea fișierelor și execuția de scripturi
+
+Options -Indexes
+
+# Permite accesul la fișiere
+<Files *>
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# Blochează scripturi executabile
+<FilesMatch "\.(php|php3|php4|php5|phtml|exe|sh|cgi|pl)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Permite doar descărcarea fișierelor permise
+<FilesMatch "\.(jpg|jpeg|png|pdf|zip|rar)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>

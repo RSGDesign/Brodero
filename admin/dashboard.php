@@ -93,6 +93,10 @@ $activeSection = $_GET['section'] ?? 'dashboard';
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-cart-check me-2"></i>Comenzi
                             </a>
+                            <a href="<?php echo SITE_URL; ?>/admin/admin_custom_orders.php" 
+                               class="list-group-item list-group-item-action">
+                                <i class="bi bi-palette me-2"></i>Comenzi Personalizate
+                            </a>
                             <a href="<?php echo SITE_URL; ?>/admin/admin_users.php" 
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-people me-2"></i>Utilizatori
@@ -106,6 +110,10 @@ $activeSection = $_GET['section'] ?? 'dashboard';
                             <a href="<?php echo SITE_URL; ?>/admin/admin_newsletter.php" 
                                class="list-group-item list-group-item-action">
                                 <i class="bi bi-envelope-paper me-2"></i>Newsletter
+                            </a>
+                            <a href="<?php echo SITE_URL; ?>/admin/seo-pages.php" 
+                               class="list-group-item list-group-item-action">
+                                <i class="bi bi-search me-2"></i>SEO Pages
                             </a>
                             <a href="<?php echo SITE_URL; ?>/pages/cont.php" 
                                class="list-group-item list-group-item-action">
