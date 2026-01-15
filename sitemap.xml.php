@@ -40,6 +40,7 @@ $seoPages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Mapare sluguri către URL-uri reale
 $slugToUrl = [
     'home' => '/',
+    'acasa' => '/',  // Fallback pentru "acasa"
     'magazin' => '/pages/magazin.php',
     'contact' => '/pages/contact.php',
     'program-referral' => '/pages/program-referral.php',
@@ -49,7 +50,14 @@ $slugToUrl = [
 
 foreach ($seoPages as $seoPage) {
     $slug = $seoPage['page_slug'];
-    $url = $slugToUrl[$slug] ?? '/pages/' . $slug . '.php';
+    
+    // Folosește mapping dacă există, altfel generează URL generic
+    if (isset($slugToUrl[$slug])) {
+        $url = $slugToUrl[$slug];
+    } else {
+        // Skip sluguri necunoscute pentru a evita URL-uri invalide
+        continue;
+    }
     
     // Determină prioritatea bazată pe slug
     $priority = '0.5';
@@ -162,16 +170,8 @@ foreach ($categories as $category) {
 echo '</urlset>';
 
 } catch (Exception $e) {
-    // În caz de eroare, generează un sitemap minim valid
-    echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-    echo '  <url>' . "\n";
-    echo '    <loc>' . htmlspecialchars(SITE_URL) . '</loc>' . "\n";
-    echo '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
-    echo '    <changefreq>daily</changefreq>' . "\n";
-    echo '    <priority>1.0</priority>' . "\n";
-    echo '  </url>' . "\n";
-    echo '</urlset>';
+    // În caz de eroare, închide XML-ul valid și loghează eroarea
     error_log('Sitemap error: ' . $e->getMessage());
+    echo '</urlset>';
 }
 ?>
