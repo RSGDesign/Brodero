@@ -73,17 +73,33 @@ if (isLoggedIn()) {
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?php echo SITE_URL; ?>/favicon.ico">
     
-    <!-- Bootstrap CSS -->
+    <!-- Preload font-uri critice pentru LCP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Bootstrap CSS (critic) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Custom CSS -->
+    <!-- Custom CSS (critic) -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/style.css">
+    
+    <!-- Performance CSS (inline critical) -->
+    <style>
+    img[loading="lazy"]{opacity:0;transition:opacity .3s}
+    img[loading="lazy"].loaded{opacity:1}
+    .hero-image,.product-image-main,.featured-product img{content-visibility:auto}
+    </style>
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/performance.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/performance.css"></noscript>
+    
+    <!-- Bootstrap Icons (defer - non-critic) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"></noscript>
+    
+    <!-- Google Fonts (cu font-display swap) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
     
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
