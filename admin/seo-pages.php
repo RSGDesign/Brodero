@@ -15,7 +15,7 @@ if (!isLoggedIn() || !isAdmin()) {
     redirect('/');
 }
 
-$db = getDB();
+$db = getPDO();
 
 // Obține toate paginile SEO
 $seoPages = getAllSeoPages($db);

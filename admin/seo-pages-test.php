@@ -15,7 +15,7 @@ if (!isLoggedIn() || !isAdmin()) {
     die("Acces interzis - autentificare necesară");
 }
 
-$db = getDB();
+$db = getPDO();
 $seoPages = getAllSeoPages($db);
 
 // Include header DUPĂ procesare
