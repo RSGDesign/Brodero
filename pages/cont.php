@@ -331,7 +331,10 @@ require_once __DIR__ . '/../includes/header.php';
                                                          alt="Avatar" 
                                                          class="rounded-circle border border-3 border-primary"
                                                          id="avatarPreview"
-                                                         style="width: 150px; height: 150px; object-fit: cover;">
+                                                         style="width: 150px; height: 150px; object-fit: cover;"
+                                                         width="150"
+                                                         height="150"
+                                                         loading="lazy">
                                                 </div>
                                                 <div>
                                                     <label for="avatarInput" class="btn btn-outline-primary btn-sm">

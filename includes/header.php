@@ -73,10 +73,14 @@ if (isLoggedIn()) {
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?php echo SITE_URL; ?>/favicon.ico">
     
-    <!-- Preload font-uri critice pentru LCP -->
+    <!-- Preconnect și Preload pentru font-uri (reduce CLS!) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Preload Poppins critical weights pentru zero CLS -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=optional">
+    <link rel="preload" href="https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- Critical CSS inline pentru fastest rendering -->
     <style><?php include(__DIR__ . '/../assets/css/critical.css'); ?></style>
@@ -97,9 +101,9 @@ if (isLoggedIn()) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"></noscript>
     
-    <!-- Google Fonts (cu font-display swap) -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <!-- Google Fonts (cu font-display optional pentru zero CLS) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=optional" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=optional" rel="stylesheet"></noscript>
     
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">

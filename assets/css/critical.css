@@ -1,6 +1,12 @@
 /* Critical CSS - Above the fold */
+/* Font loading optimization - prevents FOIT and CLS */
+@font-face{font-family:'Poppins';font-style:normal;font-weight:300;font-display:optional;src:local('Poppins'),local('Poppins-Light');size-adjust:100%}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:400;font-display:optional;src:local('Poppins'),local('Poppins-Regular');size-adjust:100%}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:500;font-display:optional;src:local('Poppins'),local('Poppins-Medium');size-adjust:100%}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:optional;src:local('Poppins'),local('Poppins-SemiBold');size-adjust:100%}
+@font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:optional;src:local('Poppins'),local('Poppins-Bold');size-adjust:100%}
 *,::before,::after{box-sizing:border-box}
-body{margin:0;font-family:'Poppins',system-ui,-apple-system,sans-serif;font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%}
+body{margin:0;font-family:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:0.5rem;font-weight:500;line-height:1.2}
 h1{font-size:2.5rem}h2{font-size:2rem}h3{font-size:1.75rem}
 p{margin-top:0;margin-bottom:1rem}
@@ -53,6 +59,23 @@ img,svg{vertical-align:middle}
 /* Product cards critical */
 .product-card{transition:transform 0.3s,box-shadow 0.3s;border-radius:15px;overflow:hidden}
 .product-card img{height:250px;object-fit:cover;width:100%}
-/* Prevent CLS */
+/* Prevent CLS - Comprehensive */
 img[width][height]{height:auto}
 .card-img-top{aspect-ratio:4/3;object-fit:cover}
+/* Reserve space for lazy loaded images */
+img[loading="lazy"]{min-height:150px;background:#f0f0f0}
+img[loading="lazy"][width][height]{min-height:0}
+/* Navbar height reservation */
+.navbar{min-height:76px}
+.navbar-collapse{transition:none!important}
+/* Card minimum heights */
+.product-card{min-height:400px}
+.card-body{min-height:150px}
+/* Hero section height */
+.hero-section{min-height:400px;max-height:600px}
+/* Prevent button shift */
+.btn{min-width:100px}
+/* Text containers */
+h1,h2,h3,h4,h5,h6,p{contain:layout style}
+/* Bootstrap collapse no animation on load */
+.collapsing{transition:none!important}

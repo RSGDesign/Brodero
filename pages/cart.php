@@ -123,7 +123,10 @@ $total = $subtotal - $discount;
                         <div class="row g-3 align-items-center mb-3 pb-3 border-bottom" data-cart-id="<?php echo $item['cart_id']; ?>">
                             <div class="col-3 col-md-2">
                                 <img src="<?php echo SITE_URL . '/uploads/' . ($item['image'] ?? 'placeholder.jpg'); ?>" 
-                                     class="img-fluid rounded" alt="">
+                                     class="img-fluid rounded" alt=""
+                                     width="100"
+                                     height="100"
+                                     loading="lazy">
                             </div>
                             <div class="col-7 col-md-5">
                                 <h6 class="mb-1"><?php echo htmlspecialchars($item['name']); ?></h6>

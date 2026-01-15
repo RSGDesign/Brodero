@@ -30,7 +30,10 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="position-relative about-image-wrapper">
                     <img src="<?php echo SITE_URL; ?>/assets/images/about/poza1.jpg" 
                          alt="Broderie manuală - Lucru artistic de înaltă calitate" 
-                         class="img-fluid rounded-custom shadow-custom about-image">
+                         class="img-fluid rounded-custom shadow-custom about-image"
+                         width="600"
+                         height="450"
+                         loading="lazy">
                     <div class="position-absolute bottom-0 end-0 bg-primary text-white p-4 rounded-custom m-3 about-badge">
                         <h3 class="fw-bold mb-0">3+</h3>
                         <p class="mb-0">Ani de Experiență</p>
