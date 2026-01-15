@@ -20,14 +20,6 @@ $db = getPDO();
 // Obține toate paginile SEO
 $seoPages = getAllSeoPages($db);
 
-// DEBUG - Verifică ce returnează
-if (empty($seoPages)) {
-    error_log("SEO Pages: Array is empty!");
-    // Verifică dacă tabelul are date
-    $count = $db->query("SELECT COUNT(*) as total FROM seo_pages")->fetch();
-    error_log("Total rows in seo_pages: " . $count['total']);
-}
-
 // Include header.php DUPĂ procesarea datelor
 $pageTitle = "SEO Pages - Admin";
 require_once __DIR__ . '/../includes/header.php';
