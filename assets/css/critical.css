@@ -5,6 +5,8 @@
 @font-face{font-family:'Poppins';font-style:normal;font-weight:500;font-display:optional;src:local('Poppins'),local('Poppins-Medium');size-adjust:100%}
 @font-face{font-family:'Poppins';font-style:normal;font-weight:600;font-display:optional;src:local('Poppins'),local('Poppins-SemiBold');size-adjust:100%}
 @font-face{font-family:'Poppins';font-style:normal;font-weight:700;font-display:optional;src:local('Poppins'),local('Poppins-Bold');size-adjust:100%}
+/* Bootstrap Icons font-display fix - eliminates 140ms blocking */
+@font-face{font-family:'bootstrap-icons';font-display:optional;src:url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2') format('woff2'),url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff') format('woff')}
 *,::before,::after{box-sizing:border-box}
 body{margin:0;font-family:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:0.5rem;font-weight:500;line-height:1.2}

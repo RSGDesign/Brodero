@@ -104,9 +104,10 @@ if (isLoggedIn()) {
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/accessibility.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/accessibility.css"></noscript>
     
-    <!-- Bootstrap Icons (defer - non-critic) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"></noscript>
+    <!-- Bootstrap Icons (defer - NON CRITIC, doar 13KB dar 13.1KB nefolosit!) -->
+    <!-- Încărcăm doar când e necesar, nu în critical path -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.min.css"></noscript>
     
     <!-- Google Fonts (cu font-display optional pentru zero CLS) -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=optional" rel="stylesheet" media="print" onload="this.media='all'">
