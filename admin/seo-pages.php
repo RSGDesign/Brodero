@@ -4,13 +4,13 @@
  * Gestionare SEO per pagină: title, description, keywords
  */
 
-$pageTitle = "SEO Pages - Admin";
-
-require_once __DIR__ . '/../includes/header.php';
+// Include config ÎNAINTE de orice output
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/seo.php';
 
-// Verificare acces admin
-if (!isAdmin()) {
+// Verificare acces admin ÎNAINTE de header
+if (!isLoggedIn() || !isAdmin()) {
     setMessage("Nu ai acces la această pagină.", "danger");
     redirect('/');
 }
@@ -19,6 +19,10 @@ $db = getDB();
 
 // Obține toate paginile SEO
 $seoPages = getAllSeoPages($db);
+
+// Include header.php DUPĂ procesarea datelor
+$pageTitle = "SEO Pages - Admin";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
