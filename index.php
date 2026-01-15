@@ -50,6 +50,7 @@ if ($result && $result->num_rows > 0) {
 ?>
 
 <!-- Hero Section -->
+<main id="main-content" role="main">
 <section class="hero-section">
     <div class="container">
         <div class="row align-items-center">
@@ -92,7 +93,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="feature-icon mx-auto">
                     <i class="bi bi-star-fill"></i>
                 </div>
-                <h4 class="fw-bold mb-3">Calitate Premium</h4>
+                <h3 class="fw-bold mb-3">Calitate Premium</h3>
                 <p class="text-muted">
                     Toate design-urile noastre sunt create cu atenție la detalii și testate pentru rezultate perfecte.
                 </p>
@@ -101,7 +102,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="feature-icon mx-auto">
                     <i class="bi bi-download"></i>
                 </div>
-                <h4 class="fw-bold mb-3">Download Instant</h4>
+                <h3 class="fw-bold mb-3">Download Instant</h3>
                 <p class="text-muted">
                     Descarcă fișierele imediat după achiziție, în format compatibil cu mașina ta de brodat.
                 </p>
@@ -110,7 +111,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="feature-icon mx-auto">
                     <i class="bi bi-headset"></i>
                 </div>
-                <h4 class="fw-bold mb-3">Suport Dedicat</h4>
+                <h3 class="fw-bold mb-3">Suport Dedicat</h3>
                 <p class="text-muted">
                     Echipa noastră este mereu disponibilă pentru a te ajuta cu orice întrebări sau probleme.
                 </p>
@@ -144,7 +145,7 @@ if ($result && $result->num_rows > 0) {
                          height="300">
                     
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h5>
+                        <h3 class="card-title"><?php echo htmlspecialchars($product['name']); ?></h3>
                         <p class="card-text text-muted flex-grow-1">
                             <?php echo htmlspecialchars(substr($product['description'], 0, 100)) . '...'; ?>
                         </p>
@@ -188,7 +189,7 @@ if ($result && $result->num_rows > 0) {
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <h3 class="fw-bold mb-3">Abonează-te la newsletter pentru oferte exclusive!</h3>
+                <h2 class="fw-bold mb-3">Abonează-te la newsletter pentru oferte exclusive!</h2>
                 <p class="text-muted mb-lg-0">
                     Fii printre primii care află despre noile design-uri și reducerile speciale.
                 </p>
@@ -216,6 +217,7 @@ if ($result && $result->num_rows > 0) {
         </div>
     </div>
 </section>
+</main>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 

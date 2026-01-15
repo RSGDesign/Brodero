@@ -97,6 +97,10 @@ if (isLoggedIn()) {
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/performance.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/performance.css"></noscript>
     
+    <!-- Accessibility CSS (WCAG 2.1 AA compliance) -->
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/accessibility.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/accessibility.css"></noscript>
+    
     <!-- Bootstrap Icons (defer - non-critic) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"></noscript>
@@ -295,8 +299,9 @@ if (isLoggedIn()) {
     </script>
 </head>
 <body>
-    
-    <!-- Cookie Consent Banner HTML -->
+        <!-- Skip to main content link (accessibility) -->
+    <a href="#main-content" class="skip-to-main">Sari la conținutul principal</a>
+        <!-- Cookie Consent Banner HTML -->
     <div id="cookieConsentBanner">
         <div class="cookie-consent-content">
             <div class="cookie-consent-text">
@@ -320,7 +325,7 @@ if (isLoggedIn()) {
             </a>
             
             <!-- Toggle button pentru mobil -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Comută navigarea" aria-expanded="false" aria-controls="navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             

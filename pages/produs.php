@@ -416,7 +416,7 @@ echo generateProductSchema($product);
                 <h5 class="modal-title text-white">
                     <i class="bi bi-image me-2"></i><?php echo htmlspecialchars($product['name']); ?>
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Închide galeria"></button>
             </div>
             <div class="modal-body text-center position-relative" style="min-height: 500px;">
                 <!-- Imagine mare -->
@@ -427,6 +427,7 @@ echo generateProductSchema($product);
                         onclick="navigateLightbox(-1)" 
                         id="prevBtn"
                         style="opacity: 0.8; z-index: 10;"
+                        aria-label="Imagine anterioară"
                         title="Imagine anterioară">
                     <i class="bi bi-chevron-left"></i>
                 </button>
@@ -434,6 +435,7 @@ echo generateProductSchema($product);
                         onclick="navigateLightbox(1)" 
                         id="nextBtn"
                         style="opacity: 0.8; z-index: 10;"
+                        aria-label="Imagine următoare"
                         title="Imagine următoare">
                     <i class="bi bi-chevron-right"></i>
                 </button>

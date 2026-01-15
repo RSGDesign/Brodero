@@ -340,7 +340,7 @@ $referralLink = SITE_URL . '/?ref=' . $referralCode;
             <form method="POST" action="">
                 <div class="modal-header">
                     <h5 class="modal-title">Cerere Retragere Bancară</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Închide fereastra"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-info">
