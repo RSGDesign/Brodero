@@ -4,9 +4,23 @@
  * Formular pentru comenzi personalizate cu upload fișiere
  */
 
-$pageTitle = "Modele la Comandă";
-$pageDescription = "Comandă modele personalizate adaptate nevoilor tale. Trimite-ne cererea ta cu detalii și fișiere atașate.";
-$pageKeywords = "modele la comandă, design personalizat, comenzi custom, broderie personalizată";
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/seo.php';
+
+// Încarcă SEO din baza de date
+$db = getPDO();
+$seo = getSeoForPage('modele-la-comanda', $db);
+
+if ($seo) {
+    $pageTitle = $seo['title'];
+    $pageDescription = $seo['description'];
+    $pageKeywords = $seo['keywords'];
+} else {
+    $pageTitle = "Modele la Comandă";
+    $pageDescription = "Comandă modele personalizate adaptate nevoilor tale. Trimite-ne cererea ta cu detalii și fișiere atașate.";
+    $pageKeywords = "modele la comandă, design personalizat, comenzi custom, broderie personalizată";
+}
 
 require_once __DIR__ . '/../includes/header.php';
 

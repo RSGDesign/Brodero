@@ -7,10 +7,13 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_downloads.php';
-require_once __DIR__ . '/../includes/functions_seo.php';
+require_once __DIR__ . '/../includes/seo.php';
 
-// Obține DB connection
+// Obține DB connection (mysqli pentru queries vechi)
 $db = getDB();
+
+// Obține DB connection PDO pentru SEO
+$dbPDO = getPDO();
 
 // Verificare slug produs
 if (!isset($_GET['slug']) || empty($_GET['slug'])) {
@@ -113,10 +116,34 @@ if ($product['sale_price']) {
     $discount = round((($product['price'] - $product['sale_price']) / $product['price']) * 100);
 }
 
-$pageTitle = $product['name'];
-$pageDescription = sanitizeMetaDescription($product['description'], 160);
-$pageKeywords = $product['name'] . ', broderie, design broderie, pattern';
-$pageImage = !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : '';
+// ============================================================================
+// SEO AUTOMAT DIN BAZA DE DATE
+// ============================================================================
+
+// Pregătește date produs pentru SEO
+$productData = [
+    'name' => $product['name'],
+    'description' => $product['description'],
+    'category' => !empty($product['category_names']) ? implode(', ', $product['category_names']) : 'produse digitale',
+    'price' => $finalPrice,
+    'image' => !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : ''
+];
+
+// Încarcă SEO pentru produse din DB (folosește template product:default + înlocuire placeholders)
+$seo = getSeoForProduct($productSlug, $productData, $dbPDO);
+
+if ($seo) {
+    $pageTitle = $seo['title'];
+    $pageDescription = $seo['description'];
+    $pageKeywords = $seo['keywords'];
+    $pageImage = $seo['og_image'] ?: $productData['image'];
+} else {
+    // Fallback dacă nu există template în DB
+    $pageTitle = $product['name'];
+    $pageDescription = mb_substr(strip_tags($product['description']), 0, 160);
+    $pageKeywords = $product['name'] . ', broderie, design broderie, pattern';
+    $pageImage = !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : '';
+}
 
 // Include header DUPĂ toate verificările și redirect-urile
 require_once __DIR__ . '/../includes/header.php';

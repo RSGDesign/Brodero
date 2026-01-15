@@ -4,7 +4,22 @@
  * Pagină coș de cumpărături cu actualizare cantități, ștergere, aplicare cupoane
  */
 
-$pageTitle = "Coșul Meu";
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/seo.php';
+
+// Încarcă SEO din baza de date
+$dbPDO = getPDO();
+$seo = getSeoForPage('cart', $dbPDO);
+
+if ($seo) {
+    $pageTitle = $seo['title'];
+    $pageDescription = $seo['description'];
+    $pageKeywords = $seo['keywords'];
+} else {
+    $pageTitle = "Coșul Meu";
+}
+
 require_once __DIR__ . '/../includes/header.php';
 
 if (!isset($_SESSION['session_id'])) {

@@ -7,9 +7,23 @@
 // IMPORTANT: Include config și database PRIMUL (pentru a putea face redirect fără erori)
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/seo.php';
 
 $db = getDB();
 $errors = [];
+
+// Încarcă SEO din baza de date
+$dbPDO = getPDO();
+$seo = getSeoForPage('contact', $dbPDO);
+
+if ($seo) {
+    $pageTitle = $seo['title'];
+    $pageDescription = $seo['description'];
+    $pageKeywords = $seo['keywords'];
+} else {
+    $pageTitle = "Contact";
+    $pageDescription = "Contactează-ne pentru orice întrebări sau suport.";
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROCESARE FORMULAR ÎNAINTE DE ORICE OUTPUT HTML

@@ -4,8 +4,22 @@
  * Afișare produse cu filtrare, sortare și pagination
  */
 
-$pageTitle = "Magazin";
-$pageDescription = "Explorează colecția noastră completă de design-uri de broderie premium.";
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/seo.php';
+
+// Încarcă SEO din baza de date
+$db = getPDO();
+$seo = getSeoForPage('magazin', $db);
+
+if ($seo) {
+    $pageTitle = $seo['title'];
+    $pageDescription = $seo['description'];
+    $pageKeywords = $seo['keywords'];
+} else {
+    $pageTitle = "Magazin";
+    $pageDescription = "Explorează colecția noastră completă de design-uri de broderie premium.";
+}
 
 require_once __DIR__ . '/../includes/header.php';
 

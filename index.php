@@ -4,8 +4,23 @@
  * Include banner hero și ultimele modele de design
  */
 
-$pageTitle = "Acasă";
-$pageDescription = "Brodero - Descoperă cele mai noi și creative design-uri de broderie. Transformăm ideile în artă brodată.";
+require_once __DIR__ . '/config/config.php';
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/seo.php';
+
+// Încarcă SEO din baza de date
+$db = getPDO();
+$seo = getSeoForPage('home', $db);
+
+if ($seo) {
+    $pageTitle = $seo['title'];
+    $pageDescription = $seo['description'];
+    $pageKeywords = $seo['keywords'];
+} else {
+    // Fallback dacă nu există în DB
+    $pageTitle = "Acasă";
+    $pageDescription = "Brodero - Descoperă cele mai noi și creative design-uri de broderie. Transformăm ideile în artă brodată.";
+}
 
 require_once __DIR__ . '/includes/header.php';
 

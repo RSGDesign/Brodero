@@ -40,9 +40,9 @@ if (isLoggedIn()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO Meta Tags -->
-    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) . ' - ' : ''; ?><?php echo SITE_NAME; ?> - Design de Broderie Premium</title>
+    <title><?php echo isset($pageTitle) ? htmlspecialchars($pageTitle) : SITE_NAME; ?></title>
     <meta name="description" content="<?php echo isset($pageDescription) ? htmlspecialchars($pageDescription) : 'Brodero - Magazine online de design-uri de broderie premium. Descoperă modele unice și creative pentru proiectele tale.'; ?>">
-    <meta name="keywords" content="broderie, design broderie, modele broderie, broderie digitală, pattern broderie, <?php echo isset($pageKeywords) ? htmlspecialchars($pageKeywords) : ''; ?>">
+    <meta name="keywords" content="<?php echo isset($pageKeywords) ? htmlspecialchars($pageKeywords) : 'broderie, design broderie, modele broderie, broderie digitală, pattern broderie'; ?>">
     <meta name="author" content="Brodero">
     <meta name="robots" content="<?php echo isset($seoNoIndex) && $seoNoIndex ? 'noindex, follow' : 'index, follow'; ?>">
     

@@ -7,14 +7,25 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_referral.php';
+require_once __DIR__ . '/../includes/seo.php';
 
 // Obține procent comision din setări
 $commissionPercentage = getCommissionPercentage();
 
-// SEO Meta Tags
-$pageTitle = "Program Referral – Câștigă " . number_format($commissionPercentage, 0) . "% comision";
-$pageDescription = "Invită utilizatori și câștigă " . number_format($commissionPercentage, 0) . "% comision din fiecare comandă. Program de referral simplu, transparent și fără limită.";
-$pageKeywords = "program referral, afiliere, comision, câștig pasiv, venit online";
+// Încarcă SEO din baza de date
+$db = getPDO();
+$seo = getSeoForPage('program-referral', $db);
+
+if ($seo) {
+    $pageTitle = $seo['title'];
+    $pageDescription = $seo['description'];
+    $pageKeywords = $seo['keywords'];
+} else {
+    // Fallback
+    $pageTitle = "Program Referral – Câștigă " . number_format($commissionPercentage, 0) . "% comision";
+    $pageDescription = "Invită utilizatori și câștigă " . number_format($commissionPercentage, 0) . "% comision din fiecare comandă. Program de referral simplu, transparent și fără limită.";
+    $pageKeywords = "program referral, afiliere, comision, câștig pasiv, venit online";
+}
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
