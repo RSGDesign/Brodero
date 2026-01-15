@@ -5,7 +5,7 @@
  */
 
 require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../config/database.php';
 
 header('Content-Type: application/json');
 
@@ -24,7 +24,7 @@ if ($orderId <= 0) {
 }
 
 try {
-    $db = getDB();
+    $db = getPDO();
     
     $stmt = $db->prepare("SELECT * FROM custom_orders WHERE id = ?");
     $stmt->execute([$orderId]);

@@ -4,17 +4,17 @@
  * Gestionare comenzi personalizate din dashboard
  */
 
-$pageTitle = "Comenzi Personalizate - Admin";
+// Include config ÎNAINTE de orice output
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
-require_once __DIR__ . '/../includes/header.php';
-
-// Verificare acces admin
-if (!isAdmin()) {
+// Verificare acces admin ÎNAINTE de header
+if (!isLoggedIn() || !isAdmin()) {
     setMessage("Nu ai acces la această pagină.", "danger");
     redirect('/');
 }
 
-$db = getDB();
+$db = getPDO();
 
 // ============================================================================
 // ACȚIUNI
@@ -103,6 +103,10 @@ $statsQuery = "
     FROM custom_orders
 ";
 $stats = $db->query($statsQuery)->fetch(PDO::FETCH_ASSOC);
+
+// Include header.php DUPĂ procesarea datelor
+$pageTitle = "Comenzi Personalizate - Admin";
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <!-- Page Header -->
@@ -164,7 +168,7 @@ $stats = $db->query($statsQuery)->fetch(PDO::FETCH_ASSOC);
             <!-- Main Content -->
             <div class="col-lg-10">
                 <!-- Messages -->
-                <?php if (hasMessage()): ?>
+                <?php if (function_exists('hasMessage') && hasMessage()): ?>
                     <div class="alert alert-<?php echo getMessageType(); ?> alert-dismissible fade show" role="alert">
                         <?php echo getMessage(); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
