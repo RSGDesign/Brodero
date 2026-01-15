@@ -5,7 +5,7 @@
  */
 
 require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/seo.php';
 
 // Verificare admin
@@ -15,7 +15,7 @@ if (!isLoggedIn() || !isAdmin()) {
     exit;
 }
 
-$db = getDB();
+$db = getPDO();
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 header('Content-Type: application/json');
