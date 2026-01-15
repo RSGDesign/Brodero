@@ -5,14 +5,19 @@
  * Include: pagini SEO, produse, categorii
  */
 
+// Dezactivează afișarea erorilor (nu trebuie să apară în XML)
+error_reporting(0);
+ini_set('display_errors', 0);
+
 header('Content-Type: application/xml; charset=utf-8');
 
 require_once __DIR__ . '/config/config.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/seo.php';
 
-$db = getDB();
-$baseUrl = SITE_URL;
+try {
+    $db = getPDO();
+    $baseUrl = SITE_URL;
 
 // Începe XML
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
@@ -155,4 +160,18 @@ foreach ($categories as $category) {
 
 // Închide XML
 echo '</urlset>';
+
+} catch (Exception $e) {
+    // În caz de eroare, generează un sitemap minim valid
+    echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    echo '  <url>' . "\n";
+    echo '    <loc>' . htmlspecialchars(SITE_URL) . '</loc>' . "\n";
+    echo '    <lastmod>' . date('Y-m-d') . '</lastmod>' . "\n";
+    echo '    <changefreq>daily</changefreq>' . "\n";
+    echo '    <priority>1.0</priority>' . "\n";
+    echo '  </url>' . "\n";
+    echo '</urlset>';
+    error_log('Sitemap error: ' . $e->getMessage());
+}
 ?>
