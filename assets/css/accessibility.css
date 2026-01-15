@@ -158,6 +158,141 @@ a.btn {
 }
 
 /* ===================================
+   ADDITIONAL CLS PREVENTION
+   =================================== */
+
+/* Prevent CLS from dynamic content loading */
+.container,
+.container-fluid {
+    min-height: 200px;
+}
+
+/* Prevent hero section shift */
+.hero-section {
+    min-height: 450px;
+    contain: layout style paint;
+}
+
+/* Prevent product grid shift */
+.product-grid,
+.row {
+    contain: layout;
+}
+
+/* Prevent card content shift */
+.card {
+    contain: layout style;
+    min-height: 380px;
+}
+
+.card-title {
+    min-height: 2.5em;
+    line-height: 1.3;
+}
+
+.card-text {
+    min-height: 4em;
+}
+
+/* Prevent price display shift */
+.price,
+.product-price {
+    display: block;
+    min-height: 1.5em;
+}
+
+/* Prevent badge shift */
+.badge {
+    display: inline-block;
+    min-width: 2em;
+    min-height: 1.5em;
+}
+
+/* Prevent navbar shift on scroll */
+.navbar {
+    contain: layout;
+}
+
+.navbar-brand {
+    contain: layout;
+    min-height: 40px;
+}
+
+/* Prevent footer shift */
+.footer {
+    contain: layout;
+    min-height: 300px;
+}
+
+/* Prevent form shift */
+.form-control,
+.form-select {
+    min-height: calc(1.5em + 0.75rem + 2px);
+}
+
+/* Prevent button shift during hover */
+.btn {
+    contain: layout style;
+    transform: translateZ(0);
+}
+
+/* Prevent image gallery shift */
+.gallery,
+.image-grid {
+    contain: layout;
+}
+
+/* Prevent modal shift */
+.modal-content {
+    contain: layout;
+}
+
+/* Prevent alert shift */
+.alert {
+    contain: layout;
+    min-height: 50px;
+}
+
+/* Prevent breadcrumb shift */
+.breadcrumb {
+    contain: layout;
+    min-height: 2em;
+}
+
+/* Prevent pagination shift */
+.pagination {
+    contain: layout;
+    min-height: 2.5em;
+}
+
+/* Fix aspect ratio for all product images */
+.product-image,
+.product-thumbnail {
+    aspect-ratio: 4/3;
+    object-fit: cover;
+}
+
+/* Prevent skeleton loading shift */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton {
+        animation: none;
+        background: #f0f0f0;
+    }
+}
+
+
+/* ===================================
    SCREEN READER IMPROVEMENTS
    =================================== */
 

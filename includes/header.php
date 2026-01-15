@@ -80,7 +80,10 @@ if (isLoggedIn()) {
     
     <!-- Preload Poppins critical weights pentru zero CLS -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=optional">
+    <!-- Preload actual font files for instant rendering -->
     <link rel="preload" href="https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrJJfecg.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://fonts.gstatic.com/s/poppins/v20/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://fonts.gstatic.com/s/poppins/v20/pxiByp8kv8JHgFVrLGT9Z1xlFQ.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- Critical CSS inline pentru fastest rendering -->
     <style><?php include(__DIR__ . '/../assets/css/critical.css'); ?></style>

@@ -63,19 +63,45 @@ img,svg{vertical-align:middle}
 img[width][height]{height:auto}
 .card-img-top{aspect-ratio:4/3;object-fit:cover}
 /* Reserve space for lazy loaded images */
-img[loading="lazy"]{min-height:150px;background:#f0f0f0}
+img[loading="lazy"]{min-height:150px;background:#f8f9fa}
 img[loading="lazy"][width][height]{min-height:0}
-/* Navbar height reservation */
-.navbar{min-height:76px}
+/* Navbar height reservation - FIXED */
+.navbar{min-height:76px;will-change:auto}
 .navbar-collapse{transition:none!important}
-/* Card minimum heights */
-.product-card{min-height:400px}
-.card-body{min-height:150px}
-/* Hero section height */
-.hero-section{min-height:400px;max-height:600px}
+.sticky-top{position:sticky;top:0;z-index:1020;will-change:auto}
+/* Card minimum heights - ENHANCED */
+.product-card{min-height:420px;contain:layout style paint}
+.card-body{min-height:160px;contain:layout}
+.card-title{min-height:3em;line-height:1.5}
+/* Hero section height - FIXED */
+.hero-section{min-height:400px;max-height:600px;contain:layout}
 /* Prevent button shift */
-.btn{min-width:100px}
-/* Text containers */
+.btn{min-width:100px;contain:layout style}
+/* Text containers - prevent reflow */
 h1,h2,h3,h4,h5,h6,p{contain:layout style}
 /* Bootstrap collapse no animation on load */
 .collapsing{transition:none!important}
+/* Container stability */
+.container{min-height:200px}
+/* Cookie consent won't cause CLS (position:fixed) */
+#cookieConsentBanner{position:fixed!important;bottom:0;left:0}
+/* Aspect ratios for all images */
+img:not([width]):not([height]){aspect-ratio:4/3}
+.hero-image{aspect-ratio:4/3;max-height:450px}
+/* Fix newsletter section */
+.newsletter-form{min-height:60px}
+/* Additional CLS prevention */
+.row{min-height:50px}
+.section-title{min-height:2.5em}
+.card{min-height:350px}
+.card-text{min-height:3em}
+/* Prevent font swap CLS */
+body{font-synthesis:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+/* Reserve space for icons */
+.bi{display:inline-block;width:1em;height:1em;vertical-align:middle}
+/* Fix Bootstrap grid shifts */
+.col-12,.col-md-6,.col-lg-4,.col-lg-6{min-height:100px}
+/* Prevent navbar expansion CLS */
+.navbar-nav{min-height:40px}
+/* Alert stability */
+.alert{min-height:60px}
