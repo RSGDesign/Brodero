@@ -13,6 +13,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_downloads.php';
 require_once __DIR__ . '/../includes/seo.php';
 require_once __DIR__ . '/../includes/category_functions.php';
+require_once __DIR__ . '/../includes/functions_seo.php';
 
 // Debug point 1
 echo "<!-- Debug 1: Files loaded successfully -->\n";
@@ -186,9 +187,12 @@ require_once __DIR__ . '/../includes/header.php';
 echo "<!-- Debug 13: Header included -->\n";
 
 // Generează Product Schema pentru SEO
-echo generateProductSchema($product);
-
-echo "<!-- Debug 14: Product schema generated -->\n";
+try {
+    echo generateProductSchema($product);
+    echo "<!-- Debug 14: Product schema generated -->\n";
+} catch (Exception $e) {
+    echo "<!-- Debug 14 ERROR: " . htmlspecialchars($e->getMessage()) . " -->\n";
+}
 ?>
 
 <!-- Breadcrumb -->
