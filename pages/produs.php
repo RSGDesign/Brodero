@@ -52,12 +52,15 @@ if (!isset($_GET['slug']) || empty($_GET['slug'])) {
 }
 
 $productSlug = cleanInput($_GET['slug']);
+echo "<!-- Debug 4: Slug = " . htmlspecialchars($productSlug) . " -->\n";
 
 // Obține detalii produs prin slug
 $stmt = $db->prepare("SELECT p.* FROM products p WHERE p.slug = ? AND p.is_active = 1");
 $stmt->bind_param("s", $productSlug);
 $stmt->execute();
 $result = $stmt->get_result();
+
+echo "<!-- Debug 5: Query executed, rows found = " . $result->num_rows . " -->\n";
 
 if ($result->num_rows === 0) {
     setMessage("Produsul nu a fost găsit.", "danger");
@@ -68,8 +71,12 @@ $product = $result->fetch_assoc();
 $productId = $product['id']; // Definim productId pentru utilizare ulterioară
 $stmt->close();
 
+echo "<!-- Debug 6: Product loaded, ID = " . $productId . " -->\n";
+
 // MVP: Verificare dacă utilizatorul a cumpărat deja produsul
 $isPurchased = hasUserPurchasedProduct($productId);
+
+echo "<!-- Debug 7: Purchase check done -->\n";
 
 // Obține categoriile produsului
 $productCategories = getProductCategories($productId);
@@ -77,6 +84,8 @@ $product['categories'] = $productCategories;
 $product['category_names'] = array_map(function($cat) {
     return $cat['name'];
 }, $productCategories);
+
+echo "<!-- Debug 8: Categories loaded -->\n";
 
 // Incrementare vizualizări (prepared statement for security)
 $viewStmt = $db->prepare("UPDATE products SET views = views + 1 WHERE id = ?");
