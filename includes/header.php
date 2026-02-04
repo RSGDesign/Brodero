@@ -346,14 +346,10 @@ if (isLoggedIn()) {
                         <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/magazin.php">Magazin</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/program-referral.php">
-                            <i class="bi bi-gift me-1"></i>Program Referral
-                        </a>
+                        <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/program-referral.php">Program Referral</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/modele-la-comanda.php">
-                            <i class="bi bi-palette me-1"></i>Modele la Comandă
-                        </a>
+                        <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/modele-la-comanda.php">Modele la Comandă</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo SITE_URL; ?>/pages/contact.php">Contact</a>
