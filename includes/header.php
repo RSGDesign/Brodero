@@ -314,8 +314,7 @@ if (isLoggedIn()) {
     </script>
 </head>
 <body>
-        <!-- Skip to main content link (accessibility) -->
-    <a href="#main-content" class="skip-to-main">Sari la conținutul principal</a>
+       
         <!-- Cookie Consent Banner HTML -->
     <div id="cookieConsentBanner">
         <div class="cookie-consent-content">
