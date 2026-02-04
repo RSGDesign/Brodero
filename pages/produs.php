@@ -348,19 +348,19 @@ echo generateProductSchema($product);
                 </div>
                 
                 <!-- Additional Info -->
-                <div class="mt-4 p-3 bg-light rounded">
-                    <div class="row g-3 text-center">
-                        <div class="col-md-4">
-                            <i class="bi bi-shield-check text-primary fs-3 mb-2 d-block"></i>
-                            <small class="text-muted">Plată Securizată</small>
+                <div class="mt-4 p-4 bg-light rounded">
+                    <div class="row g-4">
+                        <div class="col-12 col-md-4 text-center">
+                            <i class="bi bi-shield-check text-primary fs-2 mb-2 d-block"></i>
+                            <p class="mb-0 fw-semibold">Plată Securizată</p>
                         </div>
-                        <div class="col-md-4">
-                            <i class="bi bi-download text-primary fs-3 mb-2 d-block"></i>
-                            <small class="text-muted">Download Instant</small>
+                        <div class="col-12 col-md-4 text-center">
+                            <i class="bi bi-download text-primary fs-2 mb-2 d-block"></i>
+                            <p class="mb-0 fw-semibold">Download Instant</p>
                         </div>
-                        <div class="col-md-4">
-                            <i class="bi bi-headset text-primary fs-3 mb-2 d-block"></i>
-                            <small class="text-muted">Suport 24/7</small>
+                        <div class="col-12 col-md-4 text-center">
+                            <i class="bi bi-headset text-primary fs-2 mb-2 d-block"></i>
+                            <p class="mb-0 fw-semibold">Suport 24/7</p>
                         </div>
                     </div>
                 </div>
