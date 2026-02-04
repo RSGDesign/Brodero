@@ -143,6 +143,8 @@ if ($product['sale_price']) {
     $discount = round((($product['price'] - $product['sale_price']) / $product['price']) * 100);
 }
 
+echo "<!-- Debug 9: Price calculated -->\n";
+
 // ============================================================================
 // SEO AUTOMAT DIN BAZA DE DATE
 // ============================================================================
@@ -156,8 +158,12 @@ $productData = [
     'image' => !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : ''
 ];
 
+echo "<!-- Debug 10: Product data prepared for SEO -->\n";
+
 // Încarcă SEO pentru produse din DB (folosește template product:default + înlocuire placeholders)
 $seo = getSeoForProduct($productSlug, $productData, $dbPDO);
+
+echo "<!-- Debug 11: SEO function called, result = " . ($seo ? 'found' : 'null') . " -->\n";
 
 if ($seo) {
     $pageTitle = $seo['title'];
@@ -172,11 +178,17 @@ if ($seo) {
     $pageImage = !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : '';
 }
 
+echo "<!-- Debug 12: SEO variables set, about to include header -->\n";
+
 // Include header DUPĂ toate verificările și redirect-urile
 require_once __DIR__ . '/../includes/header.php';
 
+echo "<!-- Debug 13: Header included -->\n";
+
 // Generează Product Schema pentru SEO
 echo generateProductSchema($product);
+
+echo "<!-- Debug 14: Product schema generated -->\n";
 ?>
 
 <!-- Breadcrumb -->
