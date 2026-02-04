@@ -115,10 +115,6 @@ if (isLoggedIn()) {
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/performance.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/performance.css"></noscript>
     
-    <!-- Accessibility CSS (WCAG 2.1 AA compliance) -->
-    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/accessibility.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/accessibility.css"></noscript>
-    
     <!-- Bootstrap Icons (defer - NON CRITIC, doar 13KB dar 13.1KB nefolosit!) -->
     <!-- Încărcăm doar când e necesar, nu în critical path -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.min.css" media="print" onload="this.media='all'">
