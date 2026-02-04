@@ -136,7 +136,7 @@ textarea:focus,
 /* Prevent CLS from dynamic content loading */
 .container,
 .container-fluid {
-    min-height: 200px;
+    min-height: 100px;
 }
 
 /* Prevent hero section shift */
