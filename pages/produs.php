@@ -14,13 +14,24 @@ require_once __DIR__ . '/../includes/functions_downloads.php';
 require_once __DIR__ . '/../includes/seo.php';
 require_once __DIR__ . '/../includes/category_functions.php';
 
-echo "<!-- Debug: Files loaded -->\n";
+// Debug point 1
+echo "<!-- Debug 1: Files loaded successfully -->\n";
 
 // Obține DB connection (mysqli pentru queries vechi)
-$db = getDB();
+try {
+    $db = getDB();
+    echo "<!-- Debug 2: DB mysqli connected -->\n";
+} catch (Exception $e) {
+    die("Eroare conexiune DB mysqli: " . $e->getMessage());
+}
 
 // Obține DB connection PDO pentru SEO
-$dbPDO = getPDO();
+try {
+    $dbPDO = getPDO();
+    echo "<!-- Debug 3: DB PDO connected -->\n";
+} catch (Exception $e) {
+    die("Eroare conexiune DB PDO: " . $e->getMessage());
+}
 
 // Verificare slug produs
 if (!isset($_GET['slug']) || empty($_GET['slug'])) {
