@@ -156,7 +156,9 @@ textarea:focus,
     contain: layout style;
     min-height: 380px;
 }
- (minimal)
+
+/* ===================================
+   CLS PREVENTION (minimal)
    =================================== */
 
 /* Only essential CLS fixes - removed excessive min-heights */
