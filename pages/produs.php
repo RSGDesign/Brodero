@@ -4,10 +4,6 @@
  * Afișare informații produs, galerie imagini, opțiuni achiziție
  */
 
-// Debug - activează error reporting
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_downloads.php';
@@ -15,13 +11,9 @@ require_once __DIR__ . '/../includes/seo.php';
 require_once __DIR__ . '/../includes/category_functions.php';
 require_once __DIR__ . '/../includes/functions_seo.php';
 
-// Debug point 1
-echo "<!-- Debug 1: Files loaded successfully -->\n";
-
 // Obține DB connection (mysqli pentru queries vechi)
 try {
     $db = getDB();
-    echo "<!-- Debug 2: DB mysqli connected -->\n";
 } catch (Exception $e) {
     die("Eroare conexiune DB mysqli: " . $e->getMessage());
 }
@@ -29,7 +21,6 @@ try {
 // Obține DB connection PDO pentru SEO
 try {
     $dbPDO = getPDO();
-    echo "<!-- Debug 3: DB PDO connected -->\n";
 } catch (Exception $e) {
     die("Eroare conexiune DB PDO: " . $e->getMessage());
 }
@@ -53,7 +44,6 @@ if (!isset($_GET['slug']) || empty($_GET['slug'])) {
 }
 
 $productSlug = cleanInput($_GET['slug']);
-echo "<!-- Debug 4: Slug = " . htmlspecialchars($productSlug) . " -->\n";
 
 // Obține detalii produs prin slug
 $stmt = $db->prepare("SELECT p.* FROM products p WHERE p.slug = ? AND p.is_active = 1");
@@ -61,23 +51,17 @@ $stmt->bind_param("s", $productSlug);
 $stmt->execute();
 $result = $stmt->get_result();
 
-echo "<!-- Debug 5: Query executed, rows found = " . $result->num_rows . " -->\n";
-
 if ($result->num_rows === 0) {
     setMessage("Produsul nu a fost găsit.", "danger");
     redirect('/pages/magazin.php');
 }
 
 $product = $result->fetch_assoc();
-$productId = $product['id']; // Definim productId pentru utilizare ulterioară
+$productId = $product['id'];
 $stmt->close();
-
-echo "<!-- Debug 6: Product loaded, ID = " . $productId . " -->\n";
 
 // MVP: Verificare dacă utilizatorul a cumpărat deja produsul
 $isPurchased = hasUserPurchasedProduct($productId);
-
-echo "<!-- Debug 7: Purchase check done -->\n";
 
 // Obține categoriile produsului
 $productCategories = getProductCategories($productId);
@@ -85,8 +69,6 @@ $product['categories'] = $productCategories;
 $product['category_names'] = array_map(function($cat) {
     return $cat['name'];
 }, $productCategories);
-
-echo "<!-- Debug 8: Categories loaded -->\n";
 
 // Incrementare vizualizări (prepared statement for security)
 $viewStmt = $db->prepare("UPDATE products SET views = views + 1 WHERE id = ?");
@@ -153,18 +135,21 @@ echo "<!-- Debug 9: Price calculated -->\n";
 // Pregătește date produs pentru SEO
 $productData = [
     'name' => $product['name'],
+// ============================================================================
+// SEO AUTOMAT DIN BAZA DE DATE
+// ============================================================================
+
+// Pregătește date produs pentru SEO
+$productData = [
+    'name' => $product['name'],
     'description' => $product['description'],
     'category' => !empty($product['category_names']) ? implode(', ', $product['category_names']) : 'produse digitale',
     'price' => $finalPrice,
     'image' => !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : ''
 ];
 
-echo "<!-- Debug 10: Product data prepared for SEO -->\n";
-
 // Încarcă SEO pentru produse din DB (folosește template product:default + înlocuire placeholders)
 $seo = getSeoForProduct($productSlug, $productData, $dbPDO);
-
-echo "<!-- Debug 11: SEO function called, result = " . ($seo ? 'found' : 'null') . " -->\n";
 
 if ($seo) {
     $pageTitle = $seo['title'];
@@ -179,29 +164,11 @@ if ($seo) {
     $pageImage = !empty($product['image']) ? SITE_URL . '/uploads/' . $product['image'] : '';
 }
 
-echo "<!-- Debug 12: SEO variables set, about to include header -->\n";
-
 // Include header DUPĂ toate verificările și redirect-urile
 require_once __DIR__ . '/../includes/header.php';
 
-echo "<!-- Debug 13: Header included -->\n";
-
 // Generează Product Schema pentru SEO
-try {
-    echo generateProductSchema($product);
-    echo "<!-- Debug 14: Product schema generated -->\n";
-} catch (Exception $e) {
-    echo "<!-- Debug 14 ERROR: " . htmlspecialchars($e->getMessage()) . " -->\n";
-}
-?>
-
-<!-- Breadcrumb -->
-<section class="bg-light py-3 border-bottom">
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Acasă</a></li>
-                <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>/pages/magazin.php">Magazin</a></li>
+echo generateProductSchema($product);               <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>/pages/magazin.php">Magazin</a></li>
                 <?php if (!empty($productCategories)): ?>
                     <li class="breadcrumb-item">
                         <a href="<?php echo SITE_URL; ?>/pages/magazin.php?category=<?php echo $productCategories[0]['id']; ?>">
@@ -381,15 +348,15 @@ try {
                 <!-- Additional Info -->
                 <div class="mt-4 p-3 bg-light rounded">
                     <div class="row g-3 text-center">
-                        <div class="col-4">
+                        <div class="col-md-4">
                             <i class="bi bi-shield-check text-primary fs-3 mb-2 d-block"></i>
                             <small class="text-muted">Plată Securizată</small>
                         </div>
-                        <div class="col-4">
+                        <div class="col-md-4">
                             <i class="bi bi-download text-primary fs-3 mb-2 d-block"></i>
                             <small class="text-muted">Download Instant</small>
                         </div>
-                        <div class="col-4">
+                        <div class="col-md-4">
                             <i class="bi bi-headset text-primary fs-3 mb-2 d-block"></i>
                             <small class="text-muted">Suport 24/7</small>
                         </div>
