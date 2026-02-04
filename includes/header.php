@@ -3,13 +3,20 @@
  * Header pentru site-ul Brodero
  * Include navigare, logo și iconițe pentru coș și cont
  */
+
+echo "<!-- Header.php START -->\n";
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+
+echo "<!-- Header.php: Config loaded -->\n";
 
 // Generare CSRF token pentru formulare
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+echo "<!-- Header.php: CSRF token generated -->\n";
 
 // Verificare coș
 $cartCount = 0;
@@ -32,6 +39,9 @@ if (isLoggedIn()) {
     $cartCount = $row['total'] ?? 0;
     $stmt->close();
 }
+
+echo "<!-- Header.php: Cart count = $cartCount -->\n";
+
 ?>
 <!DOCTYPE html>
 <html lang="ro">
