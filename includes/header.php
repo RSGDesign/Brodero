@@ -335,7 +335,7 @@ if (isLoggedIn()) {
     
     <!-- Header with Navigation -->
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm" role="navigation" aria-label="Main navigation">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top" role="navigation" aria-label="Main navigation">
             <div class="container">
             <!-- Logo -->
             <a class="navbar-brand fw-bold" href="<?php echo SITE_URL; ?>">
