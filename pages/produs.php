@@ -129,15 +129,6 @@ if ($product['sale_price']) {
     $discount = round((($product['price'] - $product['sale_price']) / $product['price']) * 100);
 }
 
-echo "<!-- Debug 9: Price calculated -->\n";
-
-// ============================================================================
-// SEO AUTOMAT DIN BAZA DE DATE
-// ============================================================================
-
-// Pregătește date produs pentru SEO
-$productData = [
-    'name' => $product['name'],
 // ============================================================================
 // SEO AUTOMAT DIN BAZA DE DATE
 // ============================================================================
@@ -171,7 +162,15 @@ if ($seo) {
 require_once __DIR__ . '/../includes/header.php';
 
 // Generează Product Schema pentru SEO
-echo generateProductSchema($product);               <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>/pages/magazin.php">Magazin</a></li>
+echo generateProductSchema($product);
+?>
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="bg-light py-2">
+    <div class="container">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>">Acasă</a></li>
+            <li class="breadcrumb-item"><a href="<?php echo SITE_URL; ?>/pages/magazin.php">Magazin</a></li>
                 <?php if (!empty($productCategories)): ?>
                     <li class="breadcrumb-item">
                         <a href="<?php echo SITE_URL; ?>/pages/magazin.php?category=<?php echo $productCategories[0]['id']; ?>">
