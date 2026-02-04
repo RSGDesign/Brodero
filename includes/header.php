@@ -14,8 +14,8 @@ if (!isset($_SESSION['csrf_token'])) {
 // Verificare coș
 $cartCount = 0;
 if (isLoggedIn()) {
-    $db = getDB();
-    $stmt = $db->prepare("SELECT SUM(quantity) as total FROM cart WHERE user_id = ?");
+    $dbHeader = getDB();
+    $stmt = $dbHeader->prepare("SELECT SUM(quantity) as total FROM cart WHERE user_id = ?");
     $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -23,8 +23,8 @@ if (isLoggedIn()) {
     $cartCount = $row['total'] ?? 0;
     $stmt->close();
 } elseif (isset($_SESSION['session_id'])) {
-    $db = getDB();
-    $stmt = $db->prepare("SELECT SUM(quantity) as total FROM cart WHERE session_id = ?");
+    $dbHeader = getDB();
+    $stmt = $dbHeader->prepare("SELECT SUM(quantity) as total FROM cart WHERE session_id = ?");
     $stmt->bind_param("s", $_SESSION['session_id']);
     $stmt->execute();
     $result = $stmt->get_result();
