@@ -88,6 +88,21 @@ if (isLoggedIn()) {
     <!-- Critical CSS inline pentru fastest rendering -->
     <style><?php include(__DIR__ . '/../assets/css/critical.css'); ?></style>
     
+    <!-- Fix navbar collapse conflicts -->
+    <style>
+    .navbar-collapse {
+        flex-basis: 100%;
+        flex-grow: 1;
+        align-items: center;
+    }
+    @media (max-width: 991.98px) {
+        .navbar-collapse {
+            background: white;
+            padding: 0.5rem 0;
+        }
+    }
+    </style>
+    
     <!-- Bootstrap CSS (defer - elimină 900ms render blocking!) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"></noscript>
