@@ -4,10 +4,17 @@
  * Afișare informații produs, galerie imagini, opțiuni achiziție
  */
 
+// Debug - activează error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions_downloads.php';
 require_once __DIR__ . '/../includes/seo.php';
+require_once __DIR__ . '/../includes/category_functions.php';
+
+echo "<!-- Debug: Files loaded -->\n";
 
 // Obține DB connection (mysqli pentru queries vechi)
 $db = getDB();
